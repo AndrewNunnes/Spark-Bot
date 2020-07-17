@@ -86,7 +86,7 @@ async def on_raw_reaction_remove(payload):
 
 
 
-extension = ['cogs.General_Commands', 'cogs.Fun_Commands', 'cogs.mc', 'cogs.Suggestions', 'cogs.Moderation', 'cogs.Administrator_Commands', 'cogs.other.global']
+extension = ['cogs.General_Commands', 'cogs.Fun_Commands', 'cogs.mc', 'cogs.Suggestions', 'cogs.Moderation', 'cogs.Administrator_Commands', 'cogs.global']
 
 if __name__ == '__main__':
     for ext in extension:
