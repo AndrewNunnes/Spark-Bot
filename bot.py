@@ -92,4 +92,4 @@ if __name__ == '__main__':
     for ext in extension:
         client.load_extension(ext)
 
-client.run('NzIxMzk3ODk2NzA0MTYzOTY1.XuemvQ.tQuR7uKTFTHq5vA6QvSLj7vTkVo')
+client.run('token')
