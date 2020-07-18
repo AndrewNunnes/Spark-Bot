@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 import asyncio
+import logging
+
+logging.basicConfig(level = logging.INFO)
 
 class Help_Command(commands.Cog):
     def __init__(self, bot):
@@ -101,3 +104,4 @@ class Help_Command(commands.Cog):
 
 
 def setup(bot):
+    bot.add_cog(Help_Command(bot))
