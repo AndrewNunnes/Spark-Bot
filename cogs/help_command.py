@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import asyncio
 
 class Help_Command(commands.Cog):
     def __init__(self, bot):
@@ -11,107 +12,92 @@ class Help_Command(commands.Cog):
     @commands.command()
     @commands.guild_only()
     async def help(self, ctx, member: discord.Member = None):
+        await ctx.message.delete()
         
         member = ctx.author if not member else member
+        embed = discord.Embed(title=f'All Commands (Default prefix is "{ctx.prefix}")')
+
+        embed.add_field(name="__**Command Index**__", value="📖 Shows this Menu\n\n♣️ __**General Commands**__ {Commands showing things such as serverinfo, userinfo, etc.}\n\n🤡 __**Fun Commands**__ {Variety of Different Fun Commands}\n\n🎮 __**Minecraft Commands**__ {Minecraft Related Fun Commands}\n\n📑 __**Application Commands**__ {Commands to apply for something}\n\n📫 __**Suggestion Commands**__ {Commands to leave a Suggestion}\n\n🔐 __**Moderation Commands**__ {Commands to Moderate the server (Mods and Admins Only)}\n\n🔗 __**Misc Commands**__ {Misc Commands Only Mods and Admins can Use}", inline=False)
+        embed.set_author(name=f"Command Requested by: {ctx.author}", icon_url=f"{ctx.author.avatar_url}")
+        m = await ctx.send(embed=embed)
+        await m.edit(embed=embed)
+        await m.add_reaction('📖')
+        await m.add_reaction('♣️')
+        await m.add_reaction('🤡')
+        await m.add_reaction('🎮')
+        await m.add_reaction('📑')
+        await m.add_reaction('📫')
+        await m.add_reaction('🔐')
+        await m.add_reaction('🔗')
         def checkreact(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣']
-            
+            return user == ctx.author and str(reaction.emoji) in ['📖', '♣️', '🤡', '🎮', '📑', '📫', '🔐', '🔗']
         while True:
-            try: 
-                embed = discord.Embed(title=f'All Commands (Default prefix is "!")')
+            try:
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=45.0, check=checkreact)
 
-                embed.add_field(name="__**Command Index**__", value="""
-                0️⃣ This Page
-                1️⃣ General Commands
-                2️⃣ Fun Commands
-                3️⃣ Minecraft Commands
-                4️⃣ Application Commands
-                5️⃣ Suggestion Commands
-                6️⃣ Moderation Commands
-                7️⃣ Misc Commands""", inline=False)
-    
-                m = await ctx.send(embed=embed)
-                await m.add_reaction('0️⃣')
-                await m.add_reaction('1️⃣')
-                await m.add_reaction('2️⃣')
-                await m.add_reaction('3️⃣')
-                await m.add_reaction('4️⃣')
-                await m.add_reaction('5️⃣')
-                await m.add_reaction('6️⃣')
-                await m.add_reaction('7️⃣')
-
-            except TimeoutError:
-                pass
+            except asyncio.TimeoutError:
+                bruh = discord.Embed(color=discord.Color.dark_red())
+                bruh.add_field(name="__**What were you doing?**__", value="You took too long to react with an emoji bruh\n\n<:trash:734043301187158082> Deleting in 5 seconds <:trash:734043301187158082>")
+                await m.edit(embed=bruh, delete_after=5)
             else:
-                reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=checkreact)
-                if str(reaction.emoji) == '1️⃣':
-                    embed1 = discord.Embed(title=f'Fun Commands (Default prefix is "!")')
+                if str(reaction.emoji) == '♣️':
+                    await m.remove_reaction('♣️', member)
+                    embed1 = discord.Embed(title=f'General Commands (Default prefix is "{ctx.prefix}")', color=discord.Color.darker_grey)
 
-                    embed1.add_field(name="__**Fun**__", value="""
-                    whois (Mention User)
-                    pfp (Mention User)
-                    confess (confession)
-                    sticks (Mention User)
-                    rick (Mention User)
-                    meme""", inline=False)
+                    embed1.add_field(name="__**Commands:**__", value="_*binfo*_ - {Shows info about the Bot}\n\n_*sinfo*_ - {Shows info about the server}\n\n_*uinfo*_ - {Shows info about a user}\n\n_*avatar*_ - {Shows the avatar of a user}\n\n_*ping*_ - {Runs a connection test to Discord}", inline=False)
                     await m.edit(embed=embed1)
             
-                elif str(reaction.emoji) == '2️⃣':
-                    embed2 = discord.Embed(title=f'Emoji Commands (Default prefix is "!")')
+                elif str(reaction.emoji) == '🤡':
+                    await m.remove_reaction('🤡', member)
+                    embed2 = discord.Embed(title=f'Fun Commands (Default prefix is "{ctx.prefix}")', color=discord.Color.dark_blue())
 
-                    embed2.add_field(name="__**Emojis**__", value="""
-                    thumbsup
-                    thumbsdown
-                    clown
-                    shrug
-                    oof
-                    wut""", inline=False)
+                    embed2.add_field(name="__**Commands:**__", value="_*8ball*_ - {Ask a question and get an answer}\n\n_*letschat(chat)*_ - {Have a convo with the Bot}\n\n_*fact*_ - {Get a random fact}\n\n_*insta*_ - {Get info on an Insta Account}\n\n_*embed*_ - {Make your message a fancy embed}\n\n_*bottles*_(!bottles 7 water) - {x bottles of x on the wall}\n\n_*add*_(4+4) - {Add two numbers together}\n\n_*hug*_ - {Hug someone}\n\n_*punch*_ - {Punch somebody}\n\n_*slap*_ - {Slap someone}\n\n_*iq*_ - {Says your IQ}\n\n_*gay*_ - {Shows how gay you are}\n\n_*penis*_ - {Says your penis size}\n\n_*thot*_ - {Says how much of a thot you are}\n\n_*hack_* - {Hack somebody}\n\n_*coinflip*_ - {Flip a coin}\n\n_*slots*_ - {Will you win the slot machine?}", inline=False)
                     await m.edit(embed=embed2)
 
-                elif str(reaction.emoji) == '3️⃣':
-                    embed3 = discord.Embed(title=f'Admin Commands (Default prefix is "!")')
+                elif str(reaction.emoji) == '🎮':
+                    await m.remove_reaction('🎮', member)
+                    embed3 = discord.Embed(title=f'Minecraft Commands (Default prefix is "{ctx.prefix}")', color=0xa0722a)
 
-                    embed3.add_field(name="__**Administrator**__ ", value="""
-                    kick (Mention User) (Reason)
-                    ban (Mention User) (Reason)
-                    unban (Username And Four Numbers On The End)
-                    move (Mention User) (Voice Channel ID)
-                    dm (Mention User) (Message)
-                    say (Channel) (Message)
-                    purge (Amount)
-                    """, inline=False)
+                    embed3.add_field(name="__**Commands:**__ ", value="_*mcping(!mcping play.hypixel.net)*_ - {Shows stats of a Minecraft server}\n\n_*skin*_ - {Get the skin of another Player}\n\n_*uuid*_ - {Get the UUID of another Player}\n\n_*getplayer*_ - {Get a Player username with their UUID]\n\n_*mcsales*_ - {Shows the sales of Minecraft}\n\n_*buildidea*_ - {Get a random build idea}\n\n_*colorcodes*_ - {Get the colorcodes of Minecraft Text}", inline=False)
                     await m.edit(embed=embed3)
 
             
-                elif str(reaction.emoji) == '4️⃣':
-                        embed4 = discord.Embed(title=f'Misc Commands (Default prefix is "!")')
+                elif str(reaction.emoji) == '📑':
+                    await m.remove_reaction('📑', member)
+                    embed4 = discord.Embed(title=f'Application Commands (Default prefix is "{ctx.prefix}")', color=0x223ba3)
 
-                        embed4.add_field(name="__**Misc**__", value="""
-                        queue (Your Username)
-                        suggest (Suggestion)
-                        invite
-                        ping
-                        support
-                        donate""", inline=False)
-                        await m.edit(embed=embed4)
+                    embed4.add_field(name="__**Commands:**__", value="_*applymod*_ - {Apply for Moderator}", inline=False)
+                    await m.edit(embed=embed4)
 
+                elif str(reaction.emoji) == '📫':
+                    await m.remove_reaction('📫', member)
+                    embed5 = discord.Embed(title=f'Suggestion Commands (Default prefix is "{ctx.prefix}")', color=0x223ba3)
+
+                    embed5.add_field(name="__**Commands:**__", value="_*suggest*_ - {Leave a suggestion}", inline=False)
+                    await m.edit(embed=embed5)
+
+                elif str(reaction.emoji) == '🔐':
+                    await m.remove_reaction('🔐', member)
+                    embed6 = discord.Embed(title=f'Moderation Commands(Mods and Admins **Only**) (Default prefix is "{ctx.prefix}")', color=0x9a9a23)
+
+                    embed6.add_field(name="__**Commands:**__", value="_*kick*_ - {Kicks a User}\n\n_*ban*_ - {Bans a User}\n\n_*unban*_(!unban User name#1234) - {Unbans a User}\n\n_*mute*_ - {Mutes a user from texting for a specified amount of time}\n\n_*unmute*_ - {Manually Unmutes a User}\n\n_*purge(prune, clean)*_ - {Deletes a specified amount of messages}", inline=False)
+                    await m.edit(embed=embed6)
+
+                elif str(reaction.emoji) == '🔗':
+                    await m.remove_reaction('🔗', member)
+                    embed7 = discord.Embed(title=f'Misc Commands(Mods and Admins **Only**) (Default prefix is "{ctx.prefix}")', color=0x62239a)
+
+                    embed7.add_field(name="__**Commands:**__", value="_*invite(!invite #channelname)*_ - {Creates an invite for a specific channel}\n\n_*announce*_ - {Bot will say whatever the User says}\n\n_*dm*_ - {DM a User a custom message}\n\n_*poll*_ - {Creates a Poll}\n\n_*quickpoll*_ - {Creates a poll quickly}\n\n_*restart(shutdown)*_ - {Restart/Shutdown the Bot (Owner **Only**)}", inline=False)
+                    await m.edit(embed=embed7)
 
                 else:
-                    if str(reaction.emoji) == '0️⃣':
-                        embed0 = discord.Embed(title=f'All Commands (Default prefix is "!")')
+                    if str(reaction.emoji) == '📖':
+                        await m.remove_reaction('📖', member)
+                        embed0 = discord.Embed(title=f'All Commands (Default prefix is "{ctx.prefix}")')
 
-                        embed0.add_field(name="__**Command Index**__", value="""
-                    0️⃣ This Page
-                    1️⃣ General Commands
-                    2️⃣ Fun Commands
-                    3️⃣ Minecraft Commands
-                    4️⃣ Application Commands
-                    5️⃣ Suggestion Commands
-                    6️⃣ Moderation Commands
-                    7️⃣ Misc Commands""", inline=False)
-            
+                        embed0.add_field(name="__**Command Index**__", value="📖 Shows this Menu\n\n♣️ __**General Commands**__ {Commands showing things such as serverinfo, userinfo, etc.}\n\n🤡 __**Fun Commands**__ {Variety of Different Fun Commands}\n\n🎮 __**Minecraft Commands**__ {Minecraft Related Fun Commands}\n\n📑 __**Application Commands**__ {Commands to apply for something}\n\n📫 __**Suggestion Commands**__ {Commands to leave a Suggestion}\n\n🔐 __**Moderation Commands**__ {Commands to Moderate the server (Mods and Admins Only)}\n\n🔗 __**Misc Commands**__ {Misc Commands Only Mods and Admins can Use}", inline=False)
+                        embed0.set_author(name=f"Command Requested by: {ctx.author}", icon_url=f"{ctx.author.avatar_url}")
                         await m.edit(embed=embed0)
 
 
 def setup(bot):
-    bot.add_cog(Help_Command(bot))
