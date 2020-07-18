@@ -8,7 +8,7 @@ import asyncio
 import datetime
 import typing
 
-client = commands.Bot(command_prefix = '!')
+client = commands.Bot(command_prefix = '!', case_insensitive=True)
 client.remove_command('help')
 
 @client.event
