@@ -45,7 +45,7 @@ class Help_Command(commands.Cog):
             else:
                 if str(reaction.emoji) == '♣️':
                     await m.remove_reaction('♣️', member)
-                    embed1 = discord.Embed(title=f'General Commands (Default prefix is "{ctx.prefix}")', color=discord.Color.darker_grey)
+                    embed1 = discord.Embed(title=f'General Commands (Default prefix is "{ctx.prefix}")', color=discord.Color.darker_grey())
 
                     embed1.add_field(name="__**Commands:**__", value="_*binfo*_ - {Shows info about the Bot}\n\n_*sinfo*_ - {Shows info about the server}\n\n_*uinfo*_ - {Shows info about a user}\n\n_*avatar*_ - {Shows the avatar of a user}\n\n_*ping*_ - {Runs a connection test to Discord}", inline=False)
                     await m.edit(embed=embed1)
