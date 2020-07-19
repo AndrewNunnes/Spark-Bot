@@ -32,16 +32,18 @@ class Help_Command(commands.Cog):
         await m.add_reaction('📫')
         await m.add_reaction('🔐')
         await m.add_reaction('🔗')
+        await m.add_reaction('<:trash:734043301187158082>')
         def checkreact(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ['📖', '♣️', '🤡', '🎮', '📑', '📫', '🔐', '🔗']
+            return user == ctx.author and str(reaction.emoji) in ['📖', '♣️', '🤡', '🎮', '📑', '📫', '🔐', '🔗', '<:trash:734043301187158082>']
         while True:
             try:
                 reaction, user = await self.bot.wait_for('reaction_add', timeout=45.0, check=checkreact)
 
             except asyncio.TimeoutError:
                 bruh = discord.Embed(color=discord.Color.dark_red())
-                bruh.add_field(name="__**What were you doing?**__", value="You took too long to react with an emoji bruh\n\n<:trash:734043301187158082> Deleting in 5 seconds <:trash:734043301187158082>")
-                await m.edit(embed=bruh, delete_after=5)
+                bruh.add_field(name="__**What were you doing?**__", value="You took too long to react with an emoji bruh 🤦🏽")
+                bruh.set_author(name=f"Command Requested by: {ctx.author}", icon_url=f"{ctx.author.avatar_url}")
+                await m.edit(embed=bruh)
             else:
                 if str(reaction.emoji) == '♣️':
                     await m.remove_reaction('♣️', member)
@@ -78,6 +80,12 @@ class Help_Command(commands.Cog):
 
                     embed5.add_field(name="__**Commands:**__", value="_*suggest*_ - {Leave a suggestion}", inline=False)
                     await m.edit(embed=embed5)
+                    
+                elif str(reaction.emoji) == '<:trash:734043301187158082>':
+                    await m.remove_reaction('<:trash:734043301187158082>', member)
+                    garb = discord.Embed(color=discord.Color.dark_red())
+                    garb.add_field(name="Removing this embed...", value="Your decision but aight 🤷🏽\n\n<:trash:734043301187158082>Removing the embed in 5 seconds...<:trash:734043301187158082>")
+                    await m.edit(embed=garb, delete_after=5)
 
                 elif str(reaction.emoji) == '🔐':
                     await m.remove_reaction('🔐', member)
