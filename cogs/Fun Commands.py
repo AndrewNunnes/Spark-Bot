@@ -14,6 +14,8 @@ import sys
 import discord.utils
 from discord import Game
 import json
+import requests
+import pendulum
 
 class Fun(commands.Cog):
 
@@ -31,6 +33,17 @@ class Fun(commands.Cog):
         responses = ["Heads", "Tails"]
         rancoin = random.choice(responses)
         await ctx.send(rancoin)
+        
+    @commands.command()
+    async def meme(self, ctx):
+        fetch = await ctx.send("Fetching Meme:", delete_after=0.5)
+        await asyncio.sleep(1)
+        req = requests.get("https://apis.duncte123.me/meme")
+        meme = req.json()
+        embed = discord.Embed(color=discord.Color.dark_blue())
+        embed.set_image(url=meme['data']['image'])
+        embed.add_field(name="Quality Meme", value=f"{meme['data']['title']}{meme['data']['url']}")
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
@@ -113,6 +126,21 @@ class Fun(commands.Cog):
     @commands.guild_only()
     async def hit(self, ctx, members: commands.Greedy[discord.Member], *, reason="No reason"):
         pass
+
+    @commands.command()
+    async def spotify(self, ctx, user: discord.Member=None):
+        user = user or ctx.author
+        for activity in user.activities:
+            if isinstance(activity, Spotify):
+                em = discord.Embed(color=discord.Color.dark_green())
+                em.title = f'{user.name} is listening to: {activity.title}'
+                em.set_thumbnail(url=activity.album_cover_url)
+                em.description = f"**Song Name**: {activity.title}\n**Song Artist**: {activity.artist}\n**Song Album**: {activity.album}\n**Song Length**: {pendulum.duration(seconds=activity.duration.total_seconds()).in_words(locale='en')}"
+                await ctx.send(embed=em)
+                break
+        else:
+            embed = discord.Embed(description=f"{user.name} isn't listening to Spotify right now", color=discord.Color.dark_red())
+            await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
