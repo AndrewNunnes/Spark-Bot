@@ -7,7 +7,7 @@ class Errors(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        #error = getattr(error, 'original, error')
+        error = getattr(error, 'original', error)
         if isinstance(error, commands.CommandNotFound):
             await ctx.send('~~Command doesn\'t exist bro~~')
             await ctx.message.add_reaction('⛔')
