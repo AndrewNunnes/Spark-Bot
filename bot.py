@@ -11,7 +11,7 @@ async def on_ready():
     return await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='Flight take another L'))
 
 extension = ['cogs.help_command', 'cogs.General Commands', 'cogs.Fun Commands', 'cogs.mc', 'cogs.Suggestions', 'cogs.Application', 'cogs.Moderation', 'cogs.Administrator Commands',
- 'cogs.other.global', 'cogs.events.reactions', 'cogs.events.welcome', 'cogs.events.errors']
+ 'cogs.giveaway', 'cogs.other.global', 'cogs.events.reactions', 'cogs.events.welcome', 'cogs.events.errors']
 
 if __name__ == '__main__':
     for ext in extension:
