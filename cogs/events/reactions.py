@@ -1,13 +1,13 @@
 import discord
 from discord.ext import commands
-from discord.ext import get
+from discord.utils import get
 
 class Reactions(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    #Role Reactions
-    @commands.Cog.listener
+    #Role Reactions for Announcements/Giveaways
+    @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         message_id = payload.message_id
         if message_id == 733354307298132078:
@@ -24,7 +24,7 @@ class Reactions(commands.Cog):
                     await member.add_roles(role)
                     print("done")
 
-    @commands.Cog.listener
+    @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         message_id = payload.message_id
         if message_id == 733354307298132078:
@@ -40,6 +40,25 @@ class Reactions(commands.Cog):
                 if member is not None:
                     await member.remove_roles(role)
                     print("removed")
+                    
+    #Role Reaction for New Members(Verified Member)
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        if not payload.guild_id or payload.member.bot:
+            return
+        if payload.message_id != 729493725717332021:
+            return
+        
+        role = discord.utils.get(payload.member.guild.roles, name='Verified Member')
+        if not role:
+            return
+        
+        else:
+            if payload.emoji.name == '🏀':
+                await payload.member.add_roles(role)
+                embed = discord.Embed(title="Welcome to the server", description=f"You've now been verified\n\nTo see my available commands type in `!help` in #bot-commands. If you have any questions make sure to ask the Owner\nEnjoy your stay 🙂", color=discord.Color.dark_blue())
+                await payload.member.send(embed=embed)
+                print("Now verified")
 
 def setup(bot):
     bot.add_cog(Reactions(bot))
