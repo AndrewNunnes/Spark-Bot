@@ -49,7 +49,7 @@ class Giveaway(commands.Cog):
             await asyncio.sleep(1.75)
             
             giveawayembed = discord.Embed(title="🎉 __**GIVEAWAY**__ 🎉", description=f"__*Prize: {three}*__\n\n__*Lasts: {waitTime}*__\n\n_*Hosted by: {ctx.author.mention}*_", colour=discord.Color.dark_orange())
-            giveawayembed.set_footer(text=f"Ends ")
+            giveawayembed.set_footer(text=f"{bro} Winners | Ends ")
             giveawayembed.timestamp = datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds)
             
             giveawaymsg = await channel.send(embed=giveawayembed)
@@ -65,9 +65,9 @@ class Giveaway(commands.Cog):
                     for each in winners:
                         astring = str(each)
                         list_of_string.append(astring)
-                        bruh = "\n•".join(map(str, winners))
+                        bruh = "\n• ".join(map(str, winners))
                         embed = discord.Embed(title="🎉 __**GIVEAWAY ENDED**__ 🎉", description=f"__*Winner(s):*__\n• {bruh}", color=discord.Color.dark_red())
-                        embed.set_footer(text=f"Ended ")
+                        embed.set_footer(text=f"{bro} Winners | Ended ")
                         embed.timestamp = datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds)
                         await giveawaymsg.edit(embed=embed)
                 await channel.send(f"Congratulations {','.join([x.mention for x in winners])} you won the **{three}**")
