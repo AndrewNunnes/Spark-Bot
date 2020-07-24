@@ -40,39 +40,40 @@ class Fun(commands.Cog):
         await asyncio.sleep(1)
         req = requests.get("https://apis.duncte123.me/meme")
         meme = req.json()
-        embed = discord.Embed(color=discord.Color.dark_blue())
+        embed = discord.Embed(color=discord.Color.dark_blue(), timestamp=datetime.datetime.utcnow())
         embed.set_image(url=meme['data']['image'])
-        embed.add_field(name="Quality Meme", value=f"{meme['data']['title']}{meme['data']['url']}")
+        embed.add_field(name="Quality Meme", value=f"{meme['data']['title']}")
+        embed.set_footer(text=f"{meme['data']['url']}")
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=['playb'])
     @commands.guild_only()
-    async def slots(self, ctx):
+    async def playball(self, ctx):
         """
-        `Have a chance at winning the slot machine`
+        `Have a chance at winning a basketball game`
         """
-        slots = ['❤️', '🧡', '💛', '💙', '💜', '💚', '💝', '🔱']
 
-        var1 = random.choice(slots)
-        var2 = random.choice(slots)
-        var3 = random.choice(slots)
+        woah = ['🏀 W 🏀\nNice, you dominated bruh', '❌ L ❌\nI mean it was close...', '➗ Tie ➗\nDamn bruh, you tied with the other team']
 
-        embed = discord.Embed(colour=random.randint(0, 0xffffff), title=f'**Is today your lucky day?**')
+        outcome = random.choice(woah)
+        
+        positions = ['Point Guard', 'Shooting Guard', 'Small Forward', 'Power Forward', 'Center']
+        
+        game = ['✅ Your shot\'s wet like water', '❌ You really just missed a wide open layup', '❌ You just got posterized 🤦🏽', '✅ Bruh, you just posterized that {random.choice(positions)}', '✅ You just made a mid-range fadeaway', '❌ You bricked that three', '✅ You swished that three bruh']
+        
+        var2 = random.choice(game)
+
+        embed = discord.Embed(colour=discord.Colour.dark_orange(), title=f'{ctx.author.display_name}\'s Basketball Game')
 
         msg = await ctx.send(embed=embed)
         await asyncio.sleep(3)
-        embed2 = discord.Embed(colour=random.randint(0, 0xffffff), title=f'{ctx.author.display_name}\'s slot machine', description=f'**>**{var1}  {var2}  {var3}**<**')
+        embed2 = discord.Embed(colour=discord.Colour.dark_orange(), title=f"{ctx.author.display_name}\'s MidGame Stats:", description=f"**>**{var2}**<**")
         await msg.edit(embed=embed2)
 
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)
 
-        if var1 == var2 or var1 == var3 or var2 == var3:
-          embed3 = discord.Embed(colour=random.randint(0, 0xffffff), title=f'Outcome\n**>**{var1}  {var2}  {var3}**<**', description=f'winner winner chicken dinner')
-          await msg.edit(embed=embed3)
-
-        else:
-          embed4 = discord.Embed(colour=random.randint(0, 0xffffff), title=f'Outcome\n**>**{var1}  {var2}  {var3}**<**', description=f'loser :(')
-          await msg.edit(embed=embed4)
+        embed3 = discord.Embed(description=f'Outcome\n**>**{outcome}**<**', color=0x919234)
+        await msg.edit(embed=embed3)
 
     @commands.command()
     async def add(self, ctx, left: int, right: int):
