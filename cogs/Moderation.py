@@ -184,10 +184,10 @@ class Moderation(commands.Cog):
             await user.remove_roles(rolem)
             await user.add_roles(dick)
 
-    @commands.command()
+    @commands.command(aliases=['prune', 'clean'])
     @commands.guild_only()
     @commands.has_permissions(manage_messages = True)
-    async def prune(self, ctx, count: int):
+    async def purge(self, ctx, count: int):
         """`Deletes a specified amount of messages. (Max 100)`"""
         await ctx.message.delete()
         if not count:
@@ -200,7 +200,7 @@ class Moderation(commands.Cog):
             
         await asyncio.sleep(0.5)
 
-        await ctx.send(f"{count} of my messages have been deleted 🗑", delete_after=2)
+        await ctx.send(f"{count} message(s) have been deleted 🗑", delete_after=2)
 
 def setup(bot):
     bot.add_cog(Moderation(bot))
