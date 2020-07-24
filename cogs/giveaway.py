@@ -53,8 +53,8 @@ class Giveaway(commands.Cog):
                         embed = discord.Embed(title="🎉 __**GIVEAWAY ENDED**__ 🎉", description=f"__*Winner(s):*__\n• {bruh}", color=discord.Color.dark_red())
                         embed.set_footer(text="Make sure to claim your prize!")
                         await giveawaymsg.edit(embed=embed)
-                        await channel.send(f"Congratulations {','.join([x.mention for x in winners])} you won the **{three}**")
-                        await giveawaymsg.clear_reaction('🎉')
+                await channel.send(f"Congratulations {','.join([x.mention for x in winners])} you won the **{three}**")
+                await giveawaymsg.clear_reaction('🎉')
                     
     @commands.command(aliases=["endgiveaway"])
     @commands.has_any_role('Moderator', 'Executive Admin', 'Owner', 'Not Andrew')
