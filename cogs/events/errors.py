@@ -24,6 +24,8 @@ class Errors(commands.Cog):
         elif isinstance(error, commands.MissingPermissions):
             poo = discord.Embed(description="You don't have the permissions to do that, idiot", color=discord.Color.dark_red())
             await ctx.send(embed=poo)
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Seems like you're forgetting to put something bruh")
         else:
             raise(error)
 
