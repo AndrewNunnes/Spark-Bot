@@ -37,7 +37,7 @@ class Giveaway(commands.Cog):
   @commands.command()
   async def quickgiveaway(self, ctx):
     """
-    Refined version of the giveaway below
+    Refined version of the giveaway below {NOT DONE}
     """
     def is_me(m):
       return m.author == ctx.author
@@ -187,6 +187,9 @@ class Giveaway(commands.Cog):
   @commands.guild_only()
   @commands.has_permissions(kick_members=True)
   async def end(self, ctx, message: discord.Message):
+      """
+      Ends the giveaway manually {NOT 1000% FUNCTIONAL YET}
+      """
       giveawaymsg = await ctx.fetch_message(message.id)
       users = await giveawaymsg.reactions.users().flatten()
         
