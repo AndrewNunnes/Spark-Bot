@@ -16,11 +16,15 @@ class Welcome(commands.Cog):
             embed.set_author(name=f"Welcome {member.name}", icon_url=f"{member.avatar_url}")
             embed.set_footer(text=f"{member.guild}", icon_url=f"{member.guild.icon_url}")
             embed.timestamp = datetime.datetime.utcnow()
-
-            channel = self.bot.get_channel(id=721630160448782367)
-
+            
+            channelnames = ['mem', 'new', 'member', 'user', 'User', 'gateway', 'gate', 'entrance', 'enter', 'general']
+            for channel_const in member.guild.text_channels:
+              for chann in channelnames:
+                if chann in channel_const.name:
+                  channel = channel_const
+                break
             message = await channel.send(embed=embed)
-            await message.add_reaction("<:callme:729502466592210966>")
+            await message.add_reaction("🤙🏽")
         except Exception as error:
             raise (error)
 
@@ -33,10 +37,14 @@ class Welcome(commands.Cog):
         embed.set_footer(text=f"{member.guild}", icon_url=f"{member.guild.icon_url}")
         embed.timestamp = datetime.datetime.utcnow()
 
-        channel = self.bot.get_channel(id=721630160448782367)
-
+        channelnames = ['mem', 'new', 'member', 'user', 'User', 'gateway', 'gate', 'entrance', 'enter', 'general']
+        for channel_const in member.guild.text_channels:
+          for chann in channelnames:
+            if chann in channel_const.name:
+              channel = channel_const
+            break
         message = await channel.send(embed=embed)
-        await message.add_reaction("<:waving:729500876288557109>")
+        await message.add_reaction("👋🏽")
 
 def setup(bot):
     bot.add_cog(Welcome(bot))
