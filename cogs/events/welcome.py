@@ -45,7 +45,7 @@ class Welcome(commands.Cog):
               newlist = ['gener', 'chat', 'welc']
               newchann = discord.utils.find(
                 lambda newchann:any(
-                  map(lambda n: n in newchann.name, newlist)), member.guild.channels)
+                  map(lambda n: n in newchann.name, newlist)), member.guild.text_channels)
               await newchann.send("Welcome and Goodbye messages to new users won't be sent without the channel including a keyword `new`, `memb` or `user`") #Tries to find a general chat channel to send this error in case the channel doesn't exist
             message = await channel.send(embed=embed)
             await message.add_reaction("🤙🏽")
