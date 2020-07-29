@@ -76,7 +76,7 @@ class Misc(commands.Cog):
             
     @commands.command()
     @commands.guild_only()
-    @commands.has_any_role('Moderator', 'Executive Admin')
+    @commands.has_any_role('Moderator', 'Executive Admin', 'Co Owner')
     async def poll(self, ctx, *, question):
         """Interactively creates a poll with the following question.
         To vote, use reactions!
@@ -110,7 +110,8 @@ class Misc(commands.Cog):
             pass # oh well
 
         answer = '\n'.join(f'{keycap}: {content}' for keycap, content in answers)
-        actual_poll = await ctx.send(f'{ctx.author} asks: {question}\n\n{answer}')
+        embed = discord.Embed(title=f"{ctx.author} asks: {question}", description=f"\n{answer}\n", color=discord.Color.dark_gold())
+        actual_poll = await ctx.send(embed=embed)
         for emoji, _ in answers:
             await actual_poll.add_reaction(emoji)
 
@@ -128,13 +129,13 @@ class Misc(commands.Cog):
         """
 
         if len(questions_and_choices) < 3:
-            return await ctx.send('Need at least 1 question with 2 choices.')
+            return await ctx.send('Need at least 1 question with 2 choices.', delete_after=5)
         elif len(questions_and_choices) > 21:
-            return await ctx.send('You can only have up to 20 choices.')
+            return await ctx.send('You can only have up to 20 choices.', delete_after=5)
 
         perms = ctx.channel.permissions_for(ctx.me)
         if not (perms.read_message_history or perms.add_reactions):
-            return await ctx.send('Need Read Message History and Add Reactions permissions.')
+            return await ctx.send('Need Read Message History and Add Reactions permissions.', delete_after=5)
 
         question = questions_and_choices[0]
         choices = [(to_emoji(e), v) for e, v in enumerate(questions_and_choices[1:])]
@@ -145,7 +146,8 @@ class Misc(commands.Cog):
             pass
 
         body = "\n".join(f"{key}: {c}" for key, c in choices)
-        poll = await ctx.send(f'{ctx.author} asks: {question}\n\n{body}')
+        embed = discord.Embed(title=f"{ctx.author} asks: {question}", description=f"\n{body}\n", color=discord.Color.dark_gold())
+        poll = await ctx.send(embed=embed)
         for emoji, _ in choices:
             await poll.add_reaction(emoji)
             
