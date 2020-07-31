@@ -33,7 +33,8 @@ class Minecraft(commands.Cog):
             self.sizes = _json["sizes"]
 
     def cog_unload(self):
-        self.bot.loop.create_task(self.ses.close())
+        print("Cog unloded")
+        self.bot.loop.run_until_complete(self.ses.close())
 
     def vanilla_pe_ping(self, ip, port):
         ping = UNCONNECTED_PING()
