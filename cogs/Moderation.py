@@ -4,6 +4,9 @@ import asyncio
 from asyncio import sleep
 import datetime
 
+
+import cogs._json
+
 # This prevents staff members from being punished 
 class Sinner(commands.Converter):
     async def convert(self, ctx, argument):
@@ -88,7 +91,48 @@ class Moderation(commands.Cog):
     """{_*Commands for Moderating the Server*_}"""
     def __init__(self,bot):
         self.bot = bot
-
+        
+   # @commands.command()
+  #  @commands.guild_only()
+   # @commands.has_permissions(manage_roles=True)
+   # async def addrole(self, ctx, member: discord.Member, *, role: discord.Role):
+     # """
+   #   Adds a Role to a specified Member
+    #  """
+    #  await member.add_roles(role)
+   #   await ctx.send(f"You successfully gave the {role.mention} Role to `{member.name}`")
+        
+   # @addrole.error
+  #  async def addrole_error(self, ctx, error): if isinstance(error, commands.BadArgument): await ctx.send("Looks like that role doesn't exist") #Checks if the role given doesn't exist in the server
+        
+  #  @commands.command()
+  #  @commands.guild_only()
+  #  @commands.has_permissions(manage_roles=True)
+ #   async def removerole(self, ctx, member: discord.Member, *, role: discord.Role):
+   #   """
+    #  Removes a Role from a specified Member
+   #   """
+   #   await member.remove_roles(role)
+  #    await ctx.send(f"You successfully removed the {role.mention} Role from: `{member.name}`")
+      
+    #@removerole.error
+  #  async def removerole_error(self, ctx, error):
+    #  if isinstance(error, commands.BadArgument):
+      #  await ctx.send("Looks like you put the wrong role") #Checks if the role being removed doesn't exist
+      
+    @commands.command()
+    @commands.guild_only()
+    @commands.cooldown(1, 5, commands.BucketType.guild)
+    @commands.has_permissions(manage_guild=True)
+    async def prefix(self, ctx, *, pre='!'):
+      """
+      Sets a custom prefix
+      """
+      data = cogs._json.read_json('prefixes')
+      data[str(ctx.message.guild.id)] = pre
+      cogs._json.write_json(data, 'prefixes')
+      await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}prefix <newprefix>` to change it again")
+    
     @commands.command()
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
