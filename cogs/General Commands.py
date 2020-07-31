@@ -13,6 +13,31 @@ class General(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        
+   # @commands.command(aliases=['allcommands'])
+   # @commands.guild_only()
+   # async def commands(self, ctx):
+     # """
+    #  List of all commands
+     # """
+    #  bruh = "\n ".join([c.name for c in self.bot.commands])
+      
+     # embed = discord.Embed(
+     #   title="__List of Commands__", 
+       # description=bruh, 
+      #  color=discord.Color.darker_grey())
+      
+    #  await ctx.send(embed=embed)
+        
+    @commands.command()
+    @commands.guild_only()
+    async def boosters(self, ctx, guild: discord.Guild, member: discord.Member):
+        embed = discord.Embed(
+            title="List of Boosters", 
+            description=f"{list(ctx.guild.premium_subscribers)}\nTotal:", 
+            color=discord.Color.dark_purple())
+        embed.timestamp = datetime.datetime.utcnow()
+        await ctx.send(embed=embed)
             
     @commands.command()
     @commands.guild_only()
@@ -28,7 +53,7 @@ class General(commands.Cog):
         embed = discord.Embed(title='My Info', color=discord.Color.dark_red())
         embed.add_field(name='My Owner:', value="Andrew Nunnes#1148", inline=True)
         embed.add_field(name='Python Version:', value=f"I'm running version {pythonVersion} of Python", inline=True)
-        embed.add_field(name='Discord Version:', value=f"I'm running Discord Version {dpyVersion}", inline=True)
+        embed.add_field(name='Discord.py Version:', value=f"I'm running discord.py Version {dpyVersion}", inline=True)
         embed.add_field(name='Server Count:', value=f"I'm in {serverCount} server(s)", inline=True)
         
         await ctx.send(embed=embed)
@@ -56,7 +81,7 @@ class General(commands.Cog):
         embed.add_field(name='Name:', value=ctx.guild.name, inline=True)
         embed.add_field(name='Region:', value=ctx.guild.region, inline=True)
         embed.add_field(name='Owner:', value=ctx.guild.owner, inline=True)
-        embed.add_field(name='Member Count:', value=f'<:online:728377717090680864>{statuses[0]}, <:idle:728377738599071755>{statuses[1]}, <:dnd:728377763458973706>{statuses[2]}, <:offline:728377784207933550>{statuses[3]}\nTotal: {memberCount}', inline=True)
+        embed.add_field(name='Member Count:', value=f'<:online:728377717090680864>{statuses[0]}, <:idle:728377738599071755>{statuses[1]}, <:dnd:728377763458973706>{statuses[2]}, <:offline:728377784207933550>{statuses[3]}\nTotal: {len(list(ctx.guild.members))}', inline=True)
         embed.add_field(name='Banned Members:', value=f'{len(await ctx.guild.bans())}', inline=True)
         embed.add_field(name='Humans:', value=f'{poo} Humans', inline=True)
         embed.add_field(name='Bots:', value=f'{pee} Bots', inline=True)
