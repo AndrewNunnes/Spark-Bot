@@ -37,7 +37,7 @@ class Misc(commands.Cog):
         #Remember to replace the link in the description with **your** bot's invite link
         embed = discord.Embed(
             title=f"Invite me to your server!", 
-            descriptipn=f"__*What's up {ctx.author.mention}\nYou can invite me to your server by clicking on [this message](https://discord.com/api/oauth2/authorize?client_id=721397896704163965&permissions=8&redirect_uri=https%3A%2F%2Fdiscord.com%2Fapi%2Foauth2%2Fauthorize%3Fclient_id%3D721397)*__", 
+            description=f"__*What's up {ctx.author.mention}\nYou can invite me to your server by clicking on [this message](https://discord.com/api/oauth2/authorize?client_id=721397896704163965&permissions=8&redirect_uri=https%3A%2F%2Fdiscord.com%2Fapi%2Foauth2%2Fauthorize%3Fclient_id%3D721397)*__", 
             color=discord.Color.darker_grey())
         await ctx.send(embed=embed) 
 
