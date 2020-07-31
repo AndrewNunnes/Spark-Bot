@@ -48,15 +48,17 @@ class Reactions(commands.Cog):
             return
         if payload.message_id != 729493725717332021:
             return
+        elif payload.message_id != 737848544852967445:
+            return
         
-        role = discord.utils.get(payload.member.guild.roles, name='Verified Member')
+        role = discord.utils.get(payload.member.guild.roles, name=['Verified Member' or '{Member}'])
         if not role:
             return
         
         else:
             if payload.emoji.name == '🏀':
                 await payload.member.add_roles(role)
-                embed = discord.Embed(title="Welcome to the server", description=f"You've now been verified\n\nTo see my available commands type in `!help` in #bot-commands. If you have any questions make sure to ask the Owner\nEnjoy your stay 🙂", color=discord.Color.dark_blue())
+                embed = discord.Embed(title="Welcome to the server", description=f"You've now been verified\n\nTo see my available commands type in `{prefix}help` in #bot-commands. If you have any questions make sure to ask the Owner\nEnjoy your stay 🙂", color=discord.Color.dark_blue())
                 await payload.member.send(embed=embed)
                 print("Now verified")
 
