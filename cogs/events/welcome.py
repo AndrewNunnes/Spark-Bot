@@ -10,15 +10,33 @@ class Welcome(commands.Cog):
     #Sends a fancy embed to show the prefixes    
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
-      names = ['gener', 'chat', 'memb', 'welc']
+      names = ['comman', 'bot']
       channel = discord.utils.find(
         lambda channel:any(
           map(lambda w: w in channel.name, names)),
-        guild.text_channels) #When the bot joins a server, this will check for a general or welcome channel, to send an embed
+        guild.text_channels) #When the bot joins a server, this will check for a bot commands channel to send an embed
+        
+      if not channel: #If a bot commands channel doesn't exist, it'll look for a general channel
+        newchann = ['gener', 'chat', 'welc', 'memb']
+        new = discord.utils.find(
+          lambda new:any(
+            map(lambda n: n in new.name, newchann)),
+            guild.text_channels)
+            
+        embed = discord.Embed(
+          color=discord.Color.darker_grey(), 
+          description=f"What's up everyone! Type in `!help` to see all of my available commands and get started!\n\n")
+          
+        embed.timestamp = datetime.datetime.utcnow()
+        await new.send(embed=embed)
+            
       embed = discord.Embed(color=discord.Color.darker_grey(),
       description=f"What's up everyone! Type `!help` to see all of my commands and get started!\n\n")
+      
       embed.timestamp = datetime.datetime.utcnow()
       await channel.send(embed=embed)
+      
+      #await guild.create_custom_emoji()
     
     #Welcoming new Members
     @commands.Cog.listener()
@@ -45,7 +63,7 @@ class Welcome(commands.Cog):
               newlist = ['gener', 'chat', 'welc']
               newchann = discord.utils.find(
                 lambda newchann:any(
-                  map(lambda n: n in newchann.name, newlist)), member.guild.text_channels)
+                  map(lambda n: n in newchann.name, newlist)), member.guild.channels)
               await newchann.send("Welcome and Goodbye messages to new users won't be sent without the channel including a keyword `new`, `memb` or `user`") #Tries to find a general chat channel to send this error in case the channel doesn't exist
             message = await channel.send(embed=embed)
             await message.add_reaction("🤙🏽")
@@ -61,7 +79,7 @@ class Welcome(commands.Cog):
         embed.set_footer(text=f"{member.guild}", icon_url=f"{member.guild.icon_url}")
         embed.timestamp = datetime.datetime.utcnow()
 
-        channelnames = ['memb', 'new', 'user', 'User', 'gateway', 'gate', 'entrance', 'enter']
+        channelnames = ['memb', 'new', 'user', 'User', 'gateway', 'gate', 'entrance', 'enter', 'leave']
         channel = discord.utils.find(
             lambda channel:any(
                 map(lambda c: c in channel.name, channelnames)), member.guild.text_channels)
