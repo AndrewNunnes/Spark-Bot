@@ -29,21 +29,23 @@ class Application(commands.Cog):
             "What will you do for the Discord Server?",
             "Anything else you want to say?",
         ]
+        
+        await ctx.send("__*Application will be sent to you soon...*__")
+        
         applicationAnswers = {}
         for question in applicationQuestions:
-            answer = await GetMessage(self.bot, ctx, contentOne=question, timeout=250)
-
+            answer = await GetMessage(self.bot, member=member, contentOne=question, timeout=500)
+            
             if not answer:
-                # They failed to input something as an answer
-                await ctx.send(f"You failed to answer: `{question}`\nPlease be quicker answering next time!")
-                return
+              #They failed to provide an answer
+              await member.send(f"You failed to answer: `{question}`\nBe quicker next time")
+              return
 
             # We have a valid answer to a question, lets store it
             applicationAnswers[applicationQuestions.index(question)] = answer
+            print(answer)
 
-        # We have finished asking questions, lets check they want to submit this before sending it off
-
-        channel = self.bot.get_channel(709360360456454155)
+        # We finished asking questions, lets check they want to submit this before sending it off
         confirmation = await member.send("Are you sure you want to submit this application?")
         await confirmation.add_reaction("✅")
         await confirmation.add_reaction("❌")
@@ -108,9 +110,9 @@ class Application(commands.Cog):
 
                 for key, value in descriptionChunks.items():
                     applicationEmbed = discord.Embed(
-                        title="Application Answers",
+                        title="Application Answers __**{MODERATOR}**__",
                         description=key,
-                        color=discord.Color.dark_orange(),
+                        color=discord.Color.dark_purple(),
                         timestamp=datetime.datetime.utcnow()
                     )
                     applicationEmbed.set_author(
@@ -121,6 +123,20 @@ class Application(commands.Cog):
                     if value != False:
                         # We need to add a field for the rest of the data
                         applicationEmbed.add_field(name='\uFEFF', value=value['fieldValue'])
+                    
+                    channelnames = ['application']
+                    #Checks for a channel with an Application keyword to send this to
+                    channel = discord.utils.find(
+                      lambda channel:any(
+                        map(lambda c: c in channel.name, channelnames)), ctx.guild.text_channels)
+                    
+                    #Checks if a application channel doesn't exist    
+                    if not channel:
+                      otherchann = ['gener', 'chat', 'welc']
+                      newchann = discord.utils.find(
+                        lambda newchann:any(
+                          map(lambda n: n in newchann.name, otherchann)), ctx.guild.text_channels)
+                      await newchann.send("I can't seem to find the Application channel containing a keyword {`application`} to send everybody's applications")
 
                     await channel.send(embed=applicationEmbed)
 
@@ -129,15 +145,15 @@ class Application(commands.Cog):
 
 
 async def GetMessage(
-    bot, ctx, contentOne="Default Message", contentTwo="\uFEFF", timeout=100
+    bot, member, contentOne="Default Message", contentTwo="\uFEFF", timeout=500
 ):
     """
     This function sends an embed containing the params and then waits for a message to return
 
     Params:
      - bot (commands.Bot object) :
-     - ctx (context object) : Used for sending msgs n stuff
-
+     - member (member object) : Used for sending members the embed
+     
      - Optional Params:
         - contentOne (string) : Embed title
         - contentTwo (string) : Embed description
@@ -148,15 +164,16 @@ async def GetMessage(
     or
      - False (bool) : If a timeout occurs
     """
-    embed = discord.Embed(title=f"{contentOne}", description=f"{contentTwo}")
-    sent = await ctx.send(embed=embed)
+    embed = discord.Embed(title=f"{contentOne}", description=f"{contentTwo}", color=discord.Color.darker_grey())
+    async with member.typing():
+        await asyncio.sleep(2)
+    sent = await member.send(embed=embed)
+    
     try:
         msg = await bot.wait_for(
             "message",
             timeout=timeout,
-            check=lambda message: message.author == ctx.author
-            and message.channel == ctx.channel,
-        )
+            check=lambda message: message.author == member and message.guild == None)
         if msg:
             return msg.content
     except asyncio.TimeoutError:
