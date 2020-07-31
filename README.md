@@ -19,9 +19,9 @@
 • !deleterole <rolename> {Deleted a Role from the Guild}
 • !createrole <name> {Buggy but it will create a default role}
 
-#Features
+# Features
 • !giveaway {Used to Host Giveaways for your server}
 • !spotify (user) {Check what song somebody's listening to}
 • !insta <instagram_handle> {Check Info on an Instagram Account}
 • !prefix <new_prefix> {Customizable Prefix for your server}
-• !
+• !suggest <suggestion> {Leaves an embed including the Users Suggestion}
