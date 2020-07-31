@@ -1,7 +1,9 @@
 # Andrew-s-Bot
 
 # Suggestions
-• Always open to suggestions for the Bot\n• Discord Username: Andrew Nunnes#1148\n• Temporary Support [Server](https://discord.gg/da4u29A)
+• Always open to suggestions for the Bot
+• Discord Username: Andrew Nunnes#1148 
+• Temporary Support [Server](https://discord.gg/da4u29A)
 
 # Issues/Bugs
 • If you there's any bugs/issues with the bot please let me know
