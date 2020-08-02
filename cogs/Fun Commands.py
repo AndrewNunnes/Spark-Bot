@@ -17,14 +17,33 @@ import json
 import requests
 import pendulum
 
-class Fun(commands.Cog):
+class Fun(commands.Cog, name="Fun Category"):
 
-    """{_*Fun Commands*_}"""
+    """`{Full List of Fun Commands}`"""
 
     def __init__(self, bot):
         self.bot = bot
+        
+    @commands.command(brief="{Shows a Menu for Minecraft Commands}")
+    @commands.guild_only()
+    async def minecraft(self, ctx):
+      
+      cog = self.bot.get_cog('Minecraft Category')
+      commands = cog.get_commands()
+      command_desc = [f"_*{c.name}*_ - `{c.brief}`" for c in cog.walk_commands()]
+      
+      e = discord.Embed(
+        title=f"__*{cog.qualified_name}*__", 
+        description="_*() - Optional\n<> - Required*_", 
+        color=0x6F5913)
+      e.add_field(name="_*Your Available Commands*_",  
+      value="\n".join(command_desc))
+    
+      e.timestamp = datetime.datetime.utcnow()
+    
+      await ctx.send(embed=e)
 
-    @commands.command()
+    @commands.command(brief="{Flip a Coin}")
     @commands.guild_only()
     async def coinflip(self, ctx):
         """
@@ -34,7 +53,8 @@ class Fun(commands.Cog):
         rancoin = random.choice(responses)
         await ctx.send(rancoin)
         
-    @commands.command()
+    @commands.command(brief="{Get a Random Meme}")
+    @commands.guild_only()
     async def meme(self, ctx):
         fetch = await ctx.send("Fetching Meme:", delete_after=0.5)
         await asyncio.sleep(1)
@@ -46,9 +66,9 @@ class Fun(commands.Cog):
         embed.set_footer(text=f"{meme['data']['url']}")
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['playb'])
+    @commands.command(brief="{Play a Basketball Game}")
     @commands.guild_only()
-    async def playball(self, ctx):
+    async def playb(self, ctx):
         """
         `Have a chance at winning a basketball game`
         """
@@ -59,7 +79,7 @@ class Fun(commands.Cog):
         
         positions = ['Point Guard', 'Shooting Guard', 'Small Forward', 'Power Forward', 'Center']
         
-        game = ['✅ Your shot\'s wet like water', '❌ You really just missed a wide open layup', '❌ You just got posterized 🤦🏽', '✅ Bruh, you just posterized that {random.choice(positions)}', '✅ You just made a mid-range fadeaway', '❌ You bricked that three', '✅ You swished that three bruh']
+        game = ['✅ Your shot\'s wet like water', '❌ You really just missed a wide open layup', '❌ You just got posterized 🤦🏽', '✅ BRUH, you just posterized him', '✅ You just made a mid-range fadeaway', '❌ You bricked that three', '✅ You swished that three bruh']
         
         var2 = random.choice(game)
 
@@ -75,27 +95,29 @@ class Fun(commands.Cog):
         embed3 = discord.Embed(description=f'Outcome\n**>**{outcome}**<**', color=0x919234)
         await msg.edit(embed=embed3)
 
-    @commands.command()
+    @commands.command(brief="{Add 2 Numbers}")
+    @commands.guild_only()
     async def add(self, ctx, left: int, right: int):
         """`Adds two numbers together`"""
         embed = discord.Embed(description="")
         embed.add_field(name="Answer:", value=left + right)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(brief="{Make your Message a Fancy Embed}")
+    @commands.guild_only()
     async def embed(self, ctx, *, reason):
         """`Converts your message into an embed`"""
         embed = discord.Embed(title="", description=f"{reason}")
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command(brief="{Hug Somebody}")
     async def hug(self, ctx, member: discord.Member):
         """`Hug somebody`"""
         embed = discord.Embed(description="**{1}** just hugged **{0}**".format(member.name, ctx.message.author.name), color=random.randint(0x000000, 0xffffff))
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(brief="{<#> bottles of <liquid> on the wall!}")
     @commands.guild_only()
     async def bottles(self, ctx, amount: typing.Optional[int] = 99, *, liquid="beer"):
         """
@@ -103,7 +125,7 @@ class Fun(commands.Cog):
         """
         await ctx.send("{} bottles of {} on the wall!".format(amount, liquid))
     
-    @commands.command()
+    @commands.command(brief="{Punch Somebody}")
     @commands.guild_only()
     async def punch(self, ctx, members: commands.Greedy[discord.Member], *, reason="No reason"):
         """
@@ -113,7 +135,7 @@ class Fun(commands.Cog):
         embed = discord.Embed(description="**{}** just got punched for **{}**".format(punched, reason), color=random.randint(0x000000, 0xffffff))
         await ctx.send(embed=embed)
     
-    @commands.command()
+    @commands.command(brief="{Slap Somebody}")
     @commands.guild_only()
     async def slap(self, ctx, members: commands.Greedy[discord.Member], *, reason="No reason"):
         """
@@ -123,12 +145,13 @@ class Fun(commands.Cog):
         embed = discord.Embed(description="**{}** just got slapped for **{}**".format(slapped, reason), color=random.randint(0x000000, 0xffffff))
         await ctx.send(embed=embed)
     
-    @commands.command()
-    @commands.guild_only()
-    async def hit(self, ctx, members: commands.Greedy[discord.Member], *, reason="No reason"):
-        pass
+    #@commands.command(brief="{Hit Somebody}")
+   # @commands.guild_only()
+   # async def hit(self, ctx, members: commands.Greedy[discord.Member], *, reason="No reason"):
+       # pass
 
-    @commands.command()
+    @commands.command(brief="{See what somebody's listening to}")
+    @commands.guild_only()
     async def spotify(self, ctx, user: discord.Member=None):
         user = user or ctx.author
         for activity in user.activities:
@@ -143,7 +166,7 @@ class Fun(commands.Cog):
             embed = discord.Embed(description=f"{user.name} isn't listening to Spotify right now", color=discord.Color.dark_red())
             await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(brief="{What's your IQ?}")
     @commands.guild_only()
     async def iq(self, ctx):
         """
@@ -154,7 +177,7 @@ class Fun(commands.Cog):
         await ctx.send(embed=embed)
 
 
-    @commands.command()
+    @commands.command(brief="{How gay are you?}")
     @commands.guild_only()
     async def gay(self, ctx):
         """
@@ -164,7 +187,7 @@ class Fun(commands.Cog):
         embed = discord.Embed(title="Gay Rater", description=f'You are {number}% gay! 🏳️‍🌈 🏳️‍🌈 🏳️‍🌈', color=random.randint(0x000000, 0xffffff))
         await ctx.channel.send(embed=embed)
 
-    @commands.command()
+    @commands.command(brief="{How much of a Thot are you?}")
     @commands.guild_only()
     async def thot(self, ctx):
         """
@@ -174,7 +197,7 @@ class Fun(commands.Cog):
         embed = discord.Embed(title="Thotties be lurking 😏", description=f'You are {number}% of a thot!', color=random.randint(0x000000, 0xffffff))
         await ctx.channel.send(embed=embed)
 
-    @commands.command(aliases=['bo'])
+    @commands.command(brief="{Blackout your message} [NOT DONE]")
     @commands.guild_only()
     async def blackout(self, ctx, *, message):
         """`Blacks out your message (Testing)`"""
@@ -183,7 +206,7 @@ class Fun(commands.Cog):
         await ctx.send(msg)
 
 
-    @commands.command()
+    @commands.command(brief="{How big is your penis?}")
     @commands.guild_only()
     async def penis(self, ctx):
         """
@@ -205,7 +228,7 @@ class Fun(commands.Cog):
         except Exception as error:
             raise(error)
 
-    @commands.command(pass_context=True)
+    @commands.command(brief="{Hack somebody}")
     @commands.guild_only()
     async def hack(self, ctx, member:discord.Member = None):
         """
@@ -247,7 +270,7 @@ class Fun(commands.Cog):
         await m.edit(embed=embed)
         await asyncio.sleep(3)
 
-    @commands.command()
+    @commands.command(brief="{View an Instagram Account}")
     @commands.guild_only()
     async def insta(self, ctx, username):
         """
@@ -282,7 +305,7 @@ class Fun(commands.Cog):
             embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
             await ctx.channel.send(embed=embed)
 
-    @commands.command()
+    @commands.command(brief="{Get a random fact}")
     @commands.guild_only()
     async def fact(self, ctx):
         """
@@ -298,7 +321,7 @@ class Fun(commands.Cog):
                 embed.add_field(name='***Fun Fact***', value=fact, inline=False)
                 await ctx.send(embed=embed)
                 
-    @commands.command(aliases=['8ball'])
+    @commands.command(name="8ball", brief="{Got a question? Get an answer}")
     @commands.guild_only()
     async def _8ball(self, ctx, *, question):
         """
@@ -332,7 +355,7 @@ class Fun(commands.Cog):
             embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
             await ctx.channel.send(embed=embed)
 
-    @commands.command(aliases=['chat'])
+    @commands.command(brief="{Have a talk with the bot}")
     @commands.guild_only()
     async def letschat(self, ctx, *, question):
         """
