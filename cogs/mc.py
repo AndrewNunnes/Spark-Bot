@@ -15,7 +15,7 @@ from random import choice
 from time import sleep
 
 
-class Minecraft(commands.Cog):
+class Minecraft(commands.Cog, name="Minecraft Category"):
 
     def __init__(self, bot):
         self.bot = bot
@@ -121,9 +121,28 @@ class Minecraft(commands.Cog):
                     return task.result()
 
             return {"online": False, "player_count": 0, "ping": None, "version": None}
+            
+    #@commands.command(brief="{Menu for Minecraft Commands}")
+  #  async def minecraft(self, ctx):
+      
+    #  cog = self.bot.get_cog('Minecraft')
+   #   commands = cog.get_commands()
+      #command_desc = [c.short_doc for c in cog.walk_commands()]
+   #   commandnames = [f"_*{c.name}*_ - `{c.brief}`" for c in cog.walk_commands()]
+      
+    #  e = discord.Embed(
+   #     title=f"__*{cog.qualified_name}*__", 
+    #    description="_*() - Optional\n<> - Required*_", 
+      #  color=0x6F5913)
+   #   e.add_field(
+    #    name="_*Your Available Commands*_", 
+    #    value="\n".join(commandnames))
+   #   e.timestamp = datetime.datetime.utcnow()
+      
+    #  await ctx.send(embed=e)
+      
 
-
-    @commands.command(name="mcping")
+    @commands.command(name="mcping", brief="{Get Info on a Minecraft Server}")
     async def mc_ping(self, ctx, server: str, port: int = None):
         async with ctx.typing():
             status = await self.unified_mc_ping(server, port)
@@ -142,7 +161,7 @@ class Minecraft(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(brief="{Get a User's Skin}")
     @commands.cooldown(1, 2.5, commands.BucketType.user)
     async def skin(self, ctx, *, gamertag: str):
         response = await self.ses.get(f"https://api.mojang.com/users/profiles/minecraft/{gamertag}")
@@ -177,7 +196,7 @@ class Minecraft(commands.Cog):
         skin_embed.set_image(url=f"https://mc-heads.net/body/{gamertag}")
         await ctx.send(embed=skin_embed)
 
-    @commands.command(name="nametouuid", aliases=["uuid", "getuuid"])
+    @commands.command(name="uuid", brief="{Get a UUID with a Username}")
     @commands.cooldown(1, 1, commands.BucketType.user)
     async def get_uuid(self, ctx, *, gamertag: str):
         """`Get a UUID with the username/gamertag1"""
@@ -189,7 +208,7 @@ class Minecraft(commands.Cog):
             return
         await ctx.send(embed=discord.Embed(color=discord.Color.green(), description=f"{gamertag}: ``{j[0]['id']}``"))
 
-    @commands.command(name="uuidtoname", aliases=["getgamertag"])
+    @commands.command(name="gamertag", brief="{Get a Gamertag with a UUID}")
     @commands.cooldown(1, 1, commands.BucketType.user)
     async def get_gamertag(self, ctx, uuid: str):
         """`Get somebody's username with their UUID`"""
@@ -204,7 +223,7 @@ class Minecraft(commands.Cog):
         name = j[len(j) - 1]["name"]
         await ctx.send(embed=discord.Embed(color=discord.Color.green(), description=f"{uuid}: ``{name}``"))
 
-    @commands.command(name="mcsales")
+    @commands.command(name="mcsales", brief="{Get the Total Sales on Minecraft}")
     @commands.cooldown(1, 1, commands.BucketType.user)
     async def mc_sales(self, ctx):
         """`Shows all the sales of minecraft`"""
@@ -214,9 +233,9 @@ class Minecraft(commands.Cog):
         await ctx.send(embed=discord.Embed(color=discord.Color.dark_green(),
                                            description=f"**{j['total']}** total Minecraft copies sold, **{round(j['saleVelocityPerSeconds'], 3)}** copies sold per second."))
 
-    @commands.command(name="randomserver")
+    @commands.command(name="randomserver", brief="{Get a Random Server}")
     async def random_mc_server(self, ctx):
-        s = choice(self.g.mcServers)
+        s = choice(self.g.mc_servers)
         try:
             online = MinecraftServer.lookup(s['ip'] + ":" + str(s['port'])).status()
             stat = "<:online:692764696075304960>"
@@ -225,7 +244,7 @@ class Minecraft(commands.Cog):
         await ctx.send(embed=discord.Embed(color=discord.Color.green(),
                                            description=f"{stat} \uFEFF {online}``{s['ip']}:{s['port']}`` {s['version']} ({s['type']})\n{s['note']}"))
 
-    @commands.command(name="buildidea")
+    @commands.command(name="buildidea", brief="{Get a Random Build Idea}")
     async def build_idea(self, ctx):
         """`Gives a random Minecraft Build Idea`"""
         if choice([True, False]):
@@ -235,7 +254,7 @@ class Minecraft(commands.Cog):
             await ctx.send(embed=discord.Embed(color=discord.Color.dark_green(),
                                                description=f"{choice(self.first)} a {choice(self.sizes)}, {choice(self.colors)} {choice(self.nouns)}{choice(['!', ''])}"))
 
-    @commands.command(name="mccolorcodes")
+    @commands.command(name="mccolorcodes", brief="{Colorcodes for Minecraft Text}")
     async def mc_color_codes(self, ctx):
         """`Gets the colorcodes for Minecraft Text`"""
         embed = discord.Embed(color=discord.Color.dark_green(),
