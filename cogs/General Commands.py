@@ -7,9 +7,9 @@ import datetime
 import random
 import asyncio
 
-class General(commands.Cog):
+class General(commands.Cog, name="♠️ General Category"):
 
-    """{_*General Commands You Can Use*_}"""
+    """`{General Commands}`"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -29,7 +29,7 @@ class General(commands.Cog):
       
     #  await ctx.send(embed=embed)
         
-    @commands.command()
+    @commands.command(brief="{List of Boosters for the Server}")
     @commands.guild_only()
     async def boosters(self, ctx, guild: discord.Guild, member: discord.Member):
         embed = discord.Embed(
@@ -39,7 +39,7 @@ class General(commands.Cog):
         embed.timestamp = datetime.datetime.utcnow()
         await ctx.send(embed=embed)
             
-    @commands.command()
+    @commands.command(brief="{Info about the Bot}")
     @commands.guild_only()
     @commands.cooldown(1 , 30, type=BucketType.channel)
     async def binfo(self, ctx):
@@ -58,7 +58,7 @@ class General(commands.Cog):
         
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(brief="{Info about the Server}")
     @commands.guild_only()
     @commands.cooldown(1, 30, type=BucketType.channel)
     async def sinfo(self, ctx):
@@ -89,7 +89,7 @@ class General(commands.Cog):
         embed.add_field(name='Invites:', value=f'{len(await ctx.guild.invites())}', inline=True)
         await ctx.channel.send(embed=embed)
 
-    @commands.command()
+    @commands.command(brief="{Connection Test to Discord}")
     @commands.guild_only()
     @commands.cooldown(3, 15, type=BucketType.user)
     async def ping(self, ctx):
@@ -104,7 +104,7 @@ class General(commands.Cog):
         embed = discord.Embed(title='My Connection:', description=f'__**My ping is {round(self.bot.latency * 1000)}ms**__', color=discord.Color.dark_blue())
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(brief="{Info on a User}")
     @commands.guild_only()
     @commands.cooldown(3, 20, type=BucketType.user)
     async def uinfo(self, ctx, member: discord.Member = None):
@@ -119,7 +119,7 @@ class General(commands.Cog):
         embed.set_thumbnail(url=member.avatar_url)
         await ctx.send(embed=embed)
         
-    @commands.command()
+    @commands.command(brief="{User's Avatar}")
     @commands.guild_only()
     @commands.cooldown(3, 20, type=BucketType.user)
     async def avatar(self, ctx, member: discord.Member = None):
