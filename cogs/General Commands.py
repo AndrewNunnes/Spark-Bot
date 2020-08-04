@@ -7,7 +7,7 @@ import datetime
 import random
 import asyncio
 
-class General(commands.Cog, name="♠️ General Category"):
+class General(commands.Cog, name="📯 General Category"):
 
     """`{General Commands}`"""
 
@@ -29,7 +29,9 @@ class General(commands.Cog, name="♠️ General Category"):
       
     #  await ctx.send(embed=embed)
         
-    @commands.command(brief="{List of Boosters for the Server}")
+    @commands.command(
+      brief="{List of Boosters for the Server}", 
+      usage="boosters")
     @commands.guild_only()
     async def boosters(self, ctx, guild: discord.Guild, member: discord.Member):
         embed = discord.Embed(
@@ -39,7 +41,9 @@ class General(commands.Cog, name="♠️ General Category"):
         embed.timestamp = datetime.datetime.utcnow()
         await ctx.send(embed=embed)
             
-    @commands.command(brief="{Info about the Bot}")
+    @commands.command(
+      brief="{Info about the Bot}",
+      usage="binfo")
     @commands.guild_only()
     @commands.cooldown(1 , 30, type=BucketType.channel)
     async def binfo(self, ctx):
@@ -50,7 +54,7 @@ class General(commands.Cog, name="♠️ General Category"):
         pythonVersion = platform.python_version()
         dpyVersion = discord.__version__
         serverCount = len(self.bot.guilds)
-        embed = discord.Embed(title='My Info', color=discord.Color.dark_red())
+        embed = discord.Embed(title='My Info', color=discord.Color.darker_grey())
         embed.add_field(name='My Owner:', value="Andrew Nunnes#1148", inline=True)
         embed.add_field(name='Python Version:', value=f"I'm running version {pythonVersion} of Python", inline=True)
         embed.add_field(name='Discord.py Version:', value=f"I'm running discord.py Version {dpyVersion}", inline=True)
@@ -58,7 +62,9 @@ class General(commands.Cog, name="♠️ General Category"):
         
         await ctx.send(embed=embed)
 
-    @commands.command(brief="{Info about the Server}")
+    @commands.command(
+      brief="{Info about the Server}", 
+      usage="sinfo")
     @commands.guild_only()
     @commands.cooldown(1, 30, type=BucketType.channel)
     async def sinfo(self, ctx):
@@ -89,7 +95,9 @@ class General(commands.Cog, name="♠️ General Category"):
         embed.add_field(name='Invites:', value=f'{len(await ctx.guild.invites())}', inline=True)
         await ctx.channel.send(embed=embed)
 
-    @commands.command(brief="{Connection Test to Discord}")
+    @commands.command(
+      brief="{Connection Test to Discord}", 
+      usage="ping")
     @commands.guild_only()
     @commands.cooldown(3, 15, type=BucketType.user)
     async def ping(self, ctx):
@@ -104,7 +112,9 @@ class General(commands.Cog, name="♠️ General Category"):
         embed = discord.Embed(title='My Connection:', description=f'__**My ping is {round(self.bot.latency * 1000)}ms**__', color=discord.Color.dark_blue())
         await ctx.send(embed=embed)
 
-    @commands.command(brief="{Info on a User}")
+    @commands.command(
+      brief="{Info on a User}", 
+      usage="uinfo (member)")
     @commands.guild_only()
     @commands.cooldown(3, 20, type=BucketType.user)
     async def uinfo(self, ctx, member: discord.Member = None):
@@ -119,7 +129,9 @@ class General(commands.Cog, name="♠️ General Category"):
         embed.set_thumbnail(url=member.avatar_url)
         await ctx.send(embed=embed)
         
-    @commands.command(brief="{User's Avatar}")
+    @commands.command(
+      brief="{User's Avatar}", 
+      usage="avatar (member)")
     @commands.guild_only()
     @commands.cooldown(3, 20, type=BucketType.user)
     async def avatar(self, ctx, member: discord.Member = None):
