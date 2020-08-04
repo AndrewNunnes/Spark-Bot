@@ -31,14 +31,22 @@ def convert(argument):
   return time
     
 class Giveaway(commands.Cog):
+  
+  """🎉 `{Commands for Hosting Giveaways}`"""
+  
   def __init__(self, bot):
     self.bot = bot
   
-  @commands.command()
+  @commands.command(
+    brief="{Quicksetup for the Giveaway} [NOT DONE]", 
+    usage="quickgiveaway <#channel> <winners> <time> <prize>")
+  @commands.guild_only()
+  @commands.has_permissions(kick_members=True)
   async def quickgiveaway(self, ctx):
     """
     Refined version of the giveaway below {NOT DONE}
     """
+    
     def is_me(m):
       return m.author == ctx.author
     questions = ["Aight let's start setting up this giveaway. What channel will it be in?", "Great the giveaway will be in {channel}\nHow many winners will there be? (Choose between `1-25`)", "Ok there will be {winners} winner(s)\n\nHow much time should this giveaway last? Say X amount of `d|h|m|s`", "Aight the giveaway will last {time}\nNow what are you giving away?"
@@ -78,10 +86,12 @@ class Giveaway(commands.Cog):
       print("Giveaway sends")
       await reaction.add_reaction('🎉')
               
-  @commands.command()
+  @commands.command(
+    brief="{Interactively Sets Up the Giveaway}", 
+    usage="startgiveaway")
   @commands.guild_only()
   @commands.has_permissions(kick_members=True)
-  async def giveaway(self, ctx):
+  async def startgiveaway(self, ctx):
     """
     Sloppy Version but still works perfectly
     """
@@ -183,12 +193,14 @@ class Giveaway(commands.Cog):
     await channel.send(f"🎉 Congratulations {','.join([x.mention for x in winners])} you won: **{prize}** 🎉")
     await sendgiveaway.clear_reaction('🎉')
                     
-  @commands.command(aliases=["reroll"])
+  @commands.command(
+    brief="{Rerolls a New Winner for the Giveaway}", 
+    usage="reroll <message_id>")
   @commands.guild_only()
   @commands.has_permissions(kick_members=True)
-  async def end(self, ctx, message: discord.Message):
+  async def reroll(self, ctx, message: discord.Message):
       """
-      Ends the giveaway manually {NOT 1000% FUNCTIONAL YET}
+      Ends the giveaway manually {NOT 100% FUNCTIONAL YET}
       """
       giveawaymsg = await ctx.fetch_message(message.id)
       users = await giveawaymsg.reactions.users().flatten()
@@ -198,7 +210,7 @@ class Giveaway(commands.Cog):
           if x != self.bot.user:
               new_users.append(x)
               users = new_users
-      await ctx.send(f'__**{winner.mention} has won the Giveaway!**__')
+      await ctx.send(f'__**{winner.mention} is the new winner!**__')
 
 async def GetGiveawayMessage(bot, ctx, contentOne="Test Message", timeout=90.0):
     """
