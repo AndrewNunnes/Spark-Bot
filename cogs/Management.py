@@ -3,6 +3,8 @@ from discord.ext import commands
 import asyncio
 from asyncio import sleep
 import datetime
+#from cogs.help_command import get_cog_by_class
+#from cogs.role import bot_perms
 
 
 import cogs._json
@@ -87,42 +89,76 @@ def safe_reason_append(base, to_append):
         return base
     return appended
 
-class Moderation(commands.Cog):
-    """{_*Commands for Moderating the Server*_}"""
+class Management(commands.Cog):
+  
+    """⚙️ `{Commands for Moderating the Server}`"""
     def __init__(self,bot):
         self.bot = bot
-        
-   # @commands.command()
-  #  @commands.guild_only()
-   # @commands.has_permissions(manage_roles=True)
-   # async def addrole(self, ctx, member: discord.Member, *, role: discord.Role):
-     # """
-   #   Adds a Role to a specified Member
-    #  """
-    #  await member.add_roles(role)
-   #   await ctx.send(f"You successfully gave the {role.mention} Role to `{member.name}`")
-        
-   # @addrole.error
-  #  async def addrole_error(self, ctx, error): if isinstance(error, commands.BadArgument): await ctx.send("Looks like that role doesn't exist") #Checks if the role given doesn't exist in the server
-        
-  #  @commands.command()
-  #  @commands.guild_only()
-  #  @commands.has_permissions(manage_roles=True)
- #   async def removerole(self, ctx, member: discord.Member, *, role: discord.Role):
-   #   """
-    #  Removes a Role from a specified Member
-   #   """
-   #   await member.remove_roles(role)
-  #    await ctx.send(f"You successfully removed the {role.mention} Role from: `{member.name}`")
       
-    #@removerole.error
-  #  async def removerole_error(self, ctx, error):
-    #  if isinstance(error, commands.BadArgument):
-      #  await ctx.send("Looks like you put the wrong role") #Checks if the role being removed doesn't exist
+    @commands.command(
+      brief="{Menu for Role Management}", 
+      usage="role")
+    @commands.guild_only()
+    @commands.cooldown(1, 1.5, commands.BucketType.user)
+    async def role(self, ctx):
       
-    @commands.command()
+      #cog = self.get_cog_by_class('Role')
+      cog = self.bot.get_cog('Role Management')
+      commands = cog.get_commands()
+      command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n• {c.brief}" for c in cog.walk_commands()]
+      
+      e = discord.Embed(
+        title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
+        description="\n\n".join(command_desc), 
+        color=0x4D4119)
+        
+      e.timestamp = datetime.datetime.utcnow()
+      
+      await ctx.send(embed=e)
+      
+    @commands.command(
+      brief="{Menu for Managing Categories}", 
+      usage="categorymenu")
+    @commands.guild_only()
+    async def categorymenu(self, ctx):
+      cog = self.bot.get_cog('Category')
+      commands = cog.get_commands()
+      command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n\n• {c.brief}" for c in cog.walk_commands()]
+      
+      e = discord.Embed(
+        title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
+        description="\n\n".join(command_desc), 
+        color=0x6B767B)
+        
+      e.timestamp = datetime.datetime.utcnow()
+      
+      await ctx.send(embed=e)
+      
+    @commands.command(
+      brief="{Menu for Managing Channels}", 
+      usage="channelmenu")
+    @commands.guild_only()
+    async def channelmenu(self, ctx):
+      
+      cog = self.bot.get_cog('Channels')
+      commands = cog.get_commands()
+      command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n\n• {c.brief}" for c in cog.walk_commands()]
+      
+      e = discord.Embed(
+        title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
+        description="\n\n".join(command_desc), 
+        color=0x6B767B)
+        
+      e.timestamp = datetime.datetime.utcnow()
+      
+      await ctx.send(embed=e)
+      
+    @commands.command(
+      brief="{Change the Bot's Prefix}", 
+      usage="prefix <new_prefix>")
     @commands.guild_only()
     @commands.cooldown(1, 5, commands.BucketType.guild)
+    #@bot_perms()
     @commands.has_permissions(manage_guild=True)
     async def prefix(self, ctx, *, pre='!'):
       """
@@ -132,35 +168,65 @@ class Moderation(commands.Cog):
       data[str(ctx.message.guild.id)] = pre
       cogs._json.write_json(data, 'prefixes')
       await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}prefix <newprefix>` to change it again")
-    
-    @commands.command()
+  
+    @commands.command(
+      brief="{Kicks a User from the Guild}", 
+      usage="kick <user> (reason_message)")
     @commands.guild_only()
+   # @bot_perms()
     @commands.has_permissions(kick_members=True)
-    async def kick(self, ctx, user : discord.Member):
+    async def kick(self, ctx, user : discord.Member, *, reason=None):
         """`Kicks a user from the server`"""
         if ctx.author == user:
             await ctx.send("You cannot kick yourself.")
         else:
+            await user.send(f'You\'ve been kicked from `{ctx.guild.name}` for "{reason}"')
+            
             await user.kick()
+            
             embed = discord.Embed(title=f'User {user.name} has been kicked.', color=discord.Color.dark_red())
             embed.add_field(name="Tough luck", value="👋🏽")
             embed.set_thumbnail(url=user.avatar_url)
             await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(
+      brief="{Bans a User from the Guild}", 
+      usage="ban <user> (reason_message)")
+   # @bot_perms()
     @commands.has_permissions(ban_members=True)
     @commands.guild_only()
-    async def ban(self, ctx, user : discord.Member):
+    async def ban(self, ctx, user : discord.Member, *, reason=None):
         """`Bans a user from the server`"""
         if ctx.author == user:
             await ctx.send("You cannot ban yourself.")
         else:
+            
+            e = discord.Embed(
+              title="Banned 🔨", 
+              description=f"__*You've been banned from `{ctx.guild.name}`\n\nReason: {reason}", 
+              color=0x420000)
+              
+            e.timestamp = datetime.datetime.utcnow()
+              
+            await user.send(embed=e)
+            
             await user.ban()
-            embed = discord.Embed(title=f'Banned {user.name}', description=f'{user.mention} has been banned', color=discord.Color.dark_red())
+            
+            embed = discord.Embed(
+              title=f'Banned {user.name}', 
+              description=f'{user.mention} has been banned', 
+              color=0x420000)
+            
             embed.set_thumbnail(url=user.avatar_url)
+            
+            embed.timestamp = datetime.datetime.utcnow()
+            
             await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(
+      brief="{Unbans a User}", 
+      usage="unban <user#1234>")
+  #  @bot_perms()
     @commands.guild_only()
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, *, member):
@@ -172,13 +238,25 @@ class Moderation(commands.Cog):
             user = ban_entry.user
             
             if (user.name, user.discriminator) == (member_name, member_discriminator):
+              
+                await user.send(f"You've been unbanned from `{ctx.guild}`")
+                
                 await ctx.guild.unban(user)
-                embed = discord.Embed(title=f'Unbanned {user.name}', description=f'{user.mention} has been unbanned', color=discord.Color.dark_green())
+                
+                embed = discord.Embed(
+                  title=f'Unbanned {user.name}', 
+                  description=f'{user.mention} has been unbanned', 
+                  color=discord.Color.dark_green())
+                  
                 embed.set_thumbnail(url=user.avatar_url)
+                
                 await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(
+      brief="{Mute a User} [NOT DONE]", 
+      usage="mute <user> <time>")
     @commands.guild_only()
+   # @bot_perms()
     @commands.has_permissions(kick_members=True)
     async def mute(self, ctx, user : discord.Member, time: int):
         """`Prevents a user from speaking for a specified amount of time`"""
@@ -213,8 +291,11 @@ class Moderation(commands.Cog):
             else:
                 await ctx.send(f'User {user.mention} is already muted.')
 
-    @commands.command()
+    @commands.command(
+      brief="{Manually unmute a User}", 
+      usage="unmute <user>")
     @commands.guild_only()
+    #@bot_perms()
     @commands.has_permissions(kick_members=True)
     async def unmute(self, ctx, user: discord.Member):
         """`Unmutes a user`"""
@@ -228,10 +309,13 @@ class Moderation(commands.Cog):
             await user.remove_roles(rolem)
             await user.add_roles(dick)
 
-    @commands.command(aliases=['prune', 'clean'])
+    @commands.command(
+      brief="{Clean a specified amount of messages}", 
+      usage="clean <# of Messages>")
     @commands.guild_only()
+   # @bot_perms()
     @commands.has_permissions(manage_messages=True)
-    async def purge(self, ctx, count: int):
+    async def clean(self, ctx, count: int):
         """`Deletes a specified amount of messages. (Max 100)`"""
         await ctx.message.delete()
         if not count:
@@ -247,4 +331,4 @@ class Moderation(commands.Cog):
         await ctx.send(f"{count} message(s) have been deleted 🗑", delete_after=2)
 
 def setup(bot):
-    bot.add_cog(Moderation(bot))
+    bot.add_cog(Management(bot))
