@@ -5,7 +5,10 @@ import datetime
 import typing
 from typing import Union
 
-class Role(commands.Cog, name="__*Role Management*__"):
+class Role(commands.Cog, name="Role Management"):
+  
+  """😱 `{Commands for Managing Roles}`"""
+  
   def __init__(self, bot):
     self.bot = bot
     
@@ -20,36 +23,34 @@ class Role(commands.Cog, name="__*Role Management*__"):
       and ctx.me.guild_permissions.voice()
     return commands.check(predicate)
     
-  @commands.command(brief="{Menu for Role Management}")
-  @commands.guild_only()
-  async def role(self, ctx):
+  #@commands.command(brief="{Menu for Role Management}")
+ # @commands.guild_only()
+ # async def role(self, ctx):
     
-
-    cog = self.bot.get_cog('__*Role Management*__')
-    commands = cog.get_commands()
-
-    command_desc = [f"_*{c.name}*_ - `{c.brief}`" for c in cog.walk_commands()]
+    #embed = discord.Embed(
+     # title="Commands for Role Management", 
+    #  color=discord.Color.darker_grey())
+   # embed.add_field(name="_*addrole {Add a Role to a Member}*_", value=f"{{`{ctx.prefix}addrole <member> <role_name>`}}", inline=True)
+  #  embed.add_field(name="_*
+    #commandbrief = [f"{c.brief}" for c in cog.walk_commands()]
+   # command_desc = [f"_*{c.name
     
-    embed = discord.Embed(
-      title=f"{cog.qualified_name}", 
-      description="_*() - Optional\n<> - Required*_", 
-      color=discord.Color.darker_grey())
-      
-    embed.add_field(
-      name='_*Your Available Commands*_', 
-      value="\n".join(command_desc))
-    embed.timestamp = datetime.datetime.utcnow()
+   # await ctx.send(embed=embed)
     
-    await ctx.send(embed=embed)
-    
-  @commands.command(name="roleposition", brief="{Change the Position of a Role}") #usage="{Change the position of a Role}")
+  @commands.command(
+    name="roleposition", 
+    brief="{Change the Position of a Role}", 
+    usage="roleposition <#position>") #usage="{Change the position of a Role}")
   @commands.guild_only()
   @bot_perms()
   @commands.has_permissions(manage_roles=True)
   async def position(self, ctx, role: discord.Role, *, position: int):
     pass
     
-  @commands.command(name="rolename", brief="{Change the Name of a Role}")#description="{Change the name of a Role}")
+  @commands.command(
+    name="rolename", 
+    brief="{Change the Name of a Role}", 
+    usage="rolename <role> <new_name>")#description="{Change the name of a Role}")
   @commands.guild_only()
   @commands.has_permissions(manage_roles=True)
   @bot_perms()
@@ -77,7 +78,10 @@ class Role(commands.Cog, name="__*Role Management*__"):
       
       await ctx.send(embed=embed)
       
-  @commands.command(name="rolecolor", brief="{Change the color of a Role}")
+  @commands.command(
+    name="rolecolor", 
+    brief="{Change the color of a Role}", 
+    usage="rolecolor <color> <role_name>")
   @commands.guild_only()
   @commands.has_permissions(manage_roles=True)
   @bot_perms()
@@ -106,7 +110,10 @@ class Role(commands.Cog, name="__*Role Management*__"):
       embed.timestamp = datetime.datetime.utcnow()
       await ctx.send(embed=embed)
     
-  @commands.command(name="addrole", brief="{Add a Role to a Member}")
+  @commands.command(
+    name="addrole", 
+    brief="{Add a Role to a Member}", 
+    usage="addrole <member> <role_name>")
   @commands.guild_only()
   @bot_perms()
   @commands.has_permissions(manage_roles=True)
@@ -125,7 +132,10 @@ class Role(commands.Cog, name="__*Role Management*__"):
         description=f'Either:\n• Role wasn\'t found\n• Roles including spaces must be surrounded with `"role_name"`\n• Valid Syntax: `{ctx.prefix}role add <member> <role_name>`')
       embed.timestamp = datetime.datetime.utcnow()
       
-  @commands.command(name="removerole", brief="{Remove a Role from a Member}")
+  @commands.command(
+    name="removerole", 
+    brief="{Remove a Role from a Member}", 
+    usage="removerole <member> <role_name>")
   @bot_perms()
   @commands.guild_only()
   @commands.has_permissions(manage_roles=True)
@@ -160,7 +170,10 @@ class Role(commands.Cog, name="__*Role Management*__"):
       
     #await ctx.send(embed=embed)
           
-  @commands.command(name="roleinfo", brief="{Get Info on a Role}")
+  @commands.command(
+    name="roleinfo", 
+    brief="{Get Info on a Role}", 
+    usage="roleinfo <role>")
   @commands.guild_only()
   @bot_perms()
   async def info(self, ctx, *, role: discord.Role):
@@ -180,7 +193,10 @@ class Role(commands.Cog, name="__*Role Management*__"):
       if isinstance(error, commands.BadArgument):
           await ctx.send("That isn't a valid role")
           
-  @commands.command(name="rolelist", brief="{Get a List of All the Roles in the Server}")
+  @commands.command(
+    name="rolelist", 
+    brief="{Get a List of All the Roles in the Server}", 
+    usage="rolelist")
   @commands.guild_only()
   @bot_perms()
   async def _list(self, ctx):
@@ -198,7 +214,10 @@ class Role(commands.Cog, name="__*Role Management*__"):
       
     await ctx.send(embed=embed)
           
-  @commands.command(name="roleperms", brief="{Get a List of Perms for a Role}")
+  @commands.command(
+    name="roleperms", 
+    brief="{Get a List of Perms for a Role}", 
+    usage="roleperms <role>")
   @commands.guild_only()
   @bot_perms()
   async def perms(self, ctx, *, role: discord.Role):
@@ -233,7 +252,10 @@ class Role(commands.Cog, name="__*Role Management*__"):
   #async def rolecolor(self, ctx, hex: discord.Color, *, role: discord.Role):
       
           
-  @commands.command(name="createrole", brief="{Create a New Role}")
+  @commands.command(
+    name="createrole", 
+    brief="{Create a New Role}", 
+    usage="createrole <role_name>")
   @commands.guild_only()
   @bot_perms()
   @commands.has_permissions(manage_roles=True)
@@ -245,7 +267,10 @@ class Role(commands.Cog, name="__*Role Management*__"):
     msg = await guild.create_role(name=None)
     await ctx.send(f"{msg.mention} was successfully created")
      
-  @commands.command(name="deleterole", brief="{Delete a Role}")
+  @commands.command(
+    name="deleterole", 
+    brief="{Delete a Role}", 
+    usage="deleterole <role_name>")
   @commands.guild_only()
   @bot_perms()
   @commands.has_permissions(manage_roles=True)
