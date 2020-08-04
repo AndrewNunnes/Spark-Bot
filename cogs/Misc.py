@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import asyncio
 import random
+import datetime
 
 def to_emoji(c):
     base = 0x1f1e6
@@ -9,12 +10,14 @@ def to_emoji(c):
 
 class Misc(commands.Cog):
 
-    """{_*Only Admins and Moderators can use!*_}"""
+    """🔗 `{Miscallaneous Commands}`"""
 
     def __init__(self, bot):
         self.bot = bot
         
-    @commands.command(aliases=['inv'])
+    @commands.command(
+      brief="{Create a Pernament Invite for a Channel}", 
+      usage="createinvite <#channel>")
     @commands.has_permissions(create_instant_invite=True)
     @commands.guild_only()
     async def createinvite(self, ctx, channel: discord.TextChannel):
@@ -31,17 +34,44 @@ class Misc(commands.Cog):
           #  embed.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
           #  await ctx.channel.send(embed=e
           
-    @commands.command()
+    @commands.command(
+      brief="{Invite the Bot to your Server}", 
+      usage="invite")
     @commands.guild_only()
     async def invite(self, ctx):
-        #Remember to replace the link in the description with **your** bot's invite link
-        embed = discord.Embed(
-            title=f"Invite me to your server!", 
-            description=f"__*What's up {ctx.author.mention}\nYou can invite me to your server by clicking on [this message](https://discord.com/api/oauth2/authorize?client_id=721397896704163965&permissions=8&redirect_uri=https%3A%2F%2Fdiscord.com%2Fapi%2Foauth2%2Fauthorize%3Fclient_id%3D721397)*__", 
+      
+        #Remember to replace the link
+        #in the description with **your** bot's invite link
+        e = discord.Embed(
+            title="__*My Invite Link*__", 
+            description=f"_*What's up {ctx.author.mention}\nYou can invite me to your server by clicking on [this message](https://discord.com/oauth2/authorize?client_id=721397896704163965&permissions=8&scope=bot)*_", 
             color=discord.Color.darker_grey())
-        await ctx.send(embed=embed) 
-
-    @commands.command()
+            
+        e.timestamp = datetime.datetime.utcnow()
+        
+        await ctx.send(embed=e)
+        
+    @commands.command(
+      brief="{Get the Source Code for the Bot}", 
+      usage="source")
+    @commands.guild_only()
+    async def source(self, ctx):
+      
+      #Replace the link here with 
+      #**your** Github Repo
+      
+      e = discord.Embed(
+        title="__*My Code Source*__", 
+        description=f"_*What's up {ctx.author.mention}, you can see my source code [here](https://github.com/AndrewNunnes/Andrew-s-Bot)*_", 
+        color=discord.Color.darker_grey())
+        
+      e.timestamp = datetime.datetime.utcnow()
+      
+      await ctx.send(embed=e)
+        
+    @commands.command(
+      brief="{Bot will announce your message}", 
+      usage="announce <message_here>")
     #@commands.has_permissions(kick_members=True)
     @commands.guild_only()
     async def announce(self, ctx, *, arg):
@@ -61,7 +91,9 @@ class Misc(commands.Cog):
          #   embed.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
          #   await ctx.channel.send(embed=embed, delete_after=5)
             
-    @commands.command()
+    @commands.command(
+      brief="{DM a User}", 
+      usage="dm <user> <message>")
     @commands.has_permissions(manage_messages=True)
     @commands.guild_only()
     async def dm(self, ctx, user:discord.User, *, content):
@@ -83,7 +115,9 @@ class Misc(commands.Cog):
            # embed.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
            # await ctx.channel.send(embed=embed)
             
-    @commands.command()
+    @commands.command(
+      brief="{Bot Interactively Starts a Poll}", 
+      usage="poll")
     @commands.guild_only()
     @commands.has_permissions(manage_messages=True)
     async def poll(self, ctx, *, question):
@@ -129,9 +163,11 @@ class Misc(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             return await ctx.send('Missing the question.', delete_after=4)
 
-    @commands.command()
+    @commands.command(
+      brief="{Start a poll quickly}", 
+      usage="quickpoll <at_least_2_questions>")
     @commands.guild_only()
-    @commands.has_permissions(manage_messages=True)
+    #@commands.has_permissions(manage_messages=True)
     async def quickpoll(self, ctx, *questions_and_choices: str):
         """Makes a poll quickly.
         The first argument is the question and the rest are the choices.
@@ -160,7 +196,9 @@ class Misc(commands.Cog):
         for emoji, _ in choices:
             await poll.add_reaction(emoji)
             
-    @commands.command()
+    @commands.command(
+      brief="{Restart the Bot} [BOT OWNER ONLY]", 
+      usage="restart")
     @commands.is_owner()
     @commands.guild_only()
     async def restart(self, ctx):
