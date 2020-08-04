@@ -24,10 +24,12 @@ class Logging(commands.Cog):
         color=0x420000)
       
       bruh.set_thumbnail(url=message.author.avatar_url)
-      bruh.set_footer(text=f"{message.author.name.discriminator} Tried to Post an Invite")
+      bruh.set_footer(text=f"{message.author.name} Tried to Post an Invite")
       bruh.timestamp = datetime.datetime.utcnow()
       
       await message.channel.send(embed=bruh)
+      
+      await asyncio.sleep(1)
       
       names = ['log']
       #Checks if there's a channel 
@@ -64,7 +66,29 @@ class Logging(commands.Cog):
         
         await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
 
-    await self.bot.process_commands(message)
-
+    #await self.bot.process_commands(message)
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 def setup(bot):
   bot.add_cog(Logging(bot))
