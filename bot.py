@@ -20,7 +20,8 @@ def get_prefix(client, message):
   if not str(message.guild.id) in data:
     return commands.when_mentioned_or('!')(client, message)
   return commands.when_mentioned_or(data[str(message.guild.id)])(client, message)
-  
+
+#Function used to load extensions
 def file_name(file):
     if file.endswith(".py") and not file.startswith("_"):
         client.load_extension(f"cogs.{file[:-3]}")
@@ -32,16 +33,30 @@ client.cwd = cwd
 
 @client.event
 async def on_message(message):
+  
+  #prefix = data[str(message.guild.id)]
+  
+  #Makes sure the bot doesn't respond to itself
+  if message.author == client.user:
+    return
+  #Checks for a different bot in the server
+  if message.author.bot:
+    return
   #When the bot is mentioned, it'll respond with this embed
-  if f"<@!{client.user.id}>" in message.content:
+  if client.user.mentioned_in(message):
     data = cogs._json.read_json('prefixes')
     if str(message.guild.id) in data:
         prefix = data[str(message.guild.id)]
+    if message.content.startswith(get_prefix):
+      return
     else:
         prefix = '!'
+        
     prefixembed = discord.Embed(
-      description=f"What's up {message.author.mention}. My prefix is `{prefix}`\nFeel free to change it with `!prefix <newprefix>`", 
+      description=f"What's up {message.author.mention}. My prefix is `{prefix}`\nFeel free to change it with `{prefix}prefix <newprefix>`", 
       color=discord.Color.darker_grey())
+      
+    prefixembed.set_footer(text="Remember to make my Role higher than everyone else for certain commands to work properly")
     
     prefixembed.timestamp = datetime.datetime.utcnow()
   
