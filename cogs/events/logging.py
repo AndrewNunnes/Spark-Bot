@@ -15,7 +15,6 @@ class Logging(commands.Cog):
     #send a Discord Invite
     if "discord.gg" in message.content:
       guild = message.guild
-      member = message.author
       
       await message.delete()
       
@@ -31,64 +30,45 @@ class Logging(commands.Cog):
       
       await asyncio.sleep(1)
       
-      names = ['log']
-      #Checks if there's a channel 
-      #containing log in the name
-      channel = discord.utils.find(
-        lambda channel:any(
-          map(lambda c: c in channel.name, names)), 
-          guild.text_channels)
-      
-      e = discord.Embed(
-        title="__*Invite Attempt*__", 
-        description=f"_**{message.author.name.discriminator} Tried to post an invite to a Discord Server\nShould let him know not to do it next time**_", 
-        color=0x380000)
-      
-      e.set_thumbnail(url=message.author.avatar_url)
-      e.set_footer(text=f"{message.author}")
-      e.timestamp = datetime.datetime.utcnow()
-      
-      await channel.send(embed=e)
-      
-      #If a log channel doesn't exist
-      #This will send
-      if not channel:
-        await message.channel.send("Looks like you don't have a Logs channel\n\nMaking one now...")
+      try:
+        names = ['log']
+        #Checks if there's a channel 
+        #containing log in the name
+        channel = discord.utils.find(
+          lambda channel:any(
+            map(lambda c: c in channel.name, names)), 
+            guild.text_channels) 
         
-        guild = message.guild
+        e = discord.Embed(
+          title="__*Invite Attempt*__", 
+          description=f"_**{message.author.name} Tried to post an invite to a Discord Server\nShould let him know not to do it next time**_", 
+          color=0x380000)
         
-        ow = {
-          guild.default_role: discord.PermissionOverwrite(read_messages=False)
-        }
-        for role in guild.roles:
-          if role.permissions.kick_members:
-            ow[role] = discord.PermissionOverwrite(read_messages=True)
+        e.set_thumbnail(url=message.author.avatar_url)
+        e.set_footer(text=f"{message.author}")
+        e.timestamp = datetime.datetime.utcnow()
         
-        await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+        
+        #If a log channel doesn't exist
+        #This will send
+        if not channel:
+          await message.channel.send("Looks like you don't have a Logs channel\n\nMaking one now...")
+          
+          guild = message.guild
+          
+          ow = {
+            guild.default_role: discord.PermissionOverwrite(read_messages=False)
+          }
+          for role in guild.roles:
+            if role.permissions.kick_members:
+              ow[role] = discord.PermissionOverwrite(read_messages=True)
+          
+          await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
 
-    #await self.bot.process_commands(message)
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+        await channel.send(embed=e)
+      except commands.BotMissingPermissions:
+        await message.channel.send("Seems like I'm missing permissions to make a Modlogs Channel")
+
+
 def setup(bot):
   bot.add_cog(Logging(bot))
