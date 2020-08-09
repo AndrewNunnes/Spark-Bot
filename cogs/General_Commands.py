@@ -78,6 +78,63 @@ class General(commands.Cog, name="📯 General Category"):
       
     #  await ctx.send(embed=embed)
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+
+      if message.type == discord.MessageType.premium_guild_subscription:
+
+        guild = message.guild
+
+        names = ['boost', 'announce']
+
+        #Check for a boost/announce channel
+        #And send it there
+        channel = discord.utils.find(
+          lambda channel:any(
+            map(lambda c: c in channel.name, names)), 
+            guild.text_channels) 
+
+        e = discord.Embed(
+          color=0x420000)
+
+        fields = ["<:booster:741407205575622696> __*New Booster {!}*__", f'{message.author.mention}']
+
+        e.timestamp = datetime.datetime.utcnow()
+
+        e.set_footer(text=message.author.mention, icon_url=message.author.avatar_url)
+
+        #Adding the fields
+        for name, value in fields:
+          e.add_field(
+            name=name, 
+            value=value
+          )
+
+        await channel.send(embed=e)
+
+        #If the channel doesn't exist
+        #It'll send it in a different channel
+        if not channel:
+
+          e = discord.Embed(
+            color=0x420000)
+
+          fields = ["<:booster:741407205575622696> __*New Booster {!}*__", f'{message.author.mention}']
+
+          e.timestamp = datetime.datetime.utcnow()
+
+          e.set_footer(text=message.author.mention, icon_url=message.author.avatar_url)
+
+          
+          #Adding the fields
+          for name, value in fields:
+            e.add_field(
+              name=name, 
+              value=value
+            )
+
+          await message.channel.send(embed=e)
+
     @commands.command(
       brief="{Connection Test to Discord}", 
       usage="ping")
@@ -170,16 +227,17 @@ class General(commands.Cog, name="📯 General Category"):
             ("__*❗ Current Prefix*__", f'`{ctx.prefix}`', True),
 
             ("__*Discord Stats*__",
-             "Guilds: {}"
-             "\nChannels: {}"
-             "\nEmojis: {}"
-             "\nCommands: {}"
-             "\nUsers: {:,}".format(len(self.bot.guilds), sum(list(channels)), len(self.bot.emojis),
+             "All Guilds: {}"
+             "\nAll Channels: {}"
+             "\nAll Emojis: {}"
+             "\nAll Commands: {}"
+             "\nAll Users: {:,}".format(len(self.bot.guilds), sum(list(channels)), len(self.bot.emojis),
                                     len(self.bot.commands),
                                     len(self.bot.users)), True),
 
             ("__*Line Count*__", lineCount(), True),
             ("__*Uptime*__", frmt_uptime, False),
+            ("__*Latency*__", f'{round(self.bot.latency * 1000)}ms', False), 
             ("__*Memory Usage*__", f"{mem_usage:,.2f} / {mem_total:,.2f} MiB ({mem_of_total:.2f}%)", False)]
 
         # Add fields to the embed
@@ -219,6 +277,9 @@ class General(commands.Cog, name="📯 General Category"):
     @commands.bot_has_permissions(manage_guild=True, ban_members=True)
     async def sinfo(self, ctx):
 
+        # Getting permissions of the bot within the channel
+        perms = ctx.guild.me.permissions_in(ctx.message.channel)
+
         #memberCount = len(set(self.bot.get_all_members()))
         humans = len(list(filter(lambda m: not m.bot, ctx.guild.members)))
         bots = len(list(filter(lambda m: m.bot, ctx.guild.members)))
@@ -230,11 +291,11 @@ class General(commands.Cog, name="📯 General Category"):
 
         #Getting the # of bans
         #In the server
-        bans = len(await ctx.guild.bans())
+        bans = len(await ctx.guild.bans()) if perms.ban_members else "N/A"
 
         #Getting the # of invites
         #In the server
-        invites = len(await ctx.guild.invites())
+        invites = len(await ctx.guild.invites()) if perms.manage_guild else "N/A"
 
         #List of fields to add to the embed
         fields = [("__*Name*__", ctx.guild.name, True), 
@@ -281,18 +342,21 @@ class General(commands.Cog, name="📯 General Category"):
         #Or if it's the author
         member = ctx.author if not member else member
 
-        #List for all the guild's roles
-        #[1:] removes the @everyone role
-        #2047 roles is the max due to embed limits
-        rolelist = f"{' '.join(map(str, (role.mention for role in member.roles[1:])))}"
+        # Check if user roles is greater than 20
+        if len(member.roles) > 20:
+            # Retrieve the length of the remaining roles
+            length = len(member.roles) - 20
+
+            # Store the first 20 roles in a string called "roles" (highest to lowest)
+            role = f"{' '.join(map(str, (role.mention for role in list(reversed(member.roles))[:20])))} and **{length}** more"
 
         #rolelist = [role.mention for role in member.roles[1:2047]]
-
-        #Check if the member has no roles
-        if rolelist == "":
-          roles = "No Roles"
         else:
-          roles = rolelist
+            # Display all roles as it is lower than 20
+            role = f"{' '.join(map(str, (role.mention for role in list(reversed(member.roles[1:])))))}"
+
+        # Accounting for the edge case where the user has no roles to be displayed
+        roles = "No Roles" if role == "" else role
 
         fields = [("__*Discord Tag*__", member.name, True), 
 
