@@ -274,7 +274,7 @@ class General(commands.Cog, name="📯 General Category"):
       usage="sinfo")
     @commands.guild_only()
     @commands.cooldown(1, 30, type=BucketType.channel)
-    @commands.bot_has_permissions(manage_guild=True, ban_members=True)
+    @commands.bot_has_permissions(embed_links=True)
     async def sinfo(self, ctx):
 
         # Getting permissions of the bot within the channel
