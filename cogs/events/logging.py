@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 import datetime
 import asyncio
+import typing
+from typing import Union
 import re
 
 class Logging(commands.Cog):
@@ -60,7 +62,7 @@ class Logging(commands.Cog):
             guild.default_role: discord.PermissionOverwrite(read_messages=False)
           }
           for role in guild.roles:
-            if role.permissions.kick_members:
+            if role.permissions.view_audit_log:
               ow[role] = discord.PermissionOverwrite(read_messages=True)
           
           await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
@@ -69,6 +71,141 @@ class Logging(commands.Cog):
       except commands.BotMissingPermissions:
         await message.channel.send("Seems like I'm missing permissions to make a Modlogs Channel")
 
+  #Send an edited message to 
+  #A logs channel
+  @commands.Cog.listener()
+  async def on_message_edit(self, before, after):
+
+    guild = before.guild
+    
+    #Check if there's a 
+    #Logs channel
+    names = ['log']
+    channel = discord.utils.find(
+      lambda channel:any(
+        map(lambda c: c in channel.name, names)), 
+        guild.text_channels)
+
+    e = discord.Embed(
+      title=f"Message Edited by {before.author}", 
+      description=f'\n__*Before:*__ {before.content}\n\n__*After:*__ {after.content}\n\n__*In:*__ {message.channel.mention}', 
+      color=0x2b3292
+    )
+
+    e.timestamp = datetime.datetime.utcnow()
+
+    e.set_footer(
+      text=f'{before.author}', 
+      icon_url=f'{before.author.avatar_url}')
+
+    await channel.send(embed=e)
+
+    if not channel:
+      ow = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False)}
+        
+      for role in guild.roles:
+        if role.permissions.view_audit_log:
+          ow[role] = discord.PermissionOverwrite(read_messages=True)
+          
+      await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+
+  #Sends a deleted message 
+  #To logs channel
+  @commands.Cog.listener()
+  async def on_message_delete(self, message):
+
+    guild = message.guild
+
+    #Check if there's a 
+    #Logs channel
+    names = ['log']
+    channel = discord.utils.find(
+      lambda channel:any(
+        map(lambda c: c in channel.name, names)), 
+        guild.text_channels)
+
+    e = discord.Embed(
+      title=f'Message deleted by {message.author}', 
+      description=f'__*Message Deleted:*__ {message.content}\n\n__*In:*__ {message.channel.mention}', 
+      color=0x2b3292
+    )
+
+    e.timestamp = datetime.datetime.utcnow()
+
+    e.set_footer(
+      text=f'{message.author}', 
+      icon_url=f'{message.author.avatar_url}'
+    )
+
+    await channel.send(embed=e)
+
+    if not channel:
+      ow = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False)}
+        
+      for role in guild.roles:
+        if role.permissions.view_audit_log:
+          ow[role] = discord.PermissionOverwrite(read_messages=True)
+          
+      await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+
+  @commands.Cog.listener()
+  async def on_member_ban(self, guild, user):
+
+  #async for entry in guild.audit_logs(action=discord.AuditLogAction.ban):
+    #banned = '{0.user} banned {0.target}'.format(entry)
+
+    channel_names = ['log']
+
+    #Checks for a logs channel
+    #To send the embeds to
+    channel = discord.utils.find(
+      lambda channel:any(
+        map(lambda w: w in channel.name, channel_names)),
+        guild.text_channels) 
+      
+    if not channel: 
+      #If a logs channel doesn't exist
+      # it'll look for a general channel
+      newchann = ['gener', 'chat', 'welc', 'memb']
+
+      new = discord.utils.find(
+        lambda new:any(
+          map(lambda n: n in new.name, newchann)),
+          guild.text_channels)
+          
+      e = discord.Embed(
+        color=discord.Color.darker_grey())
+
+      fields = [
+        f"__*{user.name} has been Banned {{!}}*__"]
+
+      for name, value in fields:
+        e.add_field(
+          name=name, 
+          value=value
+        )
+
+      e.timestamp = datetime.datetime.utcnow()
+      
+      await new.send(embed=e)
+          
+    embed = discord.Embed(color=discord.Color.darker_grey())
+
+    fields = [
+      f"__*{user.name} has been Banned {{!}}*__", 
+      f'Banned by: {ctx.author}\nReason: {reason}']
+
+    for name, value in fields:
+      e.add_field(
+        name=name, 
+        value=value
+      )
+    
+    embed.timestamp = datetime.datetime.utcnow()
+
+    await channel.send(embed=embed)
 
 def setup(bot):
   bot.add_cog(Logging(bot))
