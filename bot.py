@@ -23,8 +23,7 @@ def get_prefix(client, message):
 
 #Function used to load extensions
 def file_name(file):
-    if file.endswith(".py") and not file.startswith("_"):
-        client.load_extension(f"cogs.{file[:-3]}")
+    if file.endswith(".py") and not file.startswith("_"):        client.load_extension(f"cogs.{file[:-3]}")
 
 client = commands.Bot(command_prefix=get_prefix, case_insensitive=True)
 client.remove_command('help')
@@ -47,20 +46,19 @@ async def on_message(message):
     data = cogs._json.read_json('prefixes')
     if str(message.guild.id) in data:
         prefix = data[str(message.guild.id)]
-    if message.content.startswith(get_prefix):
-      return
+        if message.content.startswith(prefix):
+          return
     else:
         prefix = '!'
         
-    prefixembed = discord.Embed(
-      description=f"What's up {message.author.mention}. My prefix is `{prefix}`\nFeel free to change it with `{prefix}prefix <newprefix>`", 
-      color=discord.Color.darker_grey())
+        prefixembed = discord.Embed(
+          description=f"What's up {message.author.mention}. My prefix is `{prefix}`\nFeel free to change it with `{prefix}prefix <newprefix>`", 
+          color=discord.Color.darker_grey())
+        
+        
+        prefixembed.timestamp = datetime.datetime.utcnow()
       
-    prefixembed.set_footer(text="Remember to make my Role higher than everyone else for certain commands to work properly")
-    
-    prefixembed.timestamp = datetime.datetime.utcnow()
-  
-    await message.channel.send(embed=prefixembed)
+        await message.channel.send(embed=prefixembed)
     
   await client.process_commands(message)
   
