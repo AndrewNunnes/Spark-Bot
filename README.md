@@ -3,12 +3,12 @@
 # Suggestions
 • Always open to suggestions for the Bot
 • Discord Username: Andrew Nunnes#1148 
-• New Support [Server](https://discord.gg/TyRn2HC)
+• New Support [Server](https://discord.gg/fkdW9hB)
 
 # Issues/Bugs
 • If you there's any bugs/issues with the bot please let me know
 • Discord Username: #Andrew Nunnes#1148
-• New Support [Server](https://discord.gg/TyRn2HC)
+• New Support [Server](https://discord.gg/fkdW9hB)
 
 # Role Management Commands
 • !addrole <user> <rolename> {Adds a Role to a User}
