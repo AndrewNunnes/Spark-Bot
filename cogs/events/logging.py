@@ -6,149 +6,234 @@ import typing
 from typing import Union
 import re
 
+
 class Logging(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
+
+    self.modlogs = False
+
+    self.anti_invite = False
+
+    self.edit_delete = False
+
+  @commands.command(
+    brief='{Turn on/off Server Logs}', 
+    usage='logs <on/off>', 
+    aliases=['modlogs', 'serverlogs']
+  )
+  @commands.has_permissions(manage_guild=True)
+  @commands.guild_only()
+  async def logs(self, ctx):
+
+    #Check if message is 'on'
+    if ctx.message == 'on':
+      self.modlogs = True
+      await ctx.send('Log system has been turned on')
+    else:
+      if ctx.message == 'off':
+        self.modlogs = False
+        await ctx.send('Log system has been turned off')
+
+  @commands.command(
+    brief='{Turn on/off Logs for Messages Deleted/Edited}', 
+    usage='logs <on/off>', 
+    aliases=['edit_delete', 'edit/delete']
+  )
+  @commands.has_permissions(manage_guild=True)
+  @commands.guild_only()
+  async def editdel(self, ctx):
+
+    #Check if message is 'on'
+    if ctx.message == 'on':
+      self.edit_delete = True
+      await ctx.send('Logs for Messages Deleted/Edited has been turned on')
+    else:
+      if ctx.message == 'off':
+        self.edit_delete = False
+        await ctx.send('Logs for Messages Deleted/Edited has been turned off')
+
+  @commands.command(
+    brief='{Turn on/off Anti Invite}', 
+    usage='antiinvite <on/off>', 
+    aliases=['antiinv', 'anti_inv', 'anti_invite']
+  )
+  @commands.guild_only()
+  @commands.has_permissions(manage_guild=True)
+  async def antiinvite(self, ctx):
+    
+    #Check if message is 'on' or 'off'
+    if ctx.message == 'on':
+      self.anti_invite = True
+      await ctx.send('Anti Invite has been turned off')
+    else:
+      if ctx.message == 'off':
+        self.anti_invite = False
+        await ctx.send('Anti Invite has been turned off')
     
   @commands.Cog.listener()
   async def on_message(self, message):
+
+    if self.anti_invite or self.modlogs == True:
     
-    #Check if a user
-    #send a Discord Invite
-    if "discord.gg" in message.content:
-      guild = message.guild
-      
-      await message.delete()
-      
-      bruh = discord.Embed(
-        title=f"__*{message.author.mention}*__ you're not supposed to share Server Invites", 
-        color=0x420000)
-      
-      bruh.set_thumbnail(url=message.author.avatar_url)
-      bruh.set_footer(text=f"{message.author.name} Tried to Post an Invite")
-      bruh.timestamp = datetime.datetime.utcnow()
-      
-      await message.channel.send(embed=bruh)
-      
-      await asyncio.sleep(1)
-      
-      try:
-        names = ['log']
-        #Checks if there's a channel 
-        #containing log in the name
-        channel = discord.utils.find(
-          lambda channel:any(
-            map(lambda c: c in channel.name, names)), 
-            guild.text_channels) 
+      #Check if a user
+      #send a Discord Invite
+      if "discord.gg" in message.content:
+        guild = message.guild
+        
+        await message.delete()
         
         e = discord.Embed(
-          title="__*Invite Attempt*__", 
-          description=f"_**{message.author.name} Tried to post an invite to a Discord Server\nShould let him know not to do it next time**_", 
-          color=0x380000)
+          description=f"**{message.author.mention}*__ you're not supposed to share Server Invites**", 
+          color=0x420000)
         
         e.set_thumbnail(url=message.author.avatar_url)
-        e.set_footer(text=f"{message.author}")
+
+        e.set_footer(text=f"{message.author.name} Tried to Post an Invite")
+
         e.timestamp = datetime.datetime.utcnow()
         
+        await message.channel.send(embed=e)
         
-        #If a log channel doesn't exist
-        #This will send
-        if not channel:
-          await message.channel.send("Looks like you don't have a Logs channel\n\nMaking one now...")
+        await asyncio.sleep(1)
+        
+        try:
+          names = ['log']
+          #Checks if there's a channel 
+          #containing log in the name
+          channel = discord.utils.find(
+            lambda channel:any(
+              map(lambda c: c in channel.name, names)), 
+              guild.text_channels) 
           
-          guild = message.guild
+          e = discord.Embed(
+            title="__*Invite Attempt*__", 
+            description=f"_**{message.author.name} Tried to post an invite to a Discord Server\nShould let him know not to do it next time**_", 
+            color=0x380000)
           
-          ow = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False)
-          }
-          for role in guild.roles:
-            if role.permissions.view_audit_log:
-              ow[role] = discord.PermissionOverwrite(read_messages=True)
+          e.set_thumbnail(url=message.author.avatar_url)
+          e.set_footer(text=f"{message.author}")
+          e.timestamp = datetime.datetime.utcnow()
           
-          await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+          
+          #If a log channel doesn't exist
+          #This will send
+          if not channel:
+            await message.channel.send("Can't find a Logs Channel ")
+            
+            #guild = message.guild
+            
+            #ow = {
+              #guild.default_role: discord.PermissionOverwrite(read_messages=False)
+            #}
+            #for role in guild.roles:
+              #if role.permissions.view_audit_log:
+                #ow[role] = discord.PermissionOverwrite(read_messages=True)
+            
+            #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
 
-        await channel.send(embed=e)
-      except commands.BotMissingPermissions:
-        await message.channel.send("Seems like I'm missing permissions to make a Modlogs Channel")
+          #await channel.send(embed=e)
+        except commands.BotMissingPermissions:
+          await message.channel.send("Seems like I'm missing permissions to make a Modlogs Channel")
+
+    else:
+      pass
 
   #Send an edited message to 
   #A logs channel
   @commands.Cog.listener()
   async def on_message_edit(self, before, after):
 
-    guild = before.guild
-    
-    #Check if there's a 
-    #Logs channel
-    names = ['log']
-    channel = discord.utils.find(
-      lambda channel:any(
-        map(lambda c: c in channel.name, names)), 
-        guild.text_channels)
+    if self.edit_delete or self.modlogs == True:
 
-    e = discord.Embed(
-      title=f"Message Edited by {before.author}", 
-      description=f'\n__*Before:*__ {before.content}\n\n__*After:*__ {after.content}\n\n__*In:*__ {message.channel.mention}', 
-      color=0x2b3292
-    )
+      #Makes sure not to count embeds
+      if before.embeds or after.embeds:
+        return
 
-    e.timestamp = datetime.datetime.utcnow()
+      #Check if message edited
+      #Is by a bot
+      if before.author.bot:
+        return
 
-    e.set_footer(
-      text=f'{before.author}', 
-      icon_url=f'{before.author.avatar_url}')
+      guild = before.guild
+      
+      #Check if there's a 
+      #Logs channel
+      names = ['log']
+      channel = discord.utils.find(
+        lambda channel:any(
+          map(lambda c: c in channel.name, names)), 
+          guild.text_channels)
 
-    await channel.send(embed=e)
+      e = discord.Embed(
+        description=f'**Message Edited by {after.author.mention} In {after.channel.mention}**\n\n**Before:** {before.content}\n\n**After:** {after.content}', 
+        color=discord.Color.dark_blue()
+      )
 
-    if not channel:
-      ow = {
-        guild.default_role: discord.PermissionOverwrite(read_messages=False)}
-        
-      for role in guild.roles:
-        if role.permissions.view_audit_log:
-          ow[role] = discord.PermissionOverwrite(read_messages=True)
+      e.timestamp = datetime.datetime.utcnow()
+
+      e.set_footer(
+        text=f'{before.author}', 
+        icon_url=f'{before.author.avatar_url}')
+
+      await after.channel.send(embed=e)
+
+      if not channel:
+        pass
+        #ow = {
+          #guild.default_role: discord.PermissionOverwrite(read_messages=False)}
           
-      await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+        #for role in guild.roles:
+          #if role.permissions.view_audit_log:
+            #ow[role] = discord.PermissionOverwrite(read_messages=True)
+            
+        #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+    else:
+      pass
 
   #Sends a deleted message 
   #To logs channel
   @commands.Cog.listener()
   async def on_message_delete(self, message):
 
-    guild = message.guild
+    if self.modlogs or self.edit_delete == True:
 
-    #Check if there's a 
-    #Logs channel
-    names = ['log']
-    channel = discord.utils.find(
-      lambda channel:any(
-        map(lambda c: c in channel.name, names)), 
-        guild.text_channels)
+      guild = message.guild
 
-    e = discord.Embed(
-      title=f'Message deleted by {message.author}', 
-      description=f'__*Message Deleted:*__ {message.content}\n\n__*In:*__ {message.channel.mention}', 
-      color=0x2b3292
-    )
+      #Check if there's a 
+      #Logs channel
+      names = ['log']
+      channel = discord.utils.find(
+        lambda channel:any(
+          map(lambda c: c in channel.name, names)), 
+          guild.text_channels)
 
-    e.timestamp = datetime.datetime.utcnow()
+      e = discord.Embed(
+        description=f'**Message Deleted By {message.author.mention} In {message.channel.mention}**\n\n**Message:** {message.content}', 
+        color=discord.Color.dark_red()
+      )
 
-    e.set_footer(
-      text=f'{message.author}', 
-      icon_url=f'{message.author.avatar_url}'
-    )
+      e.timestamp = datetime.datetime.utcnow()
 
-    await channel.send(embed=e)
+      e.set_footer(
+        text=f'{message.author}', 
+        icon_url=f'{message.author.avatar_url}'
+      )
 
-    if not channel:
-      ow = {
-        guild.default_role: discord.PermissionOverwrite(read_messages=False)}
-        
-      for role in guild.roles:
-        if role.permissions.view_audit_log:
-          ow[role] = discord.PermissionOverwrite(read_messages=True)
+      await channel.send(embed=e)
+
+      if not channel:
+        pass
+        #ow = {
+          #guild.default_role: discord.PermissionOverwrite(read_messages=False)}
           
-      await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+        #for role in guild.roles:
+          #if role.permissions.view_audit_log:
+            #ow[role] = discord.PermissionOverwrite(read_messages=True)
+            
+        #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+    else:
+      pass
 
   @commands.Cog.listener()
   async def on_member_ban(self, guild, user):
