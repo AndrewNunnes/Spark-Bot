@@ -212,17 +212,17 @@ class General(commands.Cog, name="📯 General Category"):
 
         # Setting up fields
         fields = [
-            ("__*Developer*__", "Andrew Nunnes#0021", False),
+            ("__*Developer*__", "Andrew Nunnes#1148", False),
 
             ("__*Language | Library*__",
              f"<:Python_Logo:741046229441708152> Python {python_version()} | <:discord:741045246435262482> Discord.py {discord_version}",
              False),
 
             ("__*<:discord:741045246435262482> Support Server*__",
-             "[Here!](https://discord.gg/fkdW9hB)", True),
+             "[Here!](https://discord.com/invite/fkdW9hB)", True),
 
             ("__*<:invite:741045282929901678> Invite Link*__",
-             "[Here!](https://discord.com/oauth2/authorize?client_id=721397896704163965&permissions=8&scope=bot)", True),
+             "[Here!](https://discord.com/oauth2/authorize?client_id=721397896704163965&scope=bot&permissions=470117623)", True),
 
             ("__*❗ Current Prefix*__", f'`{ctx.prefix}`', True),
 
