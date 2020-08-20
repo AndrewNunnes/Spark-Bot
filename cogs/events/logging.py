@@ -24,12 +24,11 @@ class Logging(commands.Cog):
   )
   @commands.has_permissions(manage_guild=True)
   @commands.guild_only()
-  async def logs(self, ctx):
+  async def logs(self, ctx, state: bool):
 
     #Check if user argument is 'on' or 'off'
-    if ctx.message == 'on':
+    if state is True:
       self.modlogs = True
-      await ctx.send('Log system has been turned on, and logs channel has been made')
 
       #Create the server logs channel
       guild = ctx.guild
@@ -42,8 +41,10 @@ class Logging(commands.Cog):
           ow[role] = discord.PermissionOverwrite(read_messages=True)
             
           await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+
+      await ctx.send('Log system has been turned on, and logs channel has been made')
     else:
-      if ctx.message == 'off':
+      if state is False:
         self.modlogs = False
         await ctx.send('Log system has been turned off')
 
@@ -56,9 +57,21 @@ class Logging(commands.Cog):
   @commands.has_permissions(manage_guild=True)
   async def logstatus(self, ctx):
 
+    OffEdit_Delete = f"<:offline:728377784207933550> Edit/Deleted Messages Logs are {bool(self.edit_delete)}"
+
+    OffAnti_Invite = f"<:offline:728377784207933550> AntiInvite Messages are {bool(self.anti_invite)}"
+
+    OffModLogs = f"<:offline:728377784207933550> ModLogs are {bool(self.modlogs)}"
+
+    OnEdit_Delete = f"<:online:728377717090680864> Edit/Deleted Messages Logs are {bool(self.edit_delete)}"
+
+    OnAnti_Invite = f"<:online:728377717090680864> AntiInvite Messages are {bool(self.anti_invite)}"
+
+    OnModLogs = f"<:online:728377717090680864> ModLogs are {bool(self.modlogs)}"
+
     if self.modlogs == False:
       e = discord.Embed(
-        description="<:offline:728377784207933550> **Modlogs are currently off**", 
+        description=f"**{OffModLogs}\n{OffEdit_Delete}\n{OffAnti_Invite}**", 
         color=0x420000
       )
 
@@ -68,7 +81,7 @@ class Logging(commands.Cog):
     else:
       if self.modlogs == True:
         e = discord.Embed(
-          description="<:online:728377717090680864> **Modlogs are currently on**", 
+          description=f"{OnModLogs}\n{OnEdit_Delete}\n{OnAnti_Invite}", 
           color=0x420000
         )
 
@@ -83,14 +96,14 @@ class Logging(commands.Cog):
   )
   @commands.has_permissions(manage_guild=True)
   @commands.guild_only()
-  async def editdel(self, ctx):
+  async def editdel(self, ctx, *, on=False, off):
 
     #Check if message is 'on'
-    if ctx.message == 'on':
+    if ctx.message == on:
       self.edit_delete = True
       await ctx.send('Logs for Messages Deleted/Edited has been turned on')
     else:
-      if ctx.message == 'off':
+      if ctx.message == off:
         self.edit_delete = False
         await ctx.send('Logs for Messages Deleted/Edited has been turned off')
 
@@ -101,14 +114,14 @@ class Logging(commands.Cog):
   )
   @commands.guild_only()
   @commands.has_permissions(manage_guild=True)
-  async def antiinvite(self, ctx):
+  async def antiinvite(self, ctx, *, on=False, off):
     
     #Check if message is 'on' or 'off'
-    if ctx.message == 'on':
+    if ctx.message == on:
       self.anti_invite = True
       await ctx.send('Anti Invite has been turned off')
     else:
-      if ctx.message == 'off':
+      if ctx.message == off:
         self.anti_invite = False
         await ctx.send('Anti Invite has been turned off')
     
@@ -239,40 +252,43 @@ class Logging(commands.Cog):
 
     if self.modlogs or self.edit_delete == True:
 
-      guild = message.guild
+        if message.embeds:
+          return
 
-      #Check if there's a 
-      #Logs channel
-      names = ['log']
-      channel = discord.utils.find(
-        lambda channel:any(
-          map(lambda c: c in channel.name, names)), 
-          guild.text_channels)
+        guild = message.guild
 
-      e = discord.Embed(
-        description=f'**Message Deleted By {message.author.mention} In {message.channel.mention}**\n\n**Message:** {message.content}', 
-        color=discord.Color.dark_red()
-      )
+        #Check if there's a 
+        #Logs channel
+        names = ['log']
+        channel = discord.utils.find(
+          lambda channel:any(
+            map(lambda c: c in channel.name, names)), 
+            guild.text_channels)
 
-      e.timestamp = datetime.datetime.utcnow()
+        e = discord.Embed(
+          description=f'**Message Deleted By {message.author.mention} In {message.channel.mention}**\n\n**Message:** {message.content}', 
+          color=discord.Color.dark_red()
+        )
 
-      e.set_footer(
-        text=f'{message.author}', 
-        icon_url=f'{message.author.avatar_url}'
-      )
+        e.timestamp = datetime.datetime.utcnow()
 
-      await channel.send(embed=e)
+        e.set_footer(
+          text=f'{message.author}', 
+          icon_url=f'{message.author.avatar_url}'
+        )
 
-      if not channel:
-        pass
-        #ow = {
-          #guild.default_role: discord.PermissionOverwrite(read_messages=False)}
-          
-        #for role in guild.roles:
-          #if role.permissions.view_audit_log:
-            #ow[role] = discord.PermissionOverwrite(read_messages=True)
+        await channel.send(embed=e)
+
+        if not channel:
+          pass
+          #ow = {
+            #guild.default_role: discord.PermissionOverwrite(read_messages=False)}
             
-        #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+          #for role in guild.roles:
+            #if role.permissions.view_audit_log:
+              #ow[role] = discord.PermissionOverwrite(read_messages=True)
+              
+          #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
     else:
       pass
 
