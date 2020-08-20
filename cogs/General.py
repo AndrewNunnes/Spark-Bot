@@ -139,7 +139,7 @@ class General(commands.Cog, name="📯 General Category"):
       brief="{Connection Test to Discord}", 
       usage="ping")
     @commands.guild_only()
-    @commands.cooldown(3, 15, type=BucketType.user)
+    @commands.cooldown(1, 1.5, type=BucketType.user)
     async def ping(self, ctx):
       
         embed = discord.Embed(title='Pong?', color=discord.Color.dark_blue())
@@ -154,6 +154,7 @@ class General(commands.Cog, name="📯 General Category"):
       brief="{List of Boosters for the Server}", 
       usage="boosters")
     @commands.guild_only()
+    @commands.cooldown(1, 1.5, type=BucketType.user)
     async def boosters(self, ctx):
 
       #Saving the guild's boosters
@@ -184,6 +185,7 @@ class General(commands.Cog, name="📯 General Category"):
       usage='binfo'
     )
     @commands.bot_has_permissions(embed_links=True)
+    @commands.cooldown(1, 1.5, type=BucketType.user)
     async def binfo(self, ctx):
 
         #Defining the embed
@@ -273,7 +275,7 @@ class General(commands.Cog, name="📯 General Category"):
       brief="{Info about the Server}", 
       usage="sinfo")
     @commands.guild_only()
-    @commands.cooldown(1, 30, type=BucketType.channel)
+    @commands.cooldown(1, 1.5, type=BucketType.user)
     @commands.bot_has_permissions(embed_links=True)
     async def sinfo(self, ctx):
 
@@ -335,7 +337,7 @@ class General(commands.Cog, name="📯 General Category"):
       brief="{Info on a User}", 
       usage="uinfo (member)")
     @commands.guild_only()
-    @commands.cooldown(3, 20, type=BucketType.user)
+    @commands.cooldown(1, 1.5, type=BucketType.user)
     async def uinfo(self, ctx, member: discord.Member = None):
 
         #Checks if a member is mentioned 
@@ -404,7 +406,7 @@ class General(commands.Cog, name="📯 General Category"):
       usage="avatar (member)")
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
-    @commands.cooldown(3, 20, type=BucketType.user)
+    @commands.cooldown(1, 1.5, type=BucketType.user)
     async def avatar(self, ctx, member: discord.Member = None):
 
         #Checks if a member is mentioned or not
