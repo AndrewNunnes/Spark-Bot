@@ -18,37 +18,6 @@ class Logging(commands.Cog):
     self.edit_delete = False
 
   @commands.command(
-    brief='{Turn on/off Server Logs}', 
-    usage='logs <on/off>', 
-    aliases=['modlogs', 'serverlogs']
-  )
-  @commands.has_permissions(manage_guild=True)
-  @commands.guild_only()
-  async def logs(self, ctx, state: bool):
-
-    #Check if user argument is 'on' or 'off'
-    if state is True:
-      self.modlogs = True
-
-      #Create the server logs channel
-      guild = ctx.guild
-      
-      ow = {
-        guild.default_role: discord.PermissionOverwrite(read_messages=False)
-        }
-      for role in guild.roles:
-        if role.permissions.view_audit_log:
-          ow[role] = discord.PermissionOverwrite(read_messages=True)
-            
-          await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
-
-      await ctx.send('Log system has been turned on, and logs channel has been made')
-    else:
-      if state is False:
-        self.modlogs = False
-        await ctx.send('Log system has been turned off')
-
-  @commands.command(
     brief="{Check Current ModLogs Status}", 
     usage="logstatus", 
     aliases=['modlogsstatus']
@@ -66,6 +35,12 @@ class Logging(commands.Cog):
     OnEdit_Delete = f"<:online:728377717090680864> Edit/Deleted Messages Logs are {bool(self.edit_delete)}"
 
     OnAnti_Invite = f"<:online:728377717090680864> AntiInvite Messages are {bool(self.anti_invite)}"
+
+    if self.edit_delete == True:
+      OnEdit_Delete = f"<:online:728377717090680864> Edit/Deleted Messages Logs Is On"
+    else:
+      if self.edit_delete == False:
+        OffEdit_Delete = f"<:offline:728377784207933550> Edit/Deleted Messages Logs Is Off"
 
     OnModLogs = f"<:online:728377717090680864> ModLogs are {bool(self.modlogs)}"
 
@@ -90,22 +65,57 @@ class Logging(commands.Cog):
         await ctx.send(embed=e)
 
   @commands.command(
+    brief='{Turn on/off Server Logs}', 
+    usage='logs <on/off>', 
+    aliases=['modlogs', 'serverlogs']
+  )
+  @commands.has_permissions(manage_guild=True)
+  @commands.guild_only()
+  async def logs(self, ctx, state: bool):
+
+    #Check if user argument is 'on' or 'off'
+    if state is True:
+      self.modlogs = True
+
+      #Create the server logs channel
+      #guild = ctx.guild
+      
+      #ow = {
+        #guild.default_role: discord.PermissionOverwrite(read_messages=False)
+        #}
+      #for role in guild.roles:
+        #if role.permissions.view_audit_log:
+          #ow[role] = discord.PermissionOverwrite(read_messages=True)
+            
+          #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+
+      await ctx.send('<:online:728377717090680864> Log system has been turned on')
+    else:
+      if state is False:
+        #Making all other options False
+        self.modlogs = False
+        self.edit_delete = False
+        self.anti_invite = False
+
+        await ctx.send('<:offline:728377784207933550> Log system has been turned off')
+
+  @commands.command(
     brief='{Turn on/off Logs for Messages Deleted/Edited}', 
     usage='logs <on/off>', 
     aliases=['edit_delete', 'edit/delete']
   )
   @commands.has_permissions(manage_guild=True)
   @commands.guild_only()
-  async def editdel(self, ctx, *, on=False, off):
+  async def editdel(self, ctx, state: bool):
 
     #Check if message is 'on'
-    if ctx.message == on:
+    if state is True:
       self.edit_delete = True
-      await ctx.send('Logs for Messages Deleted/Edited has been turned on')
+      await ctx.send('<:online:728377717090680864> Logs for Messages Deleted/Edited has been turned on')
     else:
-      if ctx.message == off:
+      if state is False:
         self.edit_delete = False
-        await ctx.send('Logs for Messages Deleted/Edited has been turned off')
+        await ctx.send('<:offline:728377784207933550> Logs for Messages Deleted/Edited has been turned off')
 
   @commands.command(
     brief='{Turn on/off Anti Invite}', 
@@ -114,16 +124,16 @@ class Logging(commands.Cog):
   )
   @commands.guild_only()
   @commands.has_permissions(manage_guild=True)
-  async def antiinvite(self, ctx, *, on=False, off):
+  async def antiinvite(self, ctx, state: bool):
     
     #Check if message is 'on' or 'off'
-    if ctx.message == on:
+    if state is True:
       self.anti_invite = True
-      await ctx.send('Anti Invite has been turned off')
+      await ctx.send('<:online:728377717090680864> Anti Invite has been turned on')
     else:
-      if ctx.message == off:
+      if state is False:
         self.anti_invite = False
-        await ctx.send('Anti Invite has been turned off')
+        await ctx.send('<:offline:728377784207933550> Anti Invite has been turned off')
     
   @commands.Cog.listener()
   async def on_message(self, message):
@@ -230,7 +240,7 @@ class Logging(commands.Cog):
         text=f'{before.author}', 
         icon_url=f'{before.author.avatar_url}')
 
-      await after.channel.send(embed=e)
+      await channel.send(embed=e)
 
       if not channel:
         pass
