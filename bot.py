@@ -64,8 +64,13 @@ async def on_message(message):
   
 @client.event
 async def on_ready():
-    print("Bot is working")
-    return await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight take another L"))
+
+  #Only for me, for quicker code testing
+  channel = client.get_channel(737948764483878975)
+  await channel.send("I am now online!")
+
+  print("Bot is working")
+  return await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight take another L"))
     
 if __name__ == '__main__':
     for file in os.listdir(cwd+"/cogs/"):
