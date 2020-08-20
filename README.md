@@ -6,7 +6,7 @@
 
 # Issues/Bugs
 * If you there's any bugs/issues with the bot please let me know
-* Support [Server](https://discord.gg/fkdW9hB)to report issues
+* Support [Server](https://discord.gg/fkdW9hB) to report issues
 
 # Role Management Commands
 * `!addrole <user> <rolename>` -> Adds a Role to a User
