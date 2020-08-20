@@ -48,6 +48,35 @@ class Logging(commands.Cog):
         await ctx.send('Log system has been turned off')
 
   @commands.command(
+    brief="{Check Current ModLogs Status}", 
+    usage="logstatus", 
+    aliases=['modlogsstatus']
+  )
+  @commands.guild_only()
+  @commands.has_permissions(manage_guild=True)
+  async def logstatus(self, ctx):
+
+    if self.modlogs == False:
+      e = discord.Embed(
+        description="<:offline:728377784207933550> **Modlogs are currently off**", 
+        color=0x420000
+      )
+
+      e.timestamp = datetime.datetime.utcnow()
+
+      await ctx.send(embed=e)
+    else:
+      if self.modlogs == True:
+        e = discord.Embed(
+          description="<:online:728377717090680864> **Modlogs are currently on**", 
+          color=0x420000
+        )
+
+        e.timestamp = datetime.datetime.utcnow()
+
+        await ctx.send(embed=e)
+
+  @commands.command(
     brief='{Turn on/off Logs for Messages Deleted/Edited}', 
     usage='logs <on/off>', 
     aliases=['edit_delete', 'edit/delete']
