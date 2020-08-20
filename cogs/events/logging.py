@@ -26,10 +26,22 @@ class Logging(commands.Cog):
   @commands.guild_only()
   async def logs(self, ctx):
 
-    #Check if message is 'on'
+    #Check if user argument is 'on' or 'off'
     if ctx.message == 'on':
       self.modlogs = True
-      await ctx.send('Log system has been turned on')
+      await ctx.send('Log system has been turned on, and logs channel has been made')
+
+      #Create the server logs channel
+      guild = ctx.guild
+      
+      ow = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False)
+        }
+      for role in guild.roles:
+        if role.permissions.view_audit_log:
+          ow[role] = discord.PermissionOverwrite(read_messages=True)
+            
+          await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
     else:
       if ctx.message == 'off':
         self.modlogs = False
