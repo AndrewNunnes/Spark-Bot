@@ -19,31 +19,36 @@ async def create_db(client):
     #Create tables
     await cursor.executescript("""
 
-    CREATE TABLE warns (
+    CREATE TABLE IF NOT EXISTS warns (
     user_id	INTEGER,
     reason	TEXT,
     guild_id	INTEGER,
     PRIMARY KEY(user_id, guild_id)
     ); 
     
-    CREATE TABLE mutes (
+    CREATE TABLE IF NOT EXISTS mutes (
     UserID	INTEGER, 
     RoleIDS	TEXT, 
     EndTime	TEXT,
     PRIMARY KEY(UserID)
     );
 
-    CREATE TABLE prefix_list (
+    CREATE TABLE IF NOT EXISTS prefix_list (
     GuildID INTEGER, 
     prefix TEXT DEFAULT '!', 
     PRIMARY KEY(GuildID)
     );
 
-    CREATE TABLE welcome (
-    guild_id INTEGER, 
+    CREATE TABLE IF NOT EXISTS welcome (
+    guild_id TEXT, 
     msg TEXT, 
-    channel_id INTEGER, 
-    PRIMARY KEY(guild_id, channel_id)
+    channel_id TEXT, 
+    );
+
+    CREATE TABLE IF NOT EXISTS goodbye (
+    guild_id TEXT, 
+    msg TEXT, 
+    channel_id TEXT, 
     );
     
     """)
