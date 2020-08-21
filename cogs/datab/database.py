@@ -21,34 +21,36 @@ async def create_db(client):
 
     CREATE TABLE IF NOT EXISTS warns (
     user_id	INTEGER,
-    reason	TEXT,
-    guild_id	INTEGER,
+    reason TEXT,
+    guild_id INTEGER,
     PRIMARY KEY(user_id, guild_id)
     ); 
     
     CREATE TABLE IF NOT EXISTS mutes (
-    UserID	INTEGER, 
-    RoleIDS	TEXT, 
+    user_id	INTEGER, 
+    role_ids TEXT, 
     EndTime	TEXT,
-    PRIMARY KEY(UserID)
+    PRIMARY KEY(user_id)
     );
 
     CREATE TABLE IF NOT EXISTS prefix_list (
-    GuildID INTEGER, 
+    guild_id INTEGER, 
     prefix TEXT DEFAULT '!', 
-    PRIMARY KEY(GuildID)
+    PRIMARY KEY(guild_id)
     );
 
     CREATE TABLE IF NOT EXISTS welcome (
-    guild_id TEXT, 
+    guild_id INTEGER, 
     msg TEXT, 
-    channel_id TEXT, 
+    channel_id INTEGER, 
+    PRIMARY KEY(guild_id, channel_id)
     );
 
     CREATE TABLE IF NOT EXISTS goodbye (
-    guild_id TEXT, 
+    guild_id INTEGER, 
     msg TEXT, 
-    channel_id TEXT, 
+    channel_id INTEGER, 
+    PRIMARY KEY(guild_id, channel_id)
     );
     
     """)
@@ -58,8 +60,3 @@ async def create_db(client):
     await conn.commit()
 
     await conn.close()
-
-#def setup(bot):
-    #bot.add_cog(Database(bot))
-
-#self.bot.loop.create_task(create_db(self.bot))
