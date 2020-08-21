@@ -36,8 +36,128 @@ class Welcome(commands.Cog):
       embed.timestamp = datetime.datetime.utcnow()
       await channel.send(embed=embed)
       
-      #await guild.create_custom_emoji()
-    
+    @commands.group(invoke_without_command=True)
+    @commands.guild_only()
+    async def welcome(self, ctx):
+
+      e = discord.Embed(
+        title="Available Setup Commands", 
+        color=discord.Color.darker_grey()
+      )
+
+      e.add_field(
+        name="**welcome channel {Set the channel to send Welcome Messages to}**", 
+        value=f"{{`{ctx.prefix}welcome channel <#channel>`}}", 
+        inline=True)
+
+      e.add_field(
+        name="**welcome text {Set the Welcome Message}**", 
+        value=f"{{`{ctx.prefix}welcome text <text>`}}", 
+        inline=True)
+
+      await ctx.send(embed=e)
+
+    @welcome.command(
+      brief="{Change the Channel to Send Welcome Messages To}", 
+      usage="welcome channel <#channel>"
+    )
+    @commands.guild_only()
+    @commands.has_permissions(manage_channels=True)
+    async def channel(self, ctx, channel: discord.TextChannel):
+
+      conn = await aiosqlite.connect("main.db")
+      
+      cursor = await conn.cursor()
+
+      await cursor.execute(f"SELECT channel_id FROM welcome WHERE guild_id = {ctx.guild.id}")
+
+      result = cursor.fetchone()
+
+      if result is None:
+
+        chann = ("INSERT INTO welcome(guild_id, channel_id) VALUES(?, ?)")
+        values = ctx.guild.id, channel.id
+
+        await ctx.send(f"Channel has been set to {channel.mention}")
+
+      elif result is not None:
+
+        chann = "UPDATE welcome SET channel_id = ? WHERE guild_id = ?"
+        values = (channel.id, ctx.guild.id)
+
+        await ctx.send(f"Channel has been updated to {channel.mention}")
+
+      await cursor.execute(chann, values)
+
+      await conn.commit()
+
+      await cursor.close()
+
+      await conn.close()
+
+    @welcome.command(
+      brief="{Change the welcome message}", 
+      usage="welcome text <new_text_here>"
+    )
+    @commands.guild_only()
+    @commands.has_permissions(manage_channels=True)
+    async def text(self, ctx, *, text):
+
+      #Connect to the database
+      conn = await aiosqlite.connect("main.db")
+      
+      #Define the database cursor
+      cursor = await conn.cursor()
+
+      #Get the text query from welcome table
+      await cursor.execute(f"SELECT msg FROM welcome WHERE guild_id = {ctx.guild.id}")
+
+      result = cursor.fetchone()
+
+      #IF there is no result
+      if result is None:
+
+        msg = "INSERT INTO welcome(guild_id, msg) VALUES(?, ?)"
+        values = (ctx.guild.id, text)
+
+        e = discord.Embed(
+          title="**Welcome Message Set", 
+          description=f"**New Message:** {text}", 
+          color=discord.Color.dark_green()
+        )
+
+        e.timestamp = datetime.datetime.utcnow()
+
+        await ctx.send(embed=e)
+
+      #IF there is a result
+      elif result is not None:
+
+        msg = "UPDATE welcome SET text = ? WHERE guild_id = ?"
+        values = (text, ctx.guild.id)
+
+        e = discord.Embed(
+          title="**Welcome Message Updated", 
+          description=f"**New Message:** {text}", 
+          color=discord.Color.dark_green()
+        )
+
+        e.timestamp = datetime.datetime.utcnow()
+
+        await ctx.send(embed=e)
+
+      #Execute to the cursor
+      await cursor.execute(msg, values)
+
+      #Commit (Save) to the database
+      await conn.commit()
+
+      #Close the cursor connection
+      await cursor.close()
+
+      #Close the database connection
+      await conn.close()
+
     #Welcoming new Members
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -121,116 +241,6 @@ class Welcome(commands.Cog):
           e.timestamp = datetime.datetime.utcnow()
 
           await channel.send(embed=e)
-      
-    @commands.group(invoke_without_command=True)
-    @commands.guild_only()
-    async def welcome(self, ctx):
-
-      e = discord.Embed(
-        title="Available Setup Commands", 
-        color=discord.Color.darker_grey()
-      )
-
-      e.add_field(
-        name="**welcome channel {Set the channel to send Welcome Messages to}**", 
-        value=f"{{`{ctx.prefix}welcome channel <#channel>`}}", 
-        inline=True)
-
-      e.add_field(
-        name="**welcome text {Set the Welcome Message}**", 
-        value=f"{{`{ctx.prefix}welcome text <text>`}}", 
-        inline=True)
-
-      await ctx.send(embed=e)
-
-    @welcome.command()
-    @commands.guild_only()
-    @commands.has_permissions(manage_channels=True)
-    async def channel(self, ctx, channel: discord.TextChannel):
-
-      conn = await aiosqlite.connect("main.db")
-      
-      cursor = await conn.cursor()
-
-      await cursor.execute(f"SELECT channel_id FROM welcome WHERE guild_id = {ctx.guild.id}")
-
-      result = cursor.fetchone()
-
-      if result is None:
-
-        chann = ("INSERT INTO welcome(guild_id, channel_id) VALUES(?, ?)", ctx.guild.id, channel.id)
-        await ctx.send(f"Channel has been set to {channel.mention}")
-
-      elif result is not None:
-
-        chann = ("UPDATE welcome SET channel_id = ? WHERE guild_id = ?", channel.id, ctx.guild.id)
-        await ctx.send(f"Channel has been updated to {channel.mention}")
-
-      await cursor.execute(chann)
-
-      await conn.commit()
-
-      await cursor.close()
-
-      await conn.close()
-
-    @welcome.command()
-    @commands.guild_only()
-    @commands.has_permissions(manage_channels=True)
-    async def text(self, ctx, *, text):
-
-      #Connect to the database
-      conn = await aiosqlite.connect("main.db")
-      
-      #Define the database cursor
-      cursor = await conn.cursor()
-
-      #Get the text query from welcome table
-      await cursor.execute(f"SELECT msg FROM welcome WHERE guild_id = {ctx.guild.id}")
-
-      result = cursor.fetchone()
-
-      #IF there is no result
-      if result is None:
-
-        msg = ("INSERT INTO welcome(guild_id, msg) VALUES(?, ?)", ctx.guild.id, text)
-
-        e = discord.Embed(
-          title="**Welcome Message Set", 
-          description=f"**New Message:** {text}", 
-          color=discord.Color.dark_green()
-        )
-
-        e.timestamp = datetime.datetime.utcnow()
-
-        await ctx.send(embed=e)
-
-      #IF there is a result
-      elif result is not None:
-
-        msg = ("UPDATE welcome SET text = ? WHERE guild_id = ?", text, ctx.guild.id)
-
-        e = discord.Embed(
-          title="**Welcome Message Updated", 
-          description=f"**New Message:** {text}", 
-          color=discord.Color.dark_green()
-        )
-
-        e.timestamp = datetime.datetime.utcnow()
-
-        await ctx.send(embed=e)
-
-      #Execute to the cursor
-      await cursor.execute(msg)
-
-      #Commit (Save) to the database
-      await conn.commit()
-
-      #Close the cursor connection
-      await cursor.close()
-
-      #Close the database connection
-      await conn.close()
 
 def setup(bot):
     bot.add_cog(Welcome(bot))
