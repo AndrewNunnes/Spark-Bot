@@ -96,10 +96,46 @@ class Management(commands.Cog):
         self.bot = bot
 
     @commands.command(
-        brief="{Menu for ModLogs}", 
-        usage="modlogs", 
-        aliases=['logmenu']
+        brief="{Menu for Welcome Messages}", 
+        usage="welcomemenu"
     )
+    @commands.guild_only()
+    @commands.cooldown(1, 1.5, commands.BucketType.user)
+    async def welcomemenu(self, ctx):
+
+        cog = self.bot.get_cog('Welcome')
+        command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n• {c.brief}" for c in cog.walk_commands()]
+
+        e = discord.Embed(
+            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
+            description="\n\n".join(command_desc), 
+            color=0x420000)
+            
+        e.timestamp = datetime.datetime.utcnow()
+        
+        await ctx.send(embed=e)
+
+    @commands.command(
+        brief="{Menu for Welcome Messages}", 
+        usage="welcomemenu", 
+        aliases=['byemenu']
+    )
+    @commands.guild_only()
+    @commands.cooldown(1, 1.5, commands.BucketType.user)
+    async def goodbyemenu(self, ctx):
+
+        cog = self.bot.get_cog('Goodbye')
+        command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n• {c.brief}" for c in cog.walk_commands()]
+
+        e = discord.Embed(
+            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
+            description="\n\n".join(command_desc), 
+            color=0x420000)
+            
+        e.timestamp = datetime.datetime.utcnow()
+        
+        await ctx.send(embed=e)
+
     @commands.guild_only()
     @commands.cooldown(1, 1.5, commands.BucketType.user)
     async def logsmenu(self, ctx):
@@ -179,14 +215,17 @@ class Management(commands.Cog):
     #@bot_perms()
     @commands.has_permissions(manage_guild=True)
     @commands.bot_has_guild_permissions(manage_guild=True)
-    async def prefix(self, ctx, *, pre='!'):
-      """
-      Sets a custom prefix
-      """
-      data = cogs._json.read_json('prefixes')
-      data[str(ctx.message.guild.id)] = pre
-      cogs._json.write_json(data, 'prefixes')
-      await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}prefix <newprefix>` to change it again")
+    async def prefix(self, ctx, *, pre):
+        data = cogs._json.read_json('prefixes')
+        data[str(ctx.message.guild.id)] = pre
+        cogs._json.write_json(data, 'prefixes')
+
+        if pre is None:
+            await ctx.send(f"The server prefix is set to {ctx.prefix}. Use {ctx.prefix}prefix to change it")
+            
+        elif pre is not None:
+        
+            await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}prefix <newprefix>` to change it again")
   
     @commands.command(
       brief="{Kicks a User from the Guild}", 
@@ -399,7 +438,7 @@ class Management(commands.Cog):
             
         await asyncio.sleep(0.5)
 
-        await ctx.send(f"{count} message(s) have been deleted ðŸ—‘", delete_after=2)
+        await ctx.send(f"{count} message(s) have been deleted <:trash:734043301187158082>", delete_after=2)
 
 def setup(bot):
     bot.add_cog(Management(bot))
