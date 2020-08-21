@@ -7,8 +7,10 @@ import json
 from pathlib import Path
 import datetime
 import os
-
+import aiosqlite
 import cogs._json
+
+from datab.database import create_db
 
 cwd = Path(__file__).parents[0]
 cwd = str(cwd)
@@ -23,10 +25,34 @@ def get_prefix(client, message):
 
 #Function used to load extensions
 def file_name(file):
-    if file.endswith(".py") and not file.startswith("_"):        client.load_extension(f"cogs.{file[:-3]}")
+    if file.endswith(".py") and not file.startswith("_"):
+      client.load_extension(f"cogs.{file[:-3]}")
 
 client = commands.Bot(command_prefix=get_prefix, case_insensitive=True)
 client.remove_command('help')
+
+@client.event
+async def on_ready():
+
+  #Only for me, for quicker code testing
+  channel = client.get_channel(737948764483878975)
+  await channel.send("I am now online!")
+
+  print("Bot is working")
+  #Change the bot's status
+  return await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight take another L"))
+
+#Make the database
+client.loop.create_task(create_db(client))
+
+#Function for getting the prefix
+#From the database
+#def get_prefix(client, message):
+
+  #conn = await aiosqlite.connect('main.db')
+
+  #data = conn.fetchone("SELECT prefix FROM prefix_list WHERE GuildID = ?", message.guild.id)
+  #return when_mentioned_or(data)(client, message)
 
 client.cwd = cwd 
 
@@ -61,16 +87,6 @@ async def on_message(message):
         await message.channel.send(embed=prefixembed)
     
   await client.process_commands(message)
-  
-@client.event
-async def on_ready():
-
-  #Only for me, for quicker code testing
-  channel = client.get_channel(737948764483878975)
-  await channel.send("I am now online!")
-
-  print("Bot is working")
-  return await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight take another L"))
     
 if __name__ == '__main__':
     for file in os.listdir(cwd+"/cogs/"):
@@ -79,6 +95,8 @@ if __name__ == '__main__':
         file_name(f'events.{file}')
     for file in os.listdir(cwd+"/cogs/other/"):
         file_name('other.{file}')
+
+        #Ignore all these old versions
                 #if file.endswith(".py") and not file.startswith("_"):
                     #client.load_extension(f"cogs.{file[:-3]}")
     
@@ -87,5 +105,10 @@ if __name__ == '__main__':
     
 #for ext in[".".join(p.parts)[:-len(".py")] for p in pathlib.Path('cogs').glob('**/*.py')]:
   #client.load_extension(ext)
-    
-client.run("bruh")
+
+#Choose the token of the bot 
+#I want to run
+testbot_token = "token"
+spark_token = "token"
+
+client.run(varable_here)
