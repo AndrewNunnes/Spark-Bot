@@ -28,7 +28,10 @@ class Goodbye(commands.Cog):
 
       await ctx.send(embed=e)
 
-    @goodbye.command()
+    @goodbye.command(
+      brief="{Change the Channel to Send Goodbye Messages To", 
+      usage="goodbye channel <#channel>"
+    )
     @commands.guild_only()
     @commands.has_permissions(manage_channels=True)
     async def channel(self, ctx, channel: discord.TextChannel):
@@ -43,15 +46,19 @@ class Goodbye(commands.Cog):
 
       if result is None:
 
-        chann = ("INSERT INTO goodbye(guild_id, channel_id) VALUES(?, ?)", ctx.guild.id, channel.id)
+        chann = ("INSERT INTO goodbye(guild_id, channel_id) VALUES(?, ?)")
+        values = ctx.guild.id, channel.id
+
         await ctx.send(f"Channel has been set to {channel.mention}")
 
       elif result is not None:
 
-        chann = ("UPDATE goodbye SET channel_id = ? WHERE guild_id = ?", channel.id, ctx.guild.id)
+        chann = "UPDATE goodbye SET channel_id = ? WHERE guild_id = ?"
+        values = (channel.id, ctx.guild.id)
+
         await ctx.send(f"Channel has been updated to {channel.mention}")
 
-      await cursor.execute(chann)
+      await cursor.execute(chann, values)
 
       await conn.commit()
 
@@ -59,7 +66,10 @@ class Goodbye(commands.Cog):
 
       await conn.close()
 
-    @goodbye.command()
+    @goodbye.command(
+      brief="{Change the Goodbye Message}", 
+      usage="goodbye text <new_text_here>"
+    )
     @commands.guild_only()
     @commands.has_permissions(manage_channels=True)
     async def text(self, ctx, *, text):
@@ -78,10 +88,11 @@ class Goodbye(commands.Cog):
       #IF there is no result
       if result is None:
 
-        msg = ("INSERT INTO goodbye(guild_id, msg) VALUES(?, ?)", ctx.guild.id, text)
+        msg = "INSERT INTO goodbye(guild_id, msg) VALUES(?, ?)"
+        values = (ctx.guild.id, text)
 
         e = discord.Embed(
-          title="**Goodbye Message Set**", 
+          title="**Welcome Message Set", 
           description=f"**New Message:** {text}", 
           color=discord.Color.dark_green()
         )
@@ -93,10 +104,11 @@ class Goodbye(commands.Cog):
       #IF there is a result
       elif result is not None:
 
-        msg = ("UPDATE goodbye SET text = ? WHERE guild_id = ?", text, ctx.guild.id)
+        msg = "UPDATE goodbye SET text = ? WHERE guild_id = ?"
+        values = (text, ctx.guild.id)
 
         e = discord.Embed(
-          title="**Goodbye Message Updated**", 
+          title="**Welcome Message Updated", 
           description=f"**New Message:** {text}", 
           color=discord.Color.dark_green()
         )
@@ -106,7 +118,7 @@ class Goodbye(commands.Cog):
         await ctx.send(embed=e)
 
       #Execute to the cursor
-      await cursor.execute(msg)
+      await cursor.execute(msg, values)
 
       #Commit (Save) to the database
       await conn.commit()
@@ -116,7 +128,6 @@ class Goodbye(commands.Cog):
 
       #Close the database connection
       await conn.close()
-
     #Saying goodbye to leaving members
     @commands.Cog.listener()
     async def on_member_remove(self, member):
