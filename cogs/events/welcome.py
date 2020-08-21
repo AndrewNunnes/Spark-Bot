@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import datetime
-import asyncio
 import aiosqlite
 
 class Welcome(commands.Cog):
@@ -43,14 +42,27 @@ class Welcome(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
 
+      #Connect to database
       conn = await aiosqlite.connect("main.db")
       
       cursor = await conn.cursor()
 
+      #Select queries from goodbye table
       await cursor.execute(f"SELECT channel_id FROM welcome WHERE guild_id = {member.guild.id}")
 
       result = cursor.fetchone()
 
+      #Get the channel the user set 
+      #To send this welcome message to
+      channel = self.bot.get_channel(id=int(result[0]))
+
+      #Check if the channel exists 
+      #In the database
+      if channel is None:
+        return
+
+      #Check if there's any channels
+      #In the database
       if result is None:
         return
 
@@ -77,7 +89,7 @@ class Welcome(commands.Cog):
         #Set the variables to
         e = discord.Embed(
           colour=discord.Colour.dark_green(), 
-          description=str(result[0]).format(members=members, mention=mention, user=user, guild=guild))
+          description=str(result1[0]).format(members=members, mention=mention, user=user, guild=guild))
 
         e.set_thumbnail(url=f"{member.avatar_url}")
 
@@ -108,10 +120,6 @@ class Welcome(commands.Cog):
 
           e.timestamp = datetime.datetime.utcnow()
 
-          #Get the channel the user set 
-          #To send this welcome message to
-          channel = self.bot.get_channel(id=int(result[0]))
-
           await channel.send(embed=e)
       
     @commands.group(invoke_without_command=True)
@@ -124,13 +132,13 @@ class Welcome(commands.Cog):
       )
 
       e.add_field(
-        name="_*welcome channel {Set the channel to send Welcome Messages to}*_", 
-        value="{{`{ctx.prefix}welcome channel <#channel>`}}", 
+        name="**welcome channel {Set the channel to send Welcome Messages to}**", 
+        value=f"{{`{ctx.prefix}welcome channel <#channel>`}}", 
         inline=True)
 
       e.add_field(
-        name="_*welcome text {Set the channel to send Welcome Messages to}*_", 
-        value="{{`{ctx.prefix}welcome text <text>`}}", 
+        name="**welcome text {Set the Welcome Message}**", 
+        value=f"{{`{ctx.prefix}welcome text <text>`}}", 
         inline=True)
 
       await ctx.send(embed=e)
@@ -223,30 +231,6 @@ class Welcome(commands.Cog):
 
       #Close the database connection
       await conn.close()
-
-
-    #Saying goodbye to leaving members
-    @commands.Cog.listener()
-    async def on_member_remove(self, member):
-        embed = discord.Embed(colour=discord.Colour.dark_red(), description=f"{member} just left the server. Thanks for visiting! Member Count: {len(list(member.guild.members))}")
-        embed.set_thumbnail(url=f"{member.avatar_url}")
-        embed.set_author(name=f"Goodbye {member.name}", icon_url=f"{member.avatar_url}")
-        embed.set_footer(text=f"{member.guild}", icon_url=f"{member.guild.icon_url}")
-        embed.timestamp = datetime.datetime.utcnow()
-
-        channelnames = ['memb', 'new', 'user', 'User', 'gateway', 'gate', 'entrance', 'enter', 'leave']
-        channel = discord.utils.find(
-            lambda channel:any(
-                map(lambda c: c in channel.name, channelnames)), member.guild.text_channels)
-        
-        if not channel:
-          newlist = ['gener', 'chat', 'welc']
-          newchann = discord.utils.find(
-              lambda newchann:any(
-                  map(lambda n: n in newchann.name, newlist)), member.guild.text_channels)
-          await newchann.send("Welcome and Goodbye messages to new users won't be sent without the channel including a keyword `new`, `memb` or `user`") #In case the channel doesn't exist to welcome new people, this will find a different general or chat channel to send the error to
-        message = await channel.send(embed=embed)
-        await message.add_reaction("ðŸ‘‹ðŸ½")
 
 def setup(bot):
     bot.add_cog(Welcome(bot))
