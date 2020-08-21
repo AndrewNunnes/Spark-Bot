@@ -41,8 +41,8 @@ async def create_db(client):
 
     CREATE TABLE welcome (
     guild_id INTEGER, 
-    channel_id INTEGER, 
     msg TEXT, 
+    channel_id INTEGER, 
     PRIMARY KEY(guild_id, channel_id)
     );
     
