@@ -42,7 +42,7 @@ class Goodbye(commands.Cog):
 
       await cursor.execute(f"SELECT channel_id FROM goodbye WHERE guild_id = {ctx.guild.id}")
 
-      result = cursor.fetchone()
+      result = await cursor.fetchone()
 
       if result is None:
 
@@ -83,7 +83,7 @@ class Goodbye(commands.Cog):
       #Get the text query from welcome table
       await cursor.execute(f"SELECT msg FROM goodbye WHERE guild_id = {ctx.guild.id}")
 
-      result = cursor.fetchone()
+      result = await cursor.fetchone()
 
       #IF there is no result
       if result is None:
@@ -140,7 +140,7 @@ class Goodbye(commands.Cog):
       #Select queries from goodbye table
       await cursor.execute(f"SELECT channel_id FROM goodbye WHERE guild_id = {member.guild.id}")
 
-      result = cursor.fetchone()
+      result = await cursor.fetchone()
 
       #Get the channel the user set 
       #To send this welcome message to
