@@ -75,17 +75,18 @@ async def on_message(message):
         if message.content.startswith(prefix):
           return
     else:
-        prefix = '!'
-        
-        prefixembed = discord.Embed(
-          description=f"What's up {message.author.mention}. My prefix is `{prefix}`\nFeel free to change it with `{prefix}prefix <newprefix>`", 
-          color=discord.Color.darker_grey())
-        
-        
-        prefixembed.timestamp = datetime.datetime.utcnow()
+      if not str(message.guild.id) in data:
+          prefix = '!'
+          
+      prefixembed = discord.Embed(
+        description=f"What's up {message.author.mention}. My prefix is `{prefix}`\nFeel free to change it with `{prefix}prefix <newprefix>`", 
+        color=discord.Color.darker_grey())
       
-        await message.channel.send(embed=prefixembed)
+      
+      prefixembed.timestamp = datetime.datetime.utcnow()
     
+      await message.channel.send(embed=prefixembed)
+  
   await client.process_commands(message)
     
 if __name__ == '__main__':
@@ -106,9 +107,4 @@ if __name__ == '__main__':
 #for ext in[".".join(p.parts)[:-len(".py")] for p in pathlib.Path('cogs').glob('**/*.py')]:
   #client.load_extension(ext)
 
-#Choose the token of the bot 
-#I want to run
-testbot_token = "token"
-spark_token = "token"
-
-client.run(varable_here)
+client.run('bruh')
