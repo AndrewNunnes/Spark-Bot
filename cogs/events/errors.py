@@ -195,6 +195,8 @@ class Errors(commands.Cog):
         # if the user tries to invoke a command that is only for the owner
         elif isinstance(args2, commands.NotOwner):
             await on_not_owner(self, ctx, bot)
+        else:
+            raise(args2)
 
 def setup(bot):
     bot.add_cog(Errors(bot))
