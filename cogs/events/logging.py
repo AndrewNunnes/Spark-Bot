@@ -11,58 +11,48 @@ class Logging(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
+    #Setup global variables for modlogs
     self.modlogs = False
 
     self.anti_invite = False
 
     self.edit_delete = False
 
+    self.channel_log = False
+    #Must all default to False
+
   @commands.command(
     brief="{Check Current ModLogs Status}", 
     usage="logstatus", 
-    aliases=['modlogsstatus']
+    aliases=['modlogsstatus', 'logsstatus', 'modlogstatus']
   )
   @commands.guild_only()
   @commands.has_permissions(manage_guild=True)
   async def logstatus(self, ctx):
 
-    OffEdit_Delete = f"<:offline:728377784207933550> Edit/Deleted Messages Logs are {bool(self.edit_delete)}"
+    #Variables for checking if logs are on or off
+    modlogs = bool(self.modlogs)
 
-    OffAnti_Invite = f"<:offline:728377784207933550> AntiInvite Messages are {bool(self.anti_invite)}"
+    edit_del = bool(self.edit_delete)
 
-    OffModLogs = f"<:offline:728377784207933550> ModLogs are {bool(self.modlogs)}"
+    anti_inv = bool(self.anti_invite)
 
-    OnEdit_Delete = f"<:online:728377717090680864> Edit/Deleted Messages Logs are {bool(self.edit_delete)}"
+    #Variables to show the off or on emoji
+    state1 = "<:online:728377717090680864>" if modlogs else "<:offline:728377784207933550>"
 
-    OnAnti_Invite = f"<:online:728377717090680864> AntiInvite Messages are {bool(self.anti_invite)}"
+    state2 = "<:online:728377717090680864>" if edit_del else "<:offline:728377784207933550>"
 
-    if self.edit_delete == True:
-      OnEdit_Delete = f"<:online:728377717090680864> Edit/Deleted Messages Logs Is On"
-    else:
-      if self.edit_delete == False:
-        OffEdit_Delete = f"<:offline:728377784207933550> Edit/Deleted Messages Logs Is Off"
+    state3 = "<:online:728377717090680864>" if anti_inv else "<:offline:728377784207933550>"
 
-    OnModLogs = f"<:online:728377717090680864> ModLogs are {bool(self.modlogs)}"
+    #Send and make embed
+    e = discord.Embed(
+      description=f"**{state1} Modlogs is {modlogs}\n{state2} Edit/Del Logs is {edit_del}\n{state3} Anti Invite is {anti_inv}**", 
+      color=0x420000
+    )
 
-    if self.modlogs == False:
-      e = discord.Embed(
-        description=f"**{OffModLogs}\n{OffEdit_Delete}\n{OffAnti_Invite}**", 
-        color=0x420000
-      )
+    e.timestamp = datetime.datetime.utcnow()
 
-      e.timestamp = datetime.datetime.utcnow()
-
-      await ctx.send(embed=e)
-    else:
-      if self.modlogs == True:
-        e = discord.Embed(
-          description=f"{OnModLogs}\n{OnEdit_Delete}\n{OnAnti_Invite}", 
-          color=0x420000
-        )
-
-        e.timestamp = datetime.datetime.utcnow()
-
-        await ctx.send(embed=e)
+    await ctx.send(embed=e)
 
   @commands.command(
     brief='{Turn on/off Server Logs}', 
@@ -73,21 +63,31 @@ class Logging(commands.Cog):
   @commands.guild_only()
   async def logs(self, ctx, state: bool):
 
+    #Only defining for the lambda
+    guild = ctx.guild
+
+    try:
+      names = ['log']
+      #Checks if there's a channel 
+      #containing log in the name
+      channel = discord.utils.find(
+        lambda channel:any(
+          map(lambda c: c in channel.name, names)), 
+          guild.text_channels)
+        
+      if not channel:
+
+        await ctx.send("There is no Logs channel to send modlogs to")
+
+        return
+
+    except Exception:
+      pass
+
     #Check if user argument is 'on' or 'off'
     if state is True:
-      self.modlogs = True
 
-      #Create the server logs channel
-      #guild = ctx.guild
-      
-      #ow = {
-        #guild.default_role: discord.PermissionOverwrite(read_messages=False)
-        #}
-      #for role in guild.roles:
-        #if role.permissions.view_audit_log:
-          #ow[role] = discord.PermissionOverwrite(read_messages=True)
-            
-          #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
+      self.modlogs = True
 
       await ctx.send('<:online:728377717090680864> Log system has been turned on')
     else:
@@ -96,6 +96,7 @@ class Logging(commands.Cog):
         self.modlogs = False
         self.edit_delete = False
         self.anti_invite = False
+        self.channel_log = False
 
         await ctx.send('<:offline:728377784207933550> Log system has been turned off')
 
@@ -110,9 +111,13 @@ class Logging(commands.Cog):
 
     #Check if message is 'on'
     if state is True:
+
       self.edit_delete = True
       await ctx.send('<:online:728377717090680864> Logs for Messages Deleted/Edited has been turned on')
+
+    #Check if message is 'off'
     else:
+
       if state is False:
         self.edit_delete = False
         await ctx.send('<:offline:728377784207933550> Logs for Messages Deleted/Edited has been turned off')
@@ -138,7 +143,11 @@ class Logging(commands.Cog):
   @commands.Cog.listener()
   async def on_message(self, message):
 
-    if self.anti_invite or self.modlogs == True:
+    #Check to see if modlogs are off
+    if self.anti_invite==False or self.modlogs==False:
+      return
+
+    elif self.anti_invite==True:
     
       #Check if a user
       #send a Discord Invite
@@ -183,7 +192,9 @@ class Logging(commands.Cog):
           #If a log channel doesn't exist
           #This will send
           if not channel:
-            await message.channel.send("Can't find a Logs Channel ")
+            await message.channel.send("Can't find a Logs Channel")
+        except Exception:
+          pass
             
             #guild = message.guild
             
@@ -197,10 +208,18 @@ class Logging(commands.Cog):
             #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
 
           #await channel.send(embed=e)
-        except commands.BotMissingPermissions:
-          await message.channel.send("Seems like I'm missing permissions to make a Modlogs Channel")
 
-    else:
+  #Listen for when a channel
+  #Is created
+  @commands.Cog.listener()
+  async def on_guild_channel_create(self, channel):
+
+    #Check if modlogs are off
+    if self.channel_log==False or self.modlogs==False:
+      return
+
+    #Check if modlogs are on
+    elif self.channel_log==True:
       pass
 
   #Send an edited message to 
@@ -208,7 +227,12 @@ class Logging(commands.Cog):
   @commands.Cog.listener()
   async def on_message_edit(self, before, after):
 
-    if self.edit_delete or self.modlogs == True:
+    #Check to see if modlogs are off
+    if self.edit_delete==False or self.modlogs==False:
+      return
+
+    #Check if modlogs are on
+    elif self.edit_delete==True:
 
       #Makes sure not to count embeds
       if before.embeds or after.embeds:
@@ -229,10 +253,22 @@ class Logging(commands.Cog):
           map(lambda c: c in channel.name, names)), 
           guild.text_channels)
 
+      #Make embed
       e = discord.Embed(
-        description=f'**Message Edited by {after.author.mention} In {after.channel.mention}**\n\n**Before:** {before.content}\n\n**After:** {after.content}', 
+        description=f'**Message Sent by {after.author.mention} Edited In {after.channel.mention}** [Jump to Message]({after.jump_url})', 
         color=discord.Color.dark_blue()
       )
+
+      #Setup fields
+      fields = [("**Before:**", before.content, False), 
+                ("**After:**", after.content, False)]
+      
+      for name, value, inline in fields:
+        e.add_field(
+          name=name, 
+          value=value, 
+          inline=inline
+        )
 
       e.timestamp = datetime.datetime.utcnow()
 
@@ -242,6 +278,7 @@ class Logging(commands.Cog):
 
       await channel.send(embed=e)
 
+      #IF channel doesn't exist
       if not channel:
         pass
         #ow = {
@@ -252,17 +289,26 @@ class Logging(commands.Cog):
             #ow[role] = discord.PermissionOverwrite(read_messages=True)
             
         #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
-    else:
-      pass
 
   #Sends a deleted message 
   #To logs channel
   @commands.Cog.listener()
   async def on_message_delete(self, message):
 
-    if self.modlogs or self.edit_delete == True:
+    #Check if modlogs are off
+    if self.modlogs==False or self.edit_delete==False:
+      return
 
+    #Check if modlogs are on
+    elif self.edit_delete==True:
+
+        #Makes sure not to count embeds
         if message.embeds:
+          return
+
+        #Makes sure not to count
+        #Bot messages
+        if message.author.bot:
           return
 
         guild = message.guild
@@ -275,12 +321,19 @@ class Logging(commands.Cog):
             map(lambda c: c in channel.name, names)), 
             guild.text_channels)
 
+        #Make embed
         e = discord.Embed(
-          description=f'**Message Deleted By {message.author.mention} In {message.channel.mention}**\n\n**Message:** {message.content}', 
+          description=f'**Message Sent By {message.author.mention} Deleted In {message.channel.mention}**', 
           color=discord.Color.dark_red()
         )
 
         e.timestamp = datetime.datetime.utcnow()
+
+        e.add_field(
+          name="**Message:**", 
+          value=message.content, 
+          inline=False
+        )
 
         e.set_footer(
           text=f'{message.author}', 
@@ -299,8 +352,6 @@ class Logging(commands.Cog):
               #ow[role] = discord.PermissionOverwrite(read_messages=True)
               
           #await guild.create_text_channel("⚠️ Server Logs", overwrites=ow, reason="Logging for Moderation")
-    else:
-      pass
 
   @commands.Cog.listener()
   async def on_member_ban(self, guild, user):
