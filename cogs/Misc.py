@@ -2,7 +2,15 @@ import discord
 from discord.ext import commands
 import asyncio
 import random
-import datetime
+from datetime import datetime
+
+#import datetime
+#import textwrap
+#import traceback
+
+#import lightbulb
+#import hikari
+#from hikari.models.intents import Intent
 
 def to_emoji(c):
     base = 0x1f1e6
@@ -33,52 +41,18 @@ class Misc(commands.Cog):
           #  embed = discord.Embed(description#="You can't use this command!", color=discord.Color.dark_red())
           #  embed.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
           #  await ctx.channel.send(embed=e
-          
-    @commands.command(
-      brief="{Invite the Bot to your Server}", 
-      usage="invite")
-    @commands.guild_only()
-    async def invite(self, ctx):
-      
-        #Remember to replace the link
-        #in the description with **your** bot's invite link
-        e = discord.Embed(
-            title="__*My Invite Link*__", 
-            description=f"_*What's up {ctx.author.mention}\nYou can invite me to your server by clicking on [this message](https://discord.com/oauth2/authorize?client_id=721397896704163965&permissions=8&scope=bot)*_", 
-            color=discord.Color.darker_grey())
-            
-        e.timestamp = datetime.datetime.utcnow()
-        
-        await ctx.send(embed=e)
-        
-    @commands.command(
-      brief="{Get the Source Code for the Bot}", 
-      usage="source")
-    @commands.guild_only()
-    async def source(self, ctx):
-      
-      #Replace the link here with 
-      #**your** Github Repo
-      
-      e = discord.Embed(
-        title="__*My Code Source*__", 
-        description=f"_*What's up {ctx.author.mention}, you can see my source code [here](https://github.com/AndrewNunnes/Andrew-s-Bot)*_", 
-        color=discord.Color.darker_grey())
-        
-      e.timestamp = datetime.datetime.utcnow()
-      
-      await ctx.send(embed=e)
-        
     @commands.command(
       brief="{Bot will announce your message}", 
-      usage="announce <message_here>")
+      usage="announce (channel) <message_here>")
     #@commands.has_permissions(kick_members=True)
     @commands.guild_only()
-    async def announce(self, ctx, *, arg):
-        """
-        `Announces a custom message`
-        """
-        await ctx.send(arg)
+    async def announce(self, ctx, channel: discord.TextChannel=None, *, arg):
+      
+        if channel is None:
+            await ctx.send(arg)
+        
+        if channel is not None:
+            await channel.send(arg)
 
    # @announce.error
   #  async def announce_error(self, ctx, error):
@@ -97,23 +71,10 @@ class Misc(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     @commands.guild_only()
     async def dm(self, ctx, user:discord.User, *, content):
-        """
-        `DM a user`
-        """
+        
         await user.send(content)
-        await ctx.send(f"{user} just got sent the dm")
-
-    @dm.error
-    async def dm_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            msg = ['You\'re supposed to include the user, idiot', 'You forgot the user bruh', 'Are you sending it to a ghost?']
-            embed = discord.Embed(description=f'⚠️ {random.choice(msg)} ⚠️\n ```!dm <@user>```', color=discord.Color.dark_red())
-            embed.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            await ctx.send(embed=embed)
-       # elif isinstance(error, commands.NotOwner):
-        #    embed = discord.Embed(description=f"You can't use this command!", color=discord.Color.dark_red())
-           # embed.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-           # await ctx.channel.send(embed=embed)
+        
+        await ctx.send(f"Successfully sent {user} a dm")
             
     @commands.command(
       brief="{Bot Interactively Starts a Poll}", 
@@ -191,34 +152,61 @@ class Misc(commands.Cog):
             pass
 
         body = "\n".join(f"{key}: {c}" for key, c in choices)
-        embed = discord.Embed(title=f"{ctx.author} asks: {question}", description=f"\n{body}\n", color=discord.Color.dark_gold())
+        
+        embed = discord.Embed(
+            title=f"{ctx.author} asks: {question}", 
+            description=f"\n{body}\n")
+        
         poll = await ctx.send(embed=embed)
         for emoji, _ in choices:
             await poll.add_reaction(emoji)
             
     @commands.command(
+      brief="{Get a List of Guilds the Bot's in}", 
+      usage="bguilds", 
+      aliases=['botguilds'])
+    @commands.guild_only()
+    @commands.is_owner()
+    async def bguilds(self, ctx):
+
+        #Empty String 
+        #To add guild names later
+        g_list = ''
+        
+        #Iterate through servers bot's in
+        for g in self.bot.guilds:
+            #Add the guild names
+            #To the empty string
+            g_list += f'• {"".join(g.name)}\n'
+        
+        #Make embed
+        e = discord.Embed(
+            title=f"__*Total Guilds {{{len(self.bot.guilds)}}}*__", 
+            description=g_list)
+        
+        e.timestamp = datetime.utcnow()
+        
+        e.set_footer(
+            text=ctx.author, 
+            icon_url=ctx.author.avatar_url)
+        
+        await ctx.send(embed=e)
+            
+    @commands.command(
       brief="{Restart the Bot} [BOT OWNER ONLY]", 
-      usage="restart")
+      usage="shutdown", 
+      aliases=['logout', 'turnoff'])
     @commands.is_owner()
     @commands.guild_only()
-    async def restart(self, ctx):
-        """
-        `Shuts down the Bot`
-        """
+    async def shutdown(self, ctx):
+      
         await ctx.message.delete()
-        await ctx.send("I'm restarting now 👋🏽", delete_after=5)
+        
+        await ctx.send("I'm shutting down now 👋🏽", delete_after=5)
         
         await asyncio.sleep(1)
         
         await self.bot.logout()
-        
-    @restart.error
-    async def restart_error(self, ctx, error):
-        if isinstance(error, commands.NotOwner):
-            embed = discord.Embed(description="You can't use this command!", color=discord.Color.dark_red())
-            embed.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            await ctx.channel.send(embed=embed)
-        raise(error)
 
 def setup(bot):
     bot.add_cog(Misc(bot))
