@@ -9,11 +9,13 @@ import datetime
 
 import cogs._json
 
+#•----------Converters/Functions----------•#
+
 # This prevents staff members from being punished 
 class Sinner(commands.Converter):
     async def convert(self, ctx, argument):
         argument = await commands.MemberConverter().convert(ctx, argument) # gets a member object
-        permission = argument.guild_permissions.manage_messages # can change into any permission
+        permission = argument.guild_permissions.manage_messages or argument.guild_permissions.kick_members # can change into any permission
         if not permission: # checks if user has the permission
             return argument # returns user object
         else:
@@ -89,11 +91,41 @@ def safe_reason_append(base, to_append):
         return base
     return appended
 
+#Custom checks for warn command
+async def warn_checks(ctx, mem, rsn):
+  
+    if rsn is None:
+        await ctx.send("You have to give a reason to warn {member}")
+        return False
+      
+    if len(rsn) > 128:
+        await ctx.send("Your reason can't be longer than 128 Characters")
+        return False
+      
+    if ctx.author == mem:
+        await ctx.send("You can't warn yourself")
+        return False
+    
+    if ctx.author.top_role.id == mem.top_role.id and ctx.author.top_role.id != ctx.guild.owner.id:
+        await ctx.send("You don't have permissions to warn {member}")
+        return False
+      
+    return True
+    
+#•----------Commands----------•#
+
 class Management(commands.Cog):
   
     """⚠️ `{Commands for Moderating the Server}`"""
-    def __init__(self,bot):
+    def __init__(self, bot):
         self.bot = bot
+        
+        #Make a variable to get the database
+        #Makes stuff a lot easier
+        self.db = self.bot.get_cog('Database')
+        
+#•----------Command Menus----------•#
+#•--{Gets the cogs and Show their Commands--•#
 
     @commands.command(
         brief="{Menu for Welcome Messages}", 
@@ -117,7 +149,7 @@ class Management(commands.Cog):
 
     @commands.command(
         brief="{Menu for Welcome Messages}", 
-        usage="welcomemenu", 
+        usage="goodbyemenu", 
         aliases=['byemenu']
     )
     @commands.guild_only()
@@ -207,6 +239,8 @@ class Management(commands.Cog):
       
       await ctx.send(embed=e)
       
+#•----------Management Commands----------•#
+      
     @commands.command(
       brief="{Change the Bot's Prefix}", 
       usage="prefix <new_prefix>")
@@ -226,35 +260,151 @@ class Management(commands.Cog):
         elif pre is not None:
         
             await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}prefix <newprefix>` to change it again")
+            
+#•----------Warn System----------•#
+            
+    @commands.command(
+      brief="{Warn a User}", 
+      usage="warn <user> (reason)", 
+      aliases=['addwarn', 'warnuser'])
+    @commands.guild_only()
+    @commands.has_permissions(kick_members=True)
+    @commands.bot_has_permissions(kick_members=True)
+    async def warn(self, ctx, member: discord.Member, *, reason=None):
+        
+        #If the author did raise a check
+        #await warn_checks(ctx, member: discord.Member, reason)
+        
+        #Add to member's total warns
+        await self.db.add_warns(member.id, ctx.author.id, reason, ctx.guild.id)
+        
+        #Embed to try and send to member
+        #Wrapped in try/except in case
+        #It tries to send to a bot
+        try:
+            
+            #Get member's total warns
+            total_warns = len(await self.db.get_warns(member.id, ctx.guild.id))
+        
+            e = discord.Embed(
+              color=0x420000, 
+              title=f"⚠️ **You've been Warned in {ctx.guild}!**", 
+              description=f"**Warned by:** {ctx.author}**\n**Reason:** {reason}\n\n**You now have {total_warns} warn(s)")
+          
+            e.timestamp = datetime.datetime.utcnow()
+        
+            await member.send(embed=e)
+            
+        except Exception as e:
+            print(e)
+        
+        #Get member's total warns
+        total_warns = len(await self.db.get_warns(member.id, ctx.guild.id))
+        
+        #Make embed
+        e = discord.Embed(
+            color=0x420000, 
+            description=f"⚠️ **{member} has been warned. They now have {total_warns} warn(s)")
+        
+        #Make embed fields
+        fields = [("**Warned by**", ctx.author, True), 
+                ("**Reason**", reason, True)]
+                  
+        for name, value, inline in fields:
+          e.add_field(
+            name=name, 
+            value=value, 
+            inline=inline)
+            
+        e.timestamp = datetime.datetime.utcnow()
+        
+        e.set_footer(
+          text=member, 
+          icon_url=member.avatar_url)
+        
+        await ctx.send(embed=e)
+        
+    @commands.command(
+      brief="{List of Warns a User has", 
+      usage="warns <member>", 
+      aliases=['warnlist', 'listwarns'])
+    @commands.guild_only()
+    @commands.has_permissions(kick_members=True)
+    @commands.bot_has_permissions(kick_members=True)
+    async def warns(self, ctx, member: discord.Member):
+        
+        #Makes it optional to mention a member
+        member = ctx.author if not member else member
+        
+        #Get the list of warns from database
+        warn_list = await self.db.get_warns(member.id, ctx.guild.id)
+        
+        #Make embed
+        e = discord.Embed(
+            color=0x420000, 
+            description=f"**{member.mention}'s List of Warns : {{{len(warn_list)}}} Total**")
+        
+        #Check if there is any warns
+        #In database
+        if len(warn_list) == 0:
+        
+            #Make an embed if 
+            #This if statement is true
+            e = discord.Embed(
+          color=0x420000, 
+          description=f"**{member.mention}'s List of Warns : {{{len(warn_list)}}} Total**")
+          
+            e.add_field(
+                name="/200", 
+                value=f"**{member.mention}** has no warnings yet")
+          
+            e.timestamp = datetime.datetime.utcnow()
+        
+            await ctx.send(embed=e)
+            return
+          
+        for warnings in warn_list:
+            e.add_field(
+                name=f"Warning By **{self.bot.get_user(warning[1])}**", 
+                value=warning[3])
+        
+        await ctx.send(embed=e)
+        
+#•----------User Management----------•#
   
     @commands.command(
       brief="{Kicks a User from the Guild}", 
       usage="kick <user> (reason_message)")
     @commands.guild_only()
-   # @bot_perms()
     @commands.has_permissions(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
-    async def kick(self, ctx, member : discord.Member, *, reason=None):
-        print("Function called")
+    async def kick(self, ctx, member : discord.Member, *, reason):
+      
         #Checking if the user tries to 
         #Kick themselves
         if ctx.author == member:
             await ctx.send("You cannot kick yourself.")
             return
+          
+        #Making sure user gives a reason
+        #To kick the user first
         if reason is None:
             await ctx.send("You gotta give a reason to kick this member")
             return
+        #await can_execute_action(user, target):
+            #await ctx.send("You can't kick this user due to role hierarchy")
+            #return
+          
         try:
             #Sending the member this message
             await member.send(f'You\'ve been kicked from `{ctx.guild.name}` for `{reason}`')
-            print("This sends")
-        except Exception as e:
+        except Exception:
             pass
 
         #Kicking the member
         await member.kick()
-        print("kicks the member")
-
+        
+        #Send embed
         e = discord.Embed(
               description=f'{member.name} has been kicked!', 
               color=0x420000)
