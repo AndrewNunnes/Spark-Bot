@@ -118,12 +118,31 @@ class Database(commands.Cog):
         
         return result
         
+    #Function to get the current
+    #Welcome channel
+    async def get_welcome_channel(self, gid):
+        
+        result = await (await self.execute("SELECT channel_id FROM welcome WHERE guild_id = ?", gid)).fetchone()
+        
+        await self.commit()
+        
+        return result[0]
+        
+    #Function to get the current
+    #Goodbye channel
+    async def get_goodbye_channel(self, gid):
+      
+        result = await (await self.execute("SELECT channel_id FROM goodbye WHERE guild_id = ?", gid)).fetchone()
+        
+        await self.commit()
+        
+        return result[0]
+        
     #Function to get the set welcome message
     async def get_w_text(self, gid):
         
         result = await (await self.execute("SELECT msg FROM welcome WHERE guild_id = ?", gid)).fetchone()
-        print(result)
-        
+
         await self.commit()
        # await self.close()
         
@@ -133,17 +152,34 @@ class Database(commands.Cog):
     async def get_g_text(self, gid):
         
         result = await (await self.execute("SELECT msg FROM goodbye WHERE guild_id = ?", gid)).fetchone()
-        print(result)
-        
+
         await self.commit()
        # await self.close()
         
         return result[0]
         
+    #Function to remove the welcome channel
+    async def remove_w_channel(self, gid):
+      
+        result = await self.execute("UPDATE welcome SET channel_id = NULL WHERE guild_id = ?", gid)
+        
+        await self.commit()
+        
+        return result
+        
+    #Function to remove the goodbye channel
+    async def remove_g_channel(self, gid):
+        
+        result = await self.execute("UPDATE goodbye SET channel_id = NULL WHERE guild_id = ?", gid)
+        
+        await self.commit()
+        
+        return result
+        
     #Function to delete set welcome message
     async def remove_w_text(self, gid):
-        
-        #Delete the custom message
+      
+        #Set the column to null
         #From the database
         result = await self.execute("UPDATE welcome SET msg = NULL WHERE guild_id = ?", gid)
         print(result)
@@ -271,7 +307,7 @@ class Database(commands.Cog):
     #Function to clear all user warns
     async def clear_warns(self, uid, gid):
 
-        c = await self.execute("DELETE FROM warns WHERE user_id = ? AND guild_id = ?", uid, gid)
+        c = await self.execute("UPDATE warns SET reason = NULL WHERE user_id = ? AND guild_id = ?", uid, gid)
     
         await self.commit()
         await self.close()
