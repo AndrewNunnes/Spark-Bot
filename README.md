@@ -11,8 +11,7 @@
 # Welcome/Goodbye System
 * `!welcome/goodbye channel <#channel>` Setup a channel and welcome/goodbye messages are turned on
 * `!welcome/goodbye text <new_text>` Change the text of welc/bye messages. There is a default
-* `!welcome/goodbye currentmsg>` Shows current text for welc/bye messages
-* `!welcome/goodbye currentchann>` Shows current channel set/If there isn't one welc/bye messages are automatically turned off
+* `!welcome/goodbye cmsg/cc>` Shows the set text/channel for welc/bye messages
 * `!welcome/goodbye preview>` Shows a preview of your welcome/goodbye embed 
 * `!welcome/goodbye rmsg/rchannel>` Interactively asks you if you want to confirm the custom message/channel deletion
 
