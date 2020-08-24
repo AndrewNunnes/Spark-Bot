@@ -58,27 +58,27 @@ async def change_status():
     
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight take another L"))
     
-    await asyncio.sleep(60 * 1800)
+    await asyncio.sleep(1 * 900)
     
     await bot.change_presence(activity=discord.Game(name="Bots Can Play Basketball Too"))
     
-    await asyncio.sleep(60 * 1800)
+    await asyncio.sleep(1 * 900)
     
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Jacquees"))
     
-    await asyncio.sleep(60 * 1800)
+    await asyncio.sleep(1 * 900)
     
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{len(bot.guilds)} Lousy Servers"))
     
-    await asyncio.sleep(60 * 1800)
+    await asyncio.sleep(1 * 900)
     
     await bot.change_presence(activity=discord.Game(name="!help"))
     
-    await asyncio.sleep(60 * 1800)
+    await asyncio.sleep(1 * 900)
     
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{len(bot.users)} Users"))
     
-    await asyncio.sleep(60 * 1800)
+    await asyncio.sleep(1 * 900)
     
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Family Guy"))
     
@@ -114,6 +114,8 @@ async def connect_db():
     
     await bot.db.executescript("""
     
+    DROP TABLE prefix_list;
+    
     CREATE TABLE IF NOT EXISTS warns (
     id INTEGER PRIMARY KEY, 
     user_id INTEGER, 
@@ -122,9 +124,14 @@ async def connect_db():
     guild_id INTEGER
     );
     
+    CREATE TABLE IF NOT EXISTS mutes (
+    user_id INTEGER PRIMARY KEY, 
+    role_id TEXT, 
+    end_time TEXT
+    );
+    
     CREATE TABLE IF NOT EXISTS prefix_list (
-    id INTEGER PRIMARY KEY, 
-    guild_id INTEGER, 
+    guild_id INTEGER PRIMARY KEY,  
     prefix TEXT
     );
     
