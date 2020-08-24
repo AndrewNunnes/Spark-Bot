@@ -296,7 +296,7 @@ class Role(Cog, name="Role Management"):
         e = discord.Embed(
             color=discord.Color.darker_grey(), 
             title=f"Permissions for: `{role.name}`", 
-            description="\n".join(perms))
+            description="\n\n".join(perms))
     
         e.timestamp = datetime.datetime.utcnow()
       
