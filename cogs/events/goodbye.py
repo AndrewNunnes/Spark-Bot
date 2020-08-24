@@ -27,6 +27,7 @@ class Goodbye(Cog):
         brief="{The Goodbye Menu what else?}", 
         usage="goodbye")
     @guild_only()
+    @bot_has_permissions(use_external_emojis=True)
     async def goodbye(self, ctx):
       
         #Get this cog
