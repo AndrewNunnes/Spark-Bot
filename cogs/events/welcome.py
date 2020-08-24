@@ -27,6 +27,7 @@ class Welcome(Cog):
         brief="{The Welcome Menu what else?}", 
         usage="welcome")
     @guild_only()
+    @bot_has_permissions(use_external_emojis=True)
     async def welcome(self, ctx):
       
         #Get this cog
