@@ -19,30 +19,7 @@ from typing import Optional
 
 import cogs._json
 
-#•----------Converters/Functions----------•#
-
-#Custom checks for warn command
-async def warn_checks(ctx, mem, rsn):
-  
-    if rsn is None:
-        await ctx.send("You have to give a reason to warn {member}")
-        return False
-      
-    if len(rsn) > 128:
-        await ctx.send("Your reason can't be longer than 128 Characters")
-        return False
-      
-    if ctx.author == mem:
-        await ctx.send("You can't warn yourself")
-        return False
-    
-    if ctx.author.top_role.id == mem.top_role.id and ctx.author.top_role.id != ctx.guild.owner.id:
-        await ctx.send("You don't have permissions to warn {member}")
-        return False
-      
-    return True
-    
-#•----------Commands----------•#
+#•----------Class----------•#
 
 class Management(commands.Cog):
   
@@ -50,7 +27,7 @@ class Management(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         
-        #Make a variable to get the database
+        #Make a variable to get functions from database
         #Makes stuff a lot easier
         self.db = self.bot.get_cog('Database')
         
@@ -256,11 +233,36 @@ class Management(commands.Cog):
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
-    async def warn(self, ctx, member: discord.Member, *, reason=None):
+    async def warn(self, ctx, member: discord.Member, *, reason: Optional[str]="No Reason Provided"):
         
-        #If the author did raise a check
-        #await warn_checks(ctx, member: discord.Member, reason)
+        #If a member isn't provided
+        if not member:
+            await ctx.send("You have to give a reason to warn this member")
+            return
         
+        #If the reason is too long
+        if len(reason) > 350:
+            await ctx.send("Reason has to be less than 350 Characters")
+            return
+        
+        #If the author's top role
+        #Is under the member's top role
+        if ctx.author.top_role.position < member.top_role.position:
+            await ctx.send("You don't have permissions to warn this member")
+            return
+        
+        #If the author tries to warn the owner
+        #Of the server
+        if ctx.author.id != ctx.guild.owner.id:
+            await ctx.send("You can't warn the Owner of the Server")
+            return
+        
+        #If the author tries to warn
+        #Themselves
+        if ctx.author == member:
+            await ctx.send("You can't warn yourself")
+            return
+
         #Add to member's total warns
         await self.db.add_warns(member.id, ctx.author.id, reason, ctx.guild.id)
         
@@ -274,8 +276,20 @@ class Management(commands.Cog):
         
             e = discord.Embed(
               color=0x420000, 
-              title=f"⚠️ **You've been Warned in {ctx.guild}!**", 
-              description=f"**Warned by:** {ctx.author}**\n**Reason:** {reason}\n\n**You now have {total_warns} warn(s)")
+              title=f"⚠️ **You've been Warned in {ctx.guild}!**")
+            #Make fields
+            fields = [("__*Warned By*__", ctx.author, True), 
+            
+                    ("__*Reason*__", reason, True), 
+                    
+                    ("__*Total Warns*__", total_warns, True)]
+            
+            #Add fields
+            for n, v, i in fields:
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
           
             e.timestamp = datetime.datetime.utcnow()
         
@@ -286,21 +300,23 @@ class Management(commands.Cog):
         
         #Get member's total warns
         total_warns = len(await self.db.get_warns(member.id, ctx.guild.id))
-        
+
         #Make embed
         e = discord.Embed(
             color=0x420000, 
-            description=f"⚠️ **{member} has been warned. They now have {total_warns} warn(s)")
+            description=f"⚠️ **{member}** has been warned. They now have **{total_warns} warn(s)**")
         
         #Make embed fields
-        fields = [("**Warned by**", ctx.author, True), 
-                ("**Reason**", reason, True)]
+        fields = [("__*Warned by*__", ctx.author, True), 
+        
+                ("__*Reason*__", reason, True)]
                   
         for name, value, inline in fields:
-          e.add_field(
-            name=name, 
-            value=value, 
-            inline=inline)
+          
+            e.add_field(
+                name=name, 
+                value=value, 
+                inline=inline)
             
         e.timestamp = datetime.datetime.utcnow()
         
@@ -316,45 +332,163 @@ class Management(commands.Cog):
       aliases=['warnlist', 'listwarns'])
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
-    @commands.bot_has_permissions(kick_members=True)
-    async def warns(self, ctx, member: discord.Member):
+    @commands.bot_has_permissions(kick_members=True, use_external_emojis=True)
+    async def warns(self, ctx, member: Optional[discord.Member]):
         
         #Makes it optional to mention a member
         member = ctx.author if not member else member
         
         #Get the list of warns from database
         warn_list = await self.db.get_warns(member.id, ctx.guild.id)
-        
+
         #Make embed
         e = discord.Embed(
-            color=0x420000, 
             description=f"**{member.mention}'s List of Warns : {{{len(warn_list)}}} Total**")
-        
+            
+        e.set_thumbnail(
+            url=member.avatar_url)
+
         #Check if there is any warns
         #In database
         if len(warn_list) == 0:
         
-            #Make an embed if 
-            #This if statement is true
             e = discord.Embed(
-          color=0x420000, 
-          description=f"**{member.mention}'s List of Warns : {{{len(warn_list)}}} Total**")
+                color=0x420000, 
+                description=f"<:redmark:738415723172462723> __*{member.mention} doesn't have any warns to display*__")
           
-            e.add_field(
-                name="/200", 
-                value=f"**{member.mention}** has no warnings yet")
+            e.set_thumbnail(
+                url=ctx.author.avatar_url)
           
-            e.timestamp = datetime.datetime.utcnow()
-        
             await ctx.send(embed=e)
             return
           
-        for warnings in warn_list:
-            e.add_field(
-                name=f"Warning By **{self.bot.get_user(warning[1])}**", 
-                value=warning[3])
-        
+        #Iterate through our warn_list variable
+        for warning in warn_list:
+          
+            #Define the moderator
+            #Who warned
+            mod = self.bot.get_user(id=warning[1])
+
+            #If there isn't a reason
+            if warning[2] is None:
+                reason = "No Reason"
+            #If there is a warning
+            else:
+                reason = warning[2]
+                
+            fields = [(f"**Warn Case {{{warning[3]}}}**", 
+                    f"*Warned By: {mod}*" +
+                    f"\n*Reason: {reason}*",
+                    True)]
+            #Add fields
+            for n, v, i in fields:
+                
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
+            
+            e.set_footer(
+                text=f"ID: {member.id}")
+
         await ctx.send(embed=e)
+    
+    @commands.command(
+        brief="{Delete a Specific Warn}", 
+        usage="delwarn <number_of_warn_case>", 
+        aliases=['deletewarn', 'dwarn'])
+    @commands.guild_only()
+    @commands.has_permissions(kick_members=True)
+    @commands.bot_has_permissions(kick_members=True, use_external_emojis=True)
+    async def delwarn(self, ctx, member: discord.Member, *, number: int):
+        
+        #If a member isn't given
+        if not member:
+            await ctx.send("You must give a member to delete a warn for")
+            return
+        
+        if not number:
+            await ctx.send("You must give the number of the **Warn Case** to delete\nExample: `!delwarn <@user <2>`")
+            return
+        
+        #Get the warns from database
+        get_warns = await self.db.get_warns(member.id, ctx.guild.id)
+        
+        #If the member has no warns
+        if len(get_warns) == 0:
+          
+            e = discord.Embed(
+                description=f"<:redmark:738415723172462723> __*{member.mention} doesn't have any warns to delete*__")
+                
+            await ctx.send(embed=e)
+            
+            return
+          
+        else:
+            
+            #Delete the specific warn
+            await self.db.delete_warn(number)
+            
+            e = discord.Embed(
+                description=f"__*Deleting Warn Case **{number}** for {member.mention}...*__")
+            
+            m = await ctx.send(embed=e)
+            
+            await asyncio.sleep(1.5)
+            
+            ed = discord.Embed(
+                description=f"<:greenmark:738415677827973152> __*Successfully Deleted Warn Case **{number}** from {member.mention}")
+                
+            e.set_footer(
+                text=f"Warn Case {number} Deleted From {member.mention}")
+            e.timestamp = datetime.datetime.utcnow()
+            
+            await m.edit(embed=ed)
+        
+    @commands.command(
+        brief="{Clear all Warns for a User}", 
+        usage="clearwarns <user>", 
+        aliases=['clearwrn', 'clearwrns'])
+    @commands.guild_only()
+    @commands.has_permissions(kick_members=True)
+    @commands.bot_has_permissions(kick_members=True, use_external_emojis=True)
+    async def clearwarns(self, ctx, member: discord.Member):
+        
+        #If a member isn't given
+        if not member:
+            await ctx.send("You must give a member to clear warns for")
+            return
+          
+        #Function used to check
+        #If user has any warns
+        #To clear
+        get_warns = await self.db.get_warns(member.id, ctx.guild.id)
+        
+        #If the user has no warns at all
+        if len(get_warns) == 0:
+            e = discord.Embed(
+                description=f"<:redmark:738415723172462723> __*{member.mention} doesn't have any warns to delete*__")
+                
+            await ctx.send(embed=e)
+            return
+        
+        #If they do have any warns
+        else:
+          
+            #Clear all the member's warns
+            await self.db.clear_warns(member.id, ctx.guild.id)
+            
+            e = discord.Embed(
+                description=f"**Deleting All Warns for {member.mention}...**")
+            
+            m = await ctx.send(embed=e)
+            
+            await asyncio.sleep(1)
+            
+            e = discord.Embed(
+                description=f"<:greenmark:738415677827973152> __*Successfully Deleted **{len(get_warns)}** Warn(s) from {member.mention}*__")
+                
+            await m.edit(embed=e)
         
 #•----------User Management----------•#
   
