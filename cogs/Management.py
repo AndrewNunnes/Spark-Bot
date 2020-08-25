@@ -1,95 +1,25 @@
-import discord
-from discord.ext import commands
-import asyncio
-from asyncio import sleep
-import datetime
-#from cogs.help_command import get_cog_by_class
-#from cogs.role import bot_perms
 
+#•----------Modules-----------•#
+
+import discord
+
+from discord.ext import commands
+
+from discord.ext.commands import Greedy 
+
+import asyncio
+
+from asyncio import sleep
+
+import datetime
+
+from datetime import timedelta
+
+from typing import Optional
 
 import cogs._json
 
 #•----------Converters/Functions----------•#
-
-# This prevents staff members from being punished 
-class Sinner(commands.Converter):
-    async def convert(self, ctx, argument):
-        argument = await commands.MemberConverter().convert(ctx, argument) # gets a member object
-        permission = argument.guild_permissions.manage_messages or argument.guild_permissions.kick_members # can change into any permission
-        if not permission: # checks if user has the permission
-            return argument # returns user object
-        else:
-            raise commands.BadArgument("You cannot punish other staff members") # tells user that target is a staff member
-
-## Converters
-
-def can_execute_action(ctx, user, target):
-    return user.id == ctx.bot.owner_id or \
-           user == ctx.guild.owner or \
-           user.top_role > target.top_role
-
-class MemberNotFound(Exception):
-    pass
-
-async def resolve_member(guild, member_id):
-    member = guild.get_member(member_id)
-    if member is None:
-        if guild.chunked:
-            raise MemberNotFound()
-        try:
-            member = await guild.fetch_member(member_id)
-        except discord.NotFound:
-            raise MemberNotFound() from None
-    return member
-
-class MemberID(commands.Converter):
-    async def convert(self, ctx, argument):
-        try:
-            m = await commands.MemberConverter().convert(ctx, argument)
-        except commands.BadArgument:
-            try:
-                member_id = int(argument, base=10)
-                m = await resolve_member(ctx.guild, member_id)
-            except ValueError:
-                raise commands.BadArgument(f"{argument} is not a valid member or member ID.") from None
-            except MemberNotFound:
-                # hackban case
-                return type('_Hackban', (), {'id': member_id, '__str__': lambda s: f'Member ID {s.id}'})()
-
-        if not can_execute_action(ctx, ctx.author, m):
-            raise commands.BadArgument('You cannot do this action on this user due to role hierarchy.')
-        return m
-
-class BannedMember(commands.Converter):
-    async def convert(self, ctx, argument):
-        if argument.isdigit():
-            member_id = int(argument, base=10)
-            try:
-                return await ctx.guild.fetch_ban(discord.Object(id=member_id))
-            except discord.NotFound:
-                raise commands.BadArgument('This member has not been banned before.') from None
-
-        ban_list = await ctx.guild.bans()
-        entity = discord.utils.find(lambda u: str(u.user) == argument, ban_list)
-
-        if entity is None:
-            raise commands.BadArgument('This member has not been banned before.')
-        return entity
-
-class ActionReason(commands.Converter):
-    async def convert(self, ctx, argument):
-        ret = f'{ctx.author} (ID: {ctx.author.id}): {argument}'
-
-        if len(ret) > 512:
-            reason_max = 512 - len(ret) + len(argument)
-            raise commands.BadArgument(f'Reason is too long ({len(argument)}/{reason_max})')
-        return ret
-
-def safe_reason_append(base, to_append):
-    appended = base + f'({to_append})'
-    if len(appended) > 512:
-        return base
-    return appended
 
 #Custom checks for warn command
 async def warn_checks(ctx, mem, rsn):
@@ -129,40 +59,64 @@ class Management(commands.Cog):
 
     @commands.command(
         brief="{Menu for Welcome Messages}", 
-        usage="welcomemenu"
+        usage="welcomemenu", 
+        aliases=['wlcmemu', 'wcmenu']
     )
     @commands.guild_only()
     @commands.cooldown(1, 1.5, commands.BucketType.user)
     async def welcomemenu(self, ctx):
-
+        
+        #Get the Welcome Cog
         cog = self.bot.get_cog('Welcome')
-        command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n• {c.brief}" for c in cog.walk_commands()]
-
+        
+        #Make the embed
         e = discord.Embed(
             title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-            description="\n\n".join(command_desc), 
             color=0x420000)
+        
+        #Iterate through all (sub)commands 
+        #For the cog we get
+        for c in cog.walk_commands:
             
+            #Make our fields
+            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.brief}`", f"{c.usage}", True)]
+            
+            #Iterate through our fields list
+            for n, v, i in fields:
+                #Add the fields
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
+                    
         e.timestamp = datetime.datetime.utcnow()
         
         await ctx.send(embed=e)
 
     @commands.command(
-        brief="{Menu for Welcome Messages}", 
+        brief="{Menu for Goodbye Messages}", 
         usage="goodbyemenu", 
-        aliases=['byemenu']
+        aliases=['byemenu', 'gbmenu']
     )
     @commands.guild_only()
     @commands.cooldown(1, 1.5, commands.BucketType.user)
     async def goodbyemenu(self, ctx):
 
         cog = self.bot.get_cog('Goodbye')
-        command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n• {c.brief}" for c in cog.walk_commands()]
 
         e = discord.Embed(
             title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-            description="\n\n".join(command_desc), 
             color=0x420000)
+        
+        for c in cog.walk_commands:
+            
+            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.brief}`", f"{c.usage}", True)]
+            
+            for n, v, i in fields:
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
             
         e.timestamp = datetime.datetime.utcnow()
         
@@ -173,12 +127,21 @@ class Management(commands.Cog):
     async def logsmenu(self, ctx):
 
         cog = self.bot.get_cog('Logging')
-        command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n• {c.brief}" for c in cog.walk_commands()]
 
         e = discord.Embed(
-            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-            description="\n\n".join(command_desc), 
+            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__",
             color=0x420000)
+        
+        #Iterate through all commands including subcommands 
+        #Inside of that cog
+        for c in cog.walk_commands():
+            
+            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", f"{c.brief}", True)]
+            for n, v, i in fields:
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
             
         e.timestamp = datetime.datetime.utcnow()
         
@@ -191,53 +154,76 @@ class Management(commands.Cog):
     @commands.cooldown(1, 1.5, commands.BucketType.user)
     async def role(self, ctx):
       
-      #cog = self.get_cog_by_class('Role')
-      cog = self.bot.get_cog('Role Management')
-      command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n• {c.brief}" for c in cog.walk_commands()]
+        cog = self.bot.get_cog('Role Management')
+
+        e = discord.Embed(
+            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__",
+            color=0x420000)
       
-      e = discord.Embed(
-        title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-        description="\n\n".join(command_desc), 
-        color=0x4D4119)
+        for c in cog.walk_commands():
+          
+            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", f"{c.brief}", True)]
+            for name, val, i in fields:
+                e.add_field(
+                    name=name, 
+                    value=val, 
+                    inline=i)
         
-      e.timestamp = datetime.datetime.utcnow()
+        e.timestamp = datetime.datetime.utcnow()
       
-      await ctx.send(embed=e)
+        await ctx.send(embed=e)
       
     @commands.command(
       brief="{Menu for Managing Categories}", 
-      usage="categorymenu")
+      usage="categorymenu", 
+      aliases=['categmenu'])
     @commands.guild_only()
     async def categorymenu(self, ctx):
-      cog = self.bot.get_cog('Category')
-      command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n\n• {c.brief}" for c in cog.walk_commands()]
       
-      e = discord.Embed(
-        title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-        description="\n\n".join(command_desc), 
-        color=0x6B767B)
+        cog = self.bot.get_cog('Category')
+
+        e = discord.Embed(
+            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
+            color=0x420000)
+            
+        for c in cog.walk_commands():
+            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", f"{c.brief}", True)]
+            
+            for n, v, i in fields:
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
         
-      e.timestamp = datetime.datetime.utcnow()
+        e.timestamp = datetime.datetime.utcnow()
       
-      await ctx.send(embed=e)
+        await ctx.send(embed=e)
       
     @commands.command(
       brief="{Menu for Managing Channels}", 
-      usage="channelmenu")
+      usage="channelmenu", 
+      aliases=['chmenu'])
     @commands.guild_only()
     async def channelmenu(self, ctx):
       
-      cog = self.bot.get_cog('Channels')
-      command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n\n• {c.brief}" for c in cog.walk_commands()]
-      
-      e = discord.Embed(
-        title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-        description="\n\n".join(command_desc), 
-        color=0x6B767B)
+        cog = self.bot.get_cog('Channels')
+
+        e = discord.Embed(
+            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
+            color=0x420000)
         
-      e.timestamp = datetime.datetime.utcnow()
+        for c in cog.walk_commands():
+            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", f"{c.brief}", True)]
+            
+            for n, v, i in fields:
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
+        
+        e.timestamp = datetime.datetime.utcnow()
       
-      await ctx.send(embed=e)
+        await ctx.send(embed=e)
       
 #•----------Management Commands----------•#
       
@@ -510,45 +496,87 @@ class Management(commands.Cog):
                 await ctx.send(embed=embed)
 
     @commands.command(
-      brief="{Mute a User} [NOT DONE]", 
-      usage="mute <user> <time>")
+      brief="{Mute One or More User} [NOT DONE]", 
+      usage="mute <user(s)> (time)", 
+      aliases=['mutemember'])
     @commands.guild_only()
    # @bot_perms()
-    @commands.has_permissions(kick_members=True)
-    @commands.bot_has_permissions(kick_members=True)
-    async def mute(self, ctx, user : discord.Member, time: int):
-        """`Prevents a user from speaking for a specified amount of time`"""
-        if ctx.author == user:
+    @commands.has_permissions(mute_members=True)
+    @commands.bot_has_permissions(mute_members=True)
+    async def mute(self, ctx, targets: commands.Greedy[discord.Member], minutes: Optional[int], *, reason: Optional[str] = "No Reason Provided"):
+      
+        #If invoker doesn't give any members
+        #To mute
+        if not len(targets):
+            await ctx.send("You have to give a member to mute")
+            return
+          
+        #If invoker tries to mute themselves
+        if ctx.author == targets:
             await ctx.send("You cannot mute yourself.")
+            
         else:
-            rolem = discord.utils.get(ctx.message.guild.roles, name='Muted')
-            dick = discord.utils.get(ctx.message.guild.roles, name = 'Verified Member')
-            if rolem is None:
-                embed=discord.Embed(title="Muted role", url="http://echo-bot.wikia.com/wiki/Setting_up_the_muted_role", description="The mute command requires a role named 'Muted'.", color=discord.Color.dark_red())
-                embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
-                embed.set_footer(text="Without this role, the command will not work.")
-                await ctx.send(embed=embed)
-            elif rolem not in user.roles:
-                embed = discord.Embed(title=f'User {user.name} has been successfully muted for {time}s.', color=discord.Color.dark_red())
-                embed.add_field(name="Shhh!", value=":zipper_mouth:")
-                embed.set_thumbnail(url=user.avatar_url)
-                await ctx.send(embed=embed)
-                await user.add_roles(rolem)
-                await user.remove_roles(dick)
-                await sleep(time)
-                if rolem in user.roles:
-                    try:
-                        await user.remove_roles(rolem)
-                        await user.add_roles(dick)
-                        embed = discord.Embed(title=f'User {user.name} has been automatically unmuted.', color=discord.Color.dark_green())
-                        embed.add_field(name="Welcome back!", value=":open_mouth:")
-                        embed.set_thumbnail(url=user.avatar_url)
-                        await ctx.send(embed=embed)
-                    except Exception:
-                        print(f'User {user.name} could not be unmuted!')
-            else:
-                await ctx.send(f'User {user.mention} is already muted.')
-
+          
+            #Empty list to store
+            #The members to unmute later on
+            unmutes = []
+            
+            mute_role = discord.utils.get(ctx.message.guild.roles, name="Muted")
+            
+            #Iterate through the members
+            #Mentioned
+            for targ in targets:
+                #If members don't have the mute role
+                if not mute_role in targ.roles:
+                    #Check the author has a higher role
+                    #Then the members they're muting
+                    if ctx.author.top_role.position > targ.top_role.position:
+                      
+                        #Get the roles
+                        #The user has
+                        roleids = ",".join([str(r.id) for r in targ.roles])
+                        
+                        #Amount of time
+                        #To mute them for
+                        endtime = datetime.datetime.utcnow() + timedelta(seconds=minutes * 60) if minutes else None
+                        
+                        #Execute the function
+                        #From database
+                        await self.db.mute_members(targ.id, roleids, getattr(end_time, "isoformat", lambda: None)())
+                        
+                        #Edit the member's roles
+                        await targ.edit(roles=[mute_role])
+                        
+                        #Make the embed
+                        e = discord.Embed(
+                            title="**Member Muted**", 
+                            color=0x420000)
+                            
+                        e.set_thumbnail(
+                            url=targ.avatar_url)
+                        
+                        #Make the fields
+                        fields = [("**Member Muted", targ.mention, False), 
+                                  ("**Muted By**", ctx.author.mention, False), 
+                                  ("**Duration**", f"{minutes:,} Minute(s)" if minutes else "Indefinite", False), 
+                                  ("**Reason**", reason, False)]
+                                  
+                        #Add the fields
+                        for name, val, inl in fields:
+                            e.add_field(
+                                name=name, 
+                                value=val, 
+                                inline=inl)
+                        
+                        #Send the embed
+                        await ctx.send(embed=e)
+                        
+                        #Add the members
+                        #To the empty list
+                        #Of members to unmute
+                        if minutes:
+                            unmutes.append(targ)
+            
     @commands.command(
       brief="{Manually unmute a User}", 
       usage="unmute <user>")
