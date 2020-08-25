@@ -113,10 +113,10 @@ class Goodbye(Cog):
             return
         
         #If there is a channel set
-        if check_channel is not None:
+        if check_channel:
             
             e = discord.Embed(
-                description=f"**Current channel is <#{check_channel}>**")
+                description=f"**Current channel is <#{check_channel[0]}>**")
                 
             e.timestamp = datetime.utcnow()
         
@@ -180,6 +180,7 @@ class Goodbye(Cog):
             
             await ctx.send("Goodbye messages are turned off")
             return
+          
         #If there is a channel set
         if check_chann is not None:
 
@@ -310,7 +311,7 @@ class Goodbye(Cog):
                     
                     edit = discord.Embed(
                         color=0x0F4707, 
-                        description=f"**{green_mark} Successfully Deleted <#{get_channel}> and Turned off Goodbye Messages**")
+                        description=f"**{green_mark} Successfully Deleted <#{get_channel[0]}> and Turned off Goodbye Messages**")
                         
                     #Edit the previous embed
                     await m.edit(embed=edit)
@@ -364,6 +365,7 @@ class Goodbye(Cog):
         if checkchannel is None:
             await ctx.send("Goodbye Messages are  Turned off")
             return
+          
         if checkchannel is not None:
             
             #Get the message that user set
@@ -633,10 +635,11 @@ class Goodbye(Cog):
               e.timestamp = datetime.utcnow()
             
           #Send to the channel the user set
-          channel = self.bot.get_channel(id=check_channel)
+          channel = self.bot.get_channel(id=check_channel[0])
                 
           await channel.send(embed=e)
 
 #Setup the cog   
 def setup(bot):
     bot.add_cog(Goodbye(bot))
+      
