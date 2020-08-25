@@ -1,4 +1,3 @@
-
 #•----------Modules----------•#
 
 import discord
@@ -72,12 +71,16 @@ async def change_status():
     
     await asyncio.sleep(1 * 900)
     
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Summer Walker"))
+    
+    await asyncio.sleep(1 * 900)
+    
     await bot.change_presence(activity=discord.Game(name="!help"))
     
     await asyncio.sleep(1 * 900)
     
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{len(bot.users)} Users"))
-    
+
     await asyncio.sleep(1 * 900)
     
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Family Guy"))
@@ -113,7 +116,7 @@ async def connect_db():
     bot.db = await aiosqlite.connect('main.db')
     
     await bot.db.executescript("""
-
+    
     CREATE TABLE IF NOT EXISTS guilds (
     id INTEGER PRIMARY KEY
     );
@@ -128,7 +131,8 @@ async def connect_db():
     user_id INTEGER, 
     mod_id INTEGER, 
     reason TEXT, 
-    guild_id INTEGER PRIMARY KEY, 
+    warn_id INTEGER PRIMARY KEY, 
+    guild_id INTEGER, 
     FOREIGN KEY (guild_id) REFERENCES guilds (id), 
     FOREIGN KEY (user_id, mod_id) REFERENCES members (member_id, member_id)
     );
@@ -229,4 +233,4 @@ if __name__ == '__main__':
 #for ext in[".".join(p.parts)[:-len(".py")] for p in pathlib.Path('cogs').glob('**/*.py')]:
   #client.load_extension(ext)
 
-bot.run('token')
+bot.run('bruh')
