@@ -76,7 +76,7 @@ class Management(commands.Cog):
         
         #Iterate through all (sub)commands 
         #For the cog we get
-        for c in cog.walk_commands:
+        for c in cog.walk_commands():
             
             #Make our fields
             fields = [(f"• **{c.name} :** `{ctx.prefix}{c.brief}`", f"{c.usage}", True)]
@@ -108,7 +108,7 @@ class Management(commands.Cog):
             title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
             color=0x420000)
         
-        for c in cog.walk_commands:
+        for c in cog.walk_commands():
             
             fields = [(f"• **{c.name} :** `{ctx.prefix}{c.brief}`", f"{c.usage}", True)]
             
