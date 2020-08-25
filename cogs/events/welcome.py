@@ -107,16 +107,16 @@ class Welcome(Cog):
         check_channel = await self.db.get_welcome_channel(ctx.guild.id)
 
         #If there's no channel set
-        if check_channel is None:
+        if check_channel[0] is None:
           
             await ctx.send("There is no channel set")
             return
         
         #If there is a channel set
-        if check_channel is not None:
+        if check_channel:
             
             e = discord.Embed(
-                description=f"**Current channel is <#{check_channel}>**")
+                description=f"**Current channel is <#{check_channel[0]}>**")
                 
             e.timestamp = datetime.utcnow()
         
@@ -142,7 +142,7 @@ class Welcome(Cog):
         check_channel = await self.db.get_welcome_channel(ctx.guild.id)
         
         #If there isn't a channel
-        if check_channel is None:
+        if check_channel[0] is None:
             
             await ctx.send("Welcome messages are turned off")
             return
@@ -176,7 +176,7 @@ class Welcome(Cog):
         check_chann = await self.db.get_welcome_channel(ctx.guild.id)
         
         #If there isn't a channel set
-        if check_chann is None:
+        if check_chann[0] is None:
             
             await ctx.send("Welcome messages are turned off")
             return
@@ -239,12 +239,12 @@ class Welcome(Cog):
         get_channel = await self.db.get_welcome_channel(ctx.guild.id)
 
         #If there isn't a set message
-        if not get_channel:
+        if get_channel[0] is None:
             await ctx.send("There is no channel to remove")
             return
         
         #If there is a set message
-        if get_channel:
+        if get_channel is not None:
 
             e = discord.Embed(
                 description="⚠️ **Are you sure you want to delete your Welcome channel? Deleting will also turn off Welcome messages**")
@@ -484,9 +484,9 @@ class Welcome(Cog):
 
       #Check if there's a channel set
       check_channel = await self.db.get_welcome_channel(ctx.guild.id)
-      
+
       #If there isn't a channel set
-      if check_channel is None:
+      if check_channel[0] is None:
           await ctx.send("There's Nothing to Preview if Welcome Messages are Turned Off")
           return
 
@@ -637,7 +637,7 @@ class Welcome(Cog):
               e.timestamp = datetime.utcnow()
             
           #Send to the channel the user set
-          channel = self.bot.get_channel(id=check_channel)
+          channel = self.bot.get_channel(id=check_channel[0])
                 
           await channel.send(embed=e)
 
