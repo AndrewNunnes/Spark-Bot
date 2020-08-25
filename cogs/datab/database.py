@@ -79,7 +79,7 @@ class Database(commands.Cog):
         result = await (await self.execute("SELECT channel_id FROM goodbye WHERE guild_id = ?", gid)).fetchone()
         
         if result is None:
-            await self.execute("INSERT INTO welcome(guild_id, channel_id) VALUES(?, ?)", gid, cid)
+            await self.execute("INSERT INTO goodbye(guild_id, channel_id) VALUES(?, ?)", gid, cid)
         elif result is not None:
             await self.execute("UPDATE goodbye SET channel_id = ? WHERE guild_id = ?", cid, gid)
             
@@ -126,17 +126,17 @@ class Database(commands.Cog):
         
         await self.commit()
         
-        return result[0]
+        return result
         
     #Function to get the current
     #Goodbye channel
     async def get_goodbye_channel(self, gid):
       
         result = await (await self.execute("SELECT channel_id FROM goodbye WHERE guild_id = ?", gid)).fetchone()
-        
+
         await self.commit()
         
-        return result[0]
+        return result
         
     #Function to get the set welcome message
     async def get_w_text(self, gid):
