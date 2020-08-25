@@ -1,8 +1,13 @@
-import discord
-from discord.ext import commands
-import aiosqlite 
-from aiosqlite import connect
 
+#•----------Modules----------•#
+
+import discord
+
+from discord.ext import commands
+
+import aiosqlite 
+
+#•----------Class----------•
 class Database(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -124,8 +129,6 @@ class Database(commands.Cog):
         
         result = await (await self.execute("SELECT channel_id FROM welcome WHERE guild_id = ?", gid)).fetchone()
         
-        await self.commit()
-        
         return result
         
     #Function to get the current
@@ -134,8 +137,6 @@ class Database(commands.Cog):
       
         result = await (await self.execute("SELECT channel_id FROM goodbye WHERE guild_id = ?", gid)).fetchone()
 
-        await self.commit()
-        
         return result
         
     #Function to get the set welcome message
@@ -143,9 +144,6 @@ class Database(commands.Cog):
         
         result = await (await self.execute("SELECT msg FROM welcome WHERE guild_id = ?", gid)).fetchone()
 
-        await self.commit()
-       # await self.close()
-        
         return result[0]
         
     #Function to get the set goodbye message
@@ -153,9 +151,6 @@ class Database(commands.Cog):
         
         result = await (await self.execute("SELECT msg FROM goodbye WHERE guild_id = ?", gid)).fetchone()
 
-        await self.commit()
-       # await self.close()
-        
         return result[0]
         
     #Function to remove the welcome channel
@@ -200,6 +195,44 @@ class Database(commands.Cog):
         
         return result
         
+#•----------Warn System-----------•#
+    
+    #Function used to add warns
+    #To a user
+    async def add_warns(self, uid, modid, rsn, gid):
+        
+        result = await self.execute("INSERT OR IGNORE INTO warns(user_id, mod_id, reason, guild_id) VALUES(?, ?, ?, ?)", uid, modid, rsn, gid)
+        
+        await self.commit()
+        
+        return result
+    
+    #Function user to get all of a user's warns
+    async def get_warns(self, uid, gid):
+        
+        result = await (await self.execute("SELECT * FROM warns WHERE user_id = ? AND guild_id = ?", uid, gid)).fetchall()
+
+        return result
+
+    #Function to delete a user's specific warn
+    async def delete_warn(self, warnid):
+        
+        result = await self.execute("DELETE FROM warns WHERE warn_id = ?", warnid)
+        print(result)
+        
+        await self.commit()
+        
+        return result
+
+    #Function used to clear all of a user's warns
+    async def clear_warns(self, uid, gid):
+      
+        result = await self.execute("DELETE FROM warns WHERE user_id = ? AND guild_id = ?", uid, gid)
+        
+        await self.commit()
+        
+        return result
+        
 #•----------Mute/Unmute System----------•#
     
     #Function to insert the 
@@ -216,7 +249,7 @@ class Database(commands.Cog):
     #Function to get the target's role ids
     async def get_roles(self, uid):
         
-        result = await (await self.execute("SELECT role_id FROM mutes WHERE user_id = ?", uid)).fetchone()
+        result = await (await self.execute("SELECT role_id FROM mutes WHERE user_id = ? AND guild_id = ?", uid, gid)).fetchone()
         #print(result)
         
         await self.commit()
@@ -226,7 +259,7 @@ class Database(commands.Cog):
     #Function to unmute the member
     async def unmute_member(self, uid):
         
-        result = await self.execute("DELETE FROM mutes WHERE user_id = ?", uid)
+        result = await self.execute("DELETE FROM mutes WHERE user_id = ?", uid, gid)
 
         await self.commit()
         
@@ -274,41 +307,6 @@ class Database(commands.Cog):
         #Set the prefix column to Null
         c = await self.execute("UPDATE prefix_list SET prefix = NULL WHERE guild_id = ?", gid)
 
-        await self.commit()
-        await self.close()
-        
-        return c
-        
-#•----------Warn System----------•#
-  
-    #Function to add warns
-    #And save to database
-    async def add_warns(self, uid, modid, reason, gid):
-    
-        #Add warns to users
-        c = await self.execute("INSERT OR IGNORE INTO warns (user_id, mod_id, reason, guild_id) VALUES (?, ?, ?, ?)", uid, modid, reason, gid)
-    
-        await self.commit()
-        await self.close()
-        
-        return c
-    
-    #Function to get all user warns
-    #For specific guild and user ids
-    async def get_warns(self, uid, gid):
-      
-        c = await (await self.execute("SELECT * FROM warns WHERE user_id = ? AND guild_id = ?", uid, gid)).fetchone()
-    
-        await self.commit()
-        await self.close()
-        
-        return c
-
-    #Function to clear all user warns
-    async def clear_warns(self, uid, gid):
-
-        c = await self.execute("UPDATE warns SET reason = NULL WHERE user_id = ? AND guild_id = ?", uid, gid)
-    
         await self.commit()
         await self.close()
         
