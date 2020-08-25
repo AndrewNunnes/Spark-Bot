@@ -113,40 +113,38 @@ async def connect_db():
     bot.db = await aiosqlite.connect('main.db')
     
     await bot.db.executescript("""
+
+    CREATE TABLE IF NOT EXISTS guilds (
+    id INTEGER PRIMARY KEY
+    );
     
-    DROP TABLE prefix_list;
-    
+    CREATE TABLE IF NOT EXISTS members (
+    member_id INTEGER PRIMARY KEY, 
+    guild_id INTEGER, 
+    FOREIGN KEY (guild_id) REFERENCES guilds (id)
+    );
+
     CREATE TABLE IF NOT EXISTS warns (
-    id INTEGER PRIMARY KEY, 
     user_id INTEGER, 
     mod_id INTEGER, 
     reason TEXT, 
-    guild_id INTEGER
+    guild_id INTEGER PRIMARY KEY, 
+    FOREIGN KEY (guild_id) REFERENCES guilds (id), 
+    FOREIGN KEY (user_id, mod_id) REFERENCES members (member_id, member_id)
     );
-    
-    CREATE TABLE IF NOT EXISTS mutes (
-    user_id INTEGER PRIMARY KEY, 
-    role_id TEXT, 
-    end_time TEXT
-    );
-    
-    CREATE TABLE IF NOT EXISTS prefix_list (
-    guild_id INTEGER PRIMARY KEY,  
-    prefix TEXT
-    );
-    
+
     CREATE TABLE IF NOT EXISTS welcome (
-    id INTEGER PRIMARY KEY, 
-    guild_id INTEGER, 
+    guild_id INTEGER PRIMARY KEY, 
     msg TEXT, 
-    channel_id INTEGER
+    channel_id INTEGER, 
+    FOREIGN KEY (guild_id) REFERENCES guilds (id)
     ); 
     
     CREATE TABLE IF NOT EXISTS goodbye (
-    id INTEGER PRIMARY KEY, 
-    guild_id INTEGER, 
+    guild_id INTEGER PRIMARY KEY, 
     msg TEXT, 
-    channel_id INTEGER
+    channel_id INTEGER, 
+    FOREIGN KEY (guild_id) REFERENCES guilds (id)
     );
     """)
     
@@ -231,4 +229,4 @@ if __name__ == '__main__':
 #for ext in[".".join(p.parts)[:-len(".py")] for p in pathlib.Path('cogs').glob('**/*.py')]:
   #client.load_extension(ext)
 
-bot.run('bruh')
+bot.run('token')
