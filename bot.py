@@ -14,6 +14,8 @@ import json
 
 from pathlib import Path
 
+import random
+
 import datetime
 
 import os
@@ -24,11 +26,6 @@ import aiosqlite
 
 import cogs._json
 
-#•----------Other File Variables----------•#
-
-cwd = Path(__file__).parents[0]
-cwd = str(cwd)
-print(f"{cwd}\n•—•—•—•—•—•—•—•—•—•")
 
 #•--------------Functions--------------•#
 
@@ -49,42 +46,45 @@ def file_name(file):
 bot = commands.Bot(command_prefix=get_prefix, case_insensitive=True)
 bot.remove_command('help')
 
+#•----------Other File Variables----------•#
+
+cwd = Path(__file__).parents[0]
+cwd = str(cwd)
+print(f"{cwd}\n•—•—•—•—•—•—•—•—•—•")
+
+#Open our playing_status.json
+with open('data/playing_status.json', 'r', encoding='utf8') as playing:
+    #Load our json
+    bot.playing = json.load(playing) 
+
+#Open our listening_status.json
+with open('data/listening_status.json', 'r', encoding='utf8') as listen:
+    #Load our json
+    bot.listen = json.load(listen)
+
+#Open our watching_status.json
+with open('data/watching_status.json', 'r', encoding='utf8') as watch:
+    #Load our json
+    bot.watch = json.load(watch)
+
 #•--------------Change Status---------------•#
 
 #Background task to change bot status
-@tasks.loop(seconds=30)
+@tasks.loop(seconds=1 * 900)
 async def change_status():
+  
+    seconds = 1 * 900
+  
+    await bot.change_presence(activity=discord.Game(name=random.choice(bot.playing)))
     
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight take another L"))
+    await asyncio.sleep(seconds)
     
-    await asyncio.sleep(1 * 900)
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=random.choice(bot.listen)))
     
-    await bot.change_presence(activity=discord.Game(name="Bots Can Play Basketball Too"))
+    await asyncio.sleep(seconds)
     
-    await asyncio.sleep(1 * 900)
-    
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Jacquees"))
-    
-    await asyncio.sleep(1 * 900)
-    
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{len(bot.guilds)} Lousy Servers"))
-    
-    await asyncio.sleep(1 * 900)
-    
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="Summer Walker"))
-    
-    await asyncio.sleep(1 * 900)
-    
-    await bot.change_presence(activity=discord.Game(name="!help"))
-    
-    await asyncio.sleep(1 * 900)
-    
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{len(bot.users)} Users"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(bot.watch)))
 
-    await asyncio.sleep(1 * 900)
-    
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Family Guy"))
-    
 @change_status.before_loop
 async def before_ready():
     await bot.wait_until_ready()
@@ -229,8 +229,5 @@ if __name__ == '__main__':
     
 #for ext in [file.stem for file in pathlib.Path('cogs').glob('**/*.py')]:
     #client.load_extension(f"cogs.{ext}")
-    
-#for ext in[".".join(p.parts)[:-len(".py")] for p in pathlib.Path('cogs').glob('**/*.py')]:
-  #client.load_extension(ext)
 
 bot.run('bruh')
