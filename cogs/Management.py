@@ -402,6 +402,9 @@ class Management(commands.Cog):
     @commands.bot_has_permissions(kick_members=True, use_external_emojis=True)
     async def delwarn(self, ctx, member: discord.Member, *, number: int):
         
+        #Get warns from database
+        get_warns = await self.db.get_warns(member.id, ctx.guild.id)
+        
         #If a member isn't given
         if not member:
             await ctx.send("You must give a member to delete a warn for")
@@ -410,10 +413,7 @@ class Management(commands.Cog):
         if not number:
             await ctx.send("You must give the number of the **Warn Case** to delete\nExample: `!delwarn <@user <2>`")
             return
-        
-        #Get the warns from database
-        get_warns = await self.db.get_warns(member.id, ctx.guild.id)
-        
+
         #If the member has no warns
         if len(get_warns) == 0:
           
@@ -437,7 +437,7 @@ class Management(commands.Cog):
             await asyncio.sleep(1.5)
             
             ed = discord.Embed(
-                description=f"<:greenmark:738415677827973152> __*Successfully Deleted Warn Case **{number}** from {member.mention}")
+                description=f"<:greenmark:738415677827973152> __*Successfully Deleted Warn Case **{number}** from {member.mention}*__")
                 
             e.set_footer(
                 text=f"Warn Case {number} Deleted From {member.mention}")
