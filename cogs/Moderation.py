@@ -3,9 +3,8 @@
 
 import discord
 
-from discord.ext import commands
-
-from discord.ext.commands import Greedy 
+from discord.ext.commands import Greedy, command, BucketType, guild_only, cooldown, \
+has_permissions, bot_has_permissions, Cog
 
 import asyncio
 
@@ -13,17 +12,16 @@ from asyncio import sleep
 
 import datetime
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from typing import Optional
 
-import cogs._json
-
 #•----------Class----------•#
 
-class Management(commands.Cog):
+class Moderation(Cog, name="Moderation Category"):
   
-    """⚠️ `{Commands for Moderating the Server}`"""
+    """`{Commands for Moderating the Server}`"""
+    
     def __init__(self, bot):
         self.bot = bot
         
@@ -31,208 +29,55 @@ class Management(commands.Cog):
         #Makes stuff a lot easier
         self.db = self.bot.get_cog('Database')
         
-#•----------Command Menus----------•#
-#•--{Gets the cogs and Show their Commands--•#
+        self.gc = self.bot.get_cog('Helpdude')
 
-    @commands.command(
-        brief="{Menu for Welcome Messages}", 
-        usage="welcomemenu", 
-        aliases=['wlcmemu', 'wcmenu']
-    )
-    @commands.guild_only()
-    @commands.cooldown(1, 1.5, commands.BucketType.user)
-    async def welcomemenu(self, ctx):
+#•----------Management Commands----------•#
+#•----------Configuration Menu-----------•#
+
+    @command(
+        brief="{Menu for Server Configuration/Management}", 
+        usage="configmenu")
+    @guild_only()
+    @cooldown(1, 3, BucketType.user)
+    @has_permissions(manage_messages=True)
+    async def configmenu(self, ctx):
         
-        #Get the Welcome Cog
-        cog = self.bot.get_cog('Welcome')
+        cog = self.gc.get_cog_by_class('Config')
         
-        #Make the embed
         e = discord.Embed(
-            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-            color=0x420000)
-        
-        #Iterate through all (sub)commands 
-        #For the cog we get
+            title=f"__*{cog.qualified_name}*__\n*() - Optional\n<> - Required*")
+            
         for c in cog.walk_commands():
             
-            #Make our fields
-            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.brief}`", f"{c.usage}", True)]
+            #Make fields
+            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", 
+                     c.brief, True)]
             
-            #Iterate through our fields list
+            #Add fields
             for n, v, i in fields:
-                #Add the fields
                 e.add_field(
                     name=n, 
                     value=v, 
                     inline=i)
                     
-        e.timestamp = datetime.datetime.utcnow()
+        e.set_footer(
+            text=f"Requested by {ctx.author}", 
+            icon_url=ctx.author.avatar_url)
+        
+        e.timestamp = datetime.utcnow()
         
         await ctx.send(embed=e)
-
-    @commands.command(
-        brief="{Menu for Goodbye Messages}", 
-        usage="goodbyemenu", 
-        aliases=['byemenu', 'gbmenu']
-    )
-    @commands.guild_only()
-    @commands.cooldown(1, 1.5, commands.BucketType.user)
-    async def goodbyemenu(self, ctx):
-
-        cog = self.bot.get_cog('Goodbye')
-
-        e = discord.Embed(
-            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-            color=0x420000)
         
-        for c in cog.walk_commands():
-            
-            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.brief}`", f"{c.usage}", True)]
-            
-            for n, v, i in fields:
-                e.add_field(
-                    name=n, 
-                    value=v, 
-                    inline=i)
-            
-        e.timestamp = datetime.datetime.utcnow()
-        
-        await ctx.send(embed=e)
+#•----------Warn System-----------•#
 
-    @commands.guild_only()
-    @commands.cooldown(1, 1.5, commands.BucketType.user)
-    async def logsmenu(self, ctx):
-
-        cog = self.bot.get_cog('Logging')
-
-        e = discord.Embed(
-            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__",
-            color=0x420000)
-        
-        #Iterate through all commands including subcommands 
-        #Inside of that cog
-        for c in cog.walk_commands():
-            
-            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", f"{c.brief}", True)]
-            for n, v, i in fields:
-                e.add_field(
-                    name=n, 
-                    value=v, 
-                    inline=i)
-            
-        e.timestamp = datetime.datetime.utcnow()
-        
-        await ctx.send(embed=e)
-
-    @commands.command(
-      brief="{Menu for Role Management}", 
-      usage="role")
-    @commands.guild_only()
-    @commands.cooldown(1, 1.5, commands.BucketType.user)
-    async def role(self, ctx):
-      
-        cog = self.bot.get_cog('Role Management')
-
-        e = discord.Embed(
-            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__",
-            color=0x420000)
-      
-        for c in cog.walk_commands():
-          
-            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", f"{c.brief}", True)]
-            for name, val, i in fields:
-                e.add_field(
-                    name=name, 
-                    value=val, 
-                    inline=i)
-        
-        e.timestamp = datetime.datetime.utcnow()
-      
-        await ctx.send(embed=e)
-      
-    @commands.command(
-      brief="{Menu for Managing Categories}", 
-      usage="categorymenu", 
-      aliases=['categmenu'])
-    @commands.guild_only()
-    async def categorymenu(self, ctx):
-      
-        cog = self.bot.get_cog('Category')
-
-        e = discord.Embed(
-            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-            color=0x420000)
-            
-        for c in cog.walk_commands():
-            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", f"{c.brief}", True)]
-            
-            for n, v, i in fields:
-                e.add_field(
-                    name=n, 
-                    value=v, 
-                    inline=i)
-        
-        e.timestamp = datetime.datetime.utcnow()
-      
-        await ctx.send(embed=e)
-      
-    @commands.command(
-      brief="{Menu for Managing Channels}", 
-      usage="channelmenu", 
-      aliases=['chmenu'])
-    @commands.guild_only()
-    async def channelmenu(self, ctx):
-      
-        cog = self.bot.get_cog('Channels')
-
-        e = discord.Embed(
-            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__", 
-            color=0x420000)
-        
-        for c in cog.walk_commands():
-            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", f"{c.brief}", True)]
-            
-            for n, v, i in fields:
-                e.add_field(
-                    name=n, 
-                    value=v, 
-                    inline=i)
-        
-        e.timestamp = datetime.datetime.utcnow()
-      
-        await ctx.send(embed=e)
-      
-#•----------Management Commands----------•#
-      
-    @commands.command(
-      brief="{Change the Bot's Prefix}", 
-      usage="prefix <new_prefix>")
-    @commands.guild_only()
-    @commands.cooldown(1, 5, commands.BucketType.guild)
-    #@bot_perms()
-    @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_guild_permissions(manage_guild=True)
-    async def prefix(self, ctx, *, pre):
-        data = cogs._json.read_json('prefixes')
-        data[str(ctx.message.guild.id)] = pre
-        cogs._json.write_json(data, 'prefixes')
-
-        if pre is None:
-            await ctx.send(f"The server prefix is set to {ctx.prefix}. Use {ctx.prefix}prefix to change it")
-            
-        elif pre is not None:
-        
-            await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}prefix <newprefix>` to change it again")
-            
-#•----------Warn System----------•#
-            
-    @commands.command(
+    @command(
       brief="{Warn a User}", 
       usage="warn <user> (reason)", 
       aliases=['addwarn', 'warnuser'])
-    @commands.guild_only()
-    @commands.has_permissions(kick_members=True)
-    @commands.bot_has_permissions(kick_members=True)
+    @guild_only()
+    @cooldown(1, 3, BucketType.user)
+    @has_permissions(kick_members=True)
+    @bot_has_permissions(kick_members=True)
     async def warn(self, ctx, member: discord.Member, *, reason: Optional[str]="No Reason Provided"):
         
         #If a member isn't provided
@@ -291,12 +136,12 @@ class Management(commands.Cog):
                     value=v, 
                     inline=i)
           
-            e.timestamp = datetime.datetime.utcnow()
+            e.timestamp = datetime.utcnow()
         
             await member.send(embed=e)
             
         except Exception as e:
-            print(e)
+            pass
         
         #Get member's total warns
         total_warns = len(await self.db.get_warns(member.id, ctx.guild.id))
@@ -318,7 +163,7 @@ class Management(commands.Cog):
                 value=value, 
                 inline=inline)
             
-        e.timestamp = datetime.datetime.utcnow()
+        e.timestamp = datetime.utcnow()
         
         e.set_footer(
           text=member, 
@@ -326,13 +171,13 @@ class Management(commands.Cog):
         
         await ctx.send(embed=e)
         
-    @commands.command(
+    @command(
       brief="{List of Warns a User has", 
-      usage="warns <member>", 
+      usage="warns (member)", 
       aliases=['warnlist', 'listwarns'])
-    @commands.guild_only()
-    @commands.has_permissions(kick_members=True)
-    @commands.bot_has_permissions(kick_members=True, use_external_emojis=True)
+    @guild_only()
+    @bot_has_permissions(kick_members=True, use_external_emojis=True)
+    @cooldown(1, 3, BucketType.user)
     async def warns(self, ctx, member: Optional[discord.Member]):
         
         #Makes it optional to mention a member
@@ -376,7 +221,7 @@ class Management(commands.Cog):
             else:
                 reason = warning[2]
                 
-            fields = [(f"**Warn Case {{{warning[3]}}}**", 
+            fields = [(f"⚠️ **Warn Case {{{warning[3]}}}**", 
                     f"*Warned By: {mod}*" +
                     f"\n*Reason: {reason}*",
                     True)]
@@ -393,13 +238,14 @@ class Management(commands.Cog):
 
         await ctx.send(embed=e)
     
-    @commands.command(
+    @command(
         brief="{Delete a Specific Warn}", 
         usage="delwarn <number_of_warn_case>", 
         aliases=['deletewarn', 'dwarn'])
-    @commands.guild_only()
-    @commands.has_permissions(kick_members=True)
-    @commands.bot_has_permissions(kick_members=True, use_external_emojis=True)
+    @guild_only()
+    @has_permissions(kick_members=True)
+    @bot_has_permissions(kick_members=True, use_external_emojis=True)
+    @cooldown(1, 3, BucketType.user)
     async def delwarn(self, ctx, member: discord.Member, *, number: int):
         
         #Get warns from database
@@ -441,17 +287,18 @@ class Management(commands.Cog):
                 
             e.set_footer(
                 text=f"Warn Case {number} Deleted From {member.mention}")
-            e.timestamp = datetime.datetime.utcnow()
+            e.timestamp = datetime.utcnow()
             
             await m.edit(embed=ed)
         
-    @commands.command(
+    @command(
         brief="{Clear all Warns for a User}", 
         usage="clearwarns <user>", 
         aliases=['clearwrn', 'clearwrns'])
-    @commands.guild_only()
-    @commands.has_permissions(kick_members=True)
-    @commands.bot_has_permissions(kick_members=True, use_external_emojis=True)
+    @guild_only()
+    @has_permissions(kick_members=True)
+    @bot_has_permissions(kick_members=True, use_external_emojis=True)
+    @cooldown(1, 3, BucketType.user)
     async def clearwarns(self, ctx, member: discord.Member):
         
         #If a member isn't given
@@ -490,14 +337,13 @@ class Management(commands.Cog):
                 
             await m.edit(embed=e)
         
-#•----------User Management----------•#
-  
-    @commands.command(
+    @command(
       brief="{Kicks a User from the Guild}", 
       usage="kick <user> (reason_message)")
-    @commands.guild_only()
-    @commands.has_permissions(kick_members=True)
-    @commands.bot_has_permissions(kick_members=True)
+    @guild_only()
+    @has_permissions(kick_members=True)
+    @bot_has_permissions(kick_members=True)
+    @cooldown(1, 3, BucketType.user)
     async def kick(self, ctx, member : discord.Member, *, reason):
       
         #Checking if the user tries to 
@@ -529,11 +375,13 @@ class Management(commands.Cog):
               description=f'{member.name} has been kicked!', 
               color=0x420000)
 
-        e.set_footer(text=f'Member: {member.name}\nID: {member.id}')
+        e.set_footer(
+            text=f'Member: {member.name}\nID: {member.id}')
 
-        e.timestamp = datetime.datetime.now()
+        e.timestamp = datetime.utcnow()
 
-        e.set_thumbnail(url=member.avatar_url)
+        e.set_thumbnail(
+            url=member.avatar_url)
 
         #Setting up the field
         fields = [("Member Kicked", member.name, True), 
@@ -549,15 +397,14 @@ class Management(commands.Cog):
             
         await ctx.send(embed=e)
 
-    @commands.command(
+    @command(
       brief="{Bans a User from the Guild}", 
       usage="ban <user> (reason_message)")
-   # @bot_perms()
-    @commands.has_permissions(ban_members=True)
-    @commands.bot_has_permissions(ban_members=True)
-    @commands.guild_only()
+    @has_permissions(ban_members=True)
+    @bot_has_permissions(ban_members=True)
+    @guild_only()
+    @cooldown(1, 3, BucketType.user)
     async def ban(self, ctx, user : discord.Member, *, reason=None):
-        """`Bans a user from the server`"""
 
         if ctx.author == user:
             await ctx.send("You cannot ban yourself.")
@@ -570,39 +417,38 @@ class Management(commands.Cog):
         #Try to send a message to the user
         try:
             e = discord.Embed(
-              title="Banned ðŸ”¨", 
-              description=f"__*You've been banned from `{ctx.guild.name}`\n\nReason: {reason}", 
-              color=0x420000)
+                description=f"__*You've been banned from `{ctx.guild.name}`\n\nReason: {reason}", 
+                color=0x420000)
               
-            e.timestamp = datetime.datetime.utcnow()
+            e.timestamp = datetime.utcnow()
               
             await user.send(embed=e)
-        except Exception as e:
+        except Exception:
             pass
 
         #Banning the user
         await user.ban()
             
         embed = discord.Embed(
-              title=f'Banned {user.name}', 
-              description=f'{user.mention} has been banned', 
-              color=0x420000)
+            title=f'Banned {user.name}', 
+            description=f'{user.mention} has been banned', 
+            color=0x420000)
             
-        embed.set_thumbnail(url=user.avatar_url)
+        embed.set_thumbnail(
+            url=user.avatar_url)
             
         embed.timestamp = datetime.datetime.utcnow()
             
         await ctx.send(embed=embed)
 
-    @commands.command(
+    @command(
       brief="{Unbans a User}", 
       usage="unban <user#1234>")
-  #  @bot_perms()
-    @commands.guild_only()
-    @commands.has_permissions(ban_members=True)
-    @commands.bot_has_permissions(ban_members=True)
+    @guild_only()
+    @has_permissions(ban_members=True)
+    @bot_has_permissions(ban_members=True)
     async def unban(self, ctx, *, member):
-        """`Unbans a member from the server (!unban Example name#1234)`"""
+      
         banned_users = await ctx.guild.bans()
         member_name, member_discriminator = member.split('#')
         
@@ -629,15 +475,15 @@ class Management(commands.Cog):
                 
                 await ctx.send(embed=embed)
 
-    @commands.command(
+    @command(
       brief="{Mute One or More User} [NOT DONE]", 
       usage="mute <user(s)> (time)", 
       aliases=['mutemember'])
-    @commands.guild_only()
+    @guild_only()
    # @bot_perms()
-    @commands.has_permissions(mute_members=True)
-    @commands.bot_has_permissions(mute_members=True)
-    async def mute(self, ctx, targets: commands.Greedy[discord.Member], minutes: Optional[int], *, reason: Optional[str] = "No Reason Provided"):
+    @has_permissions(mute_members=True)
+    @bot_has_permissions(mute_members=True)
+    async def mute(self, ctx, targets: Greedy[discord.Member], minutes: Optional[int], *, reason: Optional[str] = "No Reason Provided"):
       
         #If invoker doesn't give any members
         #To mute
@@ -711,15 +557,15 @@ class Management(commands.Cog):
                         if minutes:
                             unmutes.append(targ)
             
-    @commands.command(
+    @command(
       brief="{Manually unmute a User}", 
       usage="unmute <user>")
-    @commands.guild_only()
+    @guild_only()
     #@bot_perms()
-    @commands.has_permissions(kick_members=True)
-    @commands.bot_has_permissions(kick_members=True)
+    @has_permissions(kick_members=True)
+    @bot_has_permissions(kick_members=True)
     async def unmute(self, ctx, user: discord.Member):
-        """`Unmutes a user`"""
+      
         rolem = discord.utils.get(ctx.message.guild.roles, name='Muted')
         dick = discord.utils.get(ctx.message.guild.roles, name = 'Verified Member')
         if rolem in user.roles:
@@ -730,21 +576,29 @@ class Management(commands.Cog):
             await user.remove_roles(rolem)
             await user.add_roles(dick)
 
-    @commands.command(
-      brief="{Clean a specified amount of messages}", 
-      usage="clean <# of Messages>")
-    @commands.guild_only()
-   # @bot_perms()
-    @commands.has_permissions(manage_messages=True)
-    @commands.bot_has_permissions(manage_messages=True)
+    @command(
+      brief="{Clean a Specified Amount of Messages}", 
+      usage="clean <number>")
+    @guild_only()
+    @has_permissions(manage_messages=True)
+    @bot_has_permissions(manage_messages=True)
     async def clean(self, ctx, count: int):
-        """`Deletes a specified amount of messages. (Max 100)`"""
+      
         await ctx.message.delete()
+        
+        #If a number isn't given
         if not count:
-            await ctx.send("Include the amount of messages to delete, you dummy", delete_after=3)
+            await ctx.send("You need to give a number of messages to delete")
             return
         
-        if count>100:
+        #If the number is over 100
+        if count > 100:
+            await ctx.send("You can only delete Max 100 Messages")
+            return
+         
+        #If the number is less than 100
+        #Delete
+        if count < 100:
             count = 1
         await ctx.message.channel.purge(limit=count, bulk=True)
             
@@ -752,5 +606,6 @@ class Management(commands.Cog):
 
         await ctx.send(f"{count} message(s) have been deleted <:trash:734043301187158082>", delete_after=2)
 
+#•----------Setup/Add this Cog----------•#
 def setup(bot):
-    bot.add_cog(Management(bot))
+    bot.add_cog(Moderation(bot))
