@@ -1,4 +1,4 @@
-----------Modules----------•#
+#•----------Modules----------•#
 import discord
 
 from discord.ext.commands import command, Cog, guild_only, has_permissions, bot_has_permissions, BadArgument, Greedy
