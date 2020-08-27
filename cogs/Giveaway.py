@@ -30,9 +30,9 @@ def convert(argument):
       raise commands.BadArgument(f"{key} isn't even a number dummy")
   return time
     
-class Giveaway(commands.Cog):
+class Giveaway(commands.Cog, name="Giveaway Category"):
   
-  """🎉 `{Commands for Hosting Giveaways}`"""
+  """`{Commands for Hosting Giveaways}`"""
   
   def __init__(self, bot):
     self.bot = bot
@@ -61,10 +61,8 @@ class Giveaway(commands.Cog):
         return
         
       else:
-        print("This works")
         #Giveaway will be made
         await ctx.send(f"Great the giveaway will start in {channel.mention} and the prize is {prize}")
-        print("Channel works")
           
           #We have a valid answer to the question, now let's store the answers
       answers[questions.index(question)] = answer
@@ -210,7 +208,7 @@ class Giveaway(commands.Cog):
           if x != self.bot.user:
               new_users.append(x)
               users = new_users
-      await ctx.send(f'__**{winner.mention} is the new winner!**__')
+      await ctx.send(f'__**{users.mention} is the new winner!**__')
 
 async def GetGiveawayMessage(bot, ctx, contentOne="Test Message", timeout=90.0):
     """
