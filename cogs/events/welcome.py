@@ -13,52 +13,55 @@ import asyncio
 
 #•----------Class----------•#
 
-class Welcome(Cog):
+class Goodbye(Cog):
     def __init__(self, bot):
         self.bot = bot
         
         self.db = self.bot.get_cog('Database')
-        
+
+        self.gc = self.bot.get_cog('Helpdude')
+
 #•----------Commands----------•#
     
     #Making the subcommand
     @group(
         invoke_without_command=True, 
-        brief="{The Welcome Menu what else?}", 
-        usage="welcome")
+        brief="{The Goodbye Menu what else?}", 
+        usage="goodbye")
     @guild_only()
     @bot_has_permissions(use_external_emojis=True)
-    async def welcome(self, ctx):
+    async def goodbye(self, ctx):
       
-        #Get this cog
-        cog = self.bot.get_cog('Welcome')
-      
-        #Get a list of commands/subcommands
-        command_desc = [f"• **{c.name}** **:** `{ctx.prefix}{c.usage}`\n• {c.brief}" for c in cog.walk_commands()]
 
+        #Get this cog
+        cog = self.gc.get_cog_by_class('Goodbye')
+        
+        desc = ["**Optional Arguments for Setting Text**" + 
+                "\n__*Supports Markdown <:greenmark:738415677827973152>*__" +
+                "\n\n__*To make new lines press `Enter/Return`*__" +
+                "\n\n•-------------------•" +
+                "\n\n{user} - user#1234)" +
+                "\n{mention} - Mentions the new member" +
+                "\n{members} - Shows the total amount of members" +
+                "\n{guild} - Name of Server"]
+        
         #Make embed
         e = discord.Embed(
-            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_", 
-            description="\n\n".join(command_desc))
-        
-        #Make fields
-        fields = [
-                  ("**Optional Arguments for Setting Text**", 
-                  "\n__*Supports Markdown <:greenmark:738415677827973152>*__" +
-                  "\n\n__*To make new lines press `Enter/Return`*__" +
-                  "\n\n•-------------------•" +
-                  "\n\n{user} - user#1234)" +
-                  "\n{mention} - Mentions the new member" +
-                  "\n{members} - Shows the total amount of members" +
-                  "\n{guild} - Name of Server", True)]
-        
-        #Add fields      
-        for name, val, inl in fields:
-            e.add_field(
-                name=name, 
-                value=val, 
-                inline=inl)
-            
+            title=f"__*{cog.qualified_name}*__\n*() - Optional\n<> - Required*", 
+            description="".join(desc))
+                  
+        for c in cog.walk_commands():
+            #Make the fields
+            fields = [
+                      (f"• **{c.name} :** `{ctx.prefix}{c.usage}`", c.brief, True)]
+              
+            #Add the fields
+            for n, v, i in fields:
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
+
         e.set_thumbnail(
             url=ctx.author.avatar_url)
 
@@ -66,9 +69,9 @@ class Welcome(Cog):
 
         await ctx.send(embed=e)
 
-    @welcome.command(
-      brief="{Change the Channel to Send Welcome Messages To}", 
-      usage="welcome channel <#channel>"
+    @goodbye.command(
+      brief="{Change the Channel to Send Goodbye Messages To}", 
+      usage="goodbye channel <#channel>"
     )
     @guild_only()
     @bot_has_permissions(manage_channels=True)
@@ -79,11 +82,11 @@ class Welcome(Cog):
           
           #Call the welcome_channel function
           #And save arguments to database
-          await self.db.welcome_channel(ctx.guild.id, channel.id)
+          await self.db.goodbye_channel(ctx.guild.id, channel.id)
           
           #Make and send embed
           e = discord.Embed(
-              description=f"**Welcome Channel has been set to {channel.mention}**")
+              description=f"**Goodbye Channel has been set to {channel.mention}**")
           
           e.timestamp = datetime.utcnow()
         
@@ -92,9 +95,9 @@ class Welcome(Cog):
       except Exception as b:
         print(b)
         
-    @welcome.command(
+    @goodbye.command(
         brief="{Check the current channel set}", 
-        usage="welcome currentchann", 
+        usage="goodbye currentchann", 
         aliases=['currentchannel', 'cc', 
                 'ccurrent', 'currentc'])
     @guild_only()
@@ -104,10 +107,10 @@ class Welcome(Cog):
       
         #Make the function from database.py
         #A var to check if its None for later 
-        check_channel = await self.db.get_welcome_channel(ctx.guild.id)
+        check_channel = await self.db.get_goodbye_channel(ctx.guild.id)
 
         #If there's no channel set
-        if check_channel[0] is None:
+        if check_channel is None:
           
             await ctx.send("There is no channel set")
             return
@@ -123,9 +126,9 @@ class Welcome(Cog):
         #Send either of the embeds
         await ctx.send(embed=e)
 
-    @welcome.command(
-      brief="{Change the welcome message (There is also a default)}", 
-      usage="welcome text <new_text_here>", 
+    @goodbye.command(
+      brief="{Change the goodbye message (There is also a default)}", 
+      usage="goodbye text <new_text_here>", 
       aliases=['message', 'msg'])
     @guild_only()
     @bot_has_permissions(manage_channels=True)
@@ -139,12 +142,12 @@ class Welcome(Cog):
           return
         
         #Check if there's a channel set first
-        check_channel = await self.db.get_welcome_channel(ctx.guild.id)
+        check_channel = await self.db.get_goodbye_channel(ctx.guild.id)
         
         #If there isn't a channel
-        if check_channel[0] is None:
+        if check_channel is None:
             
-            await ctx.send("Welcome messages are turned off")
+            await ctx.send("Goodbye messages are turned off")
             return
           
         #If there is a channel set
@@ -152,20 +155,20 @@ class Welcome(Cog):
           
             #Call the function from database
             #And save arguments
-            await self.db.welcome_text(ctx.guild.id, text)
+            await self.db.goodbye_text(ctx.guild.id, text)
         
             #Make and send embed
             e = discord.Embed(
-                title="**Welcome Message Set**",
+                title="**Goodbye Message Set**",
                 description=f"**New Message:** {text}")
                 
             e.timestamp = datetime.utcnow()
         
             await ctx.send(embed=e)
 
-    @welcome.command(
-        brief="{Check the Current Welcome Message}", 
-        usage="welcome currentmsg", 
+    @goodbye.command(
+        brief="{Check the Current Goodbye Message}", 
+        usage="goodbye currentmsg", 
         aliases=['currenttext', 
                  'currentext', 'currentmessage', 'cmsg', 'ctext', 'cmessage'])
     @guild_only()
@@ -173,20 +176,20 @@ class Welcome(Cog):
     @bot_has_permissions(manage_channels=True)
     async def currentmsg(self, ctx):
       
-        check_chann = await self.db.get_welcome_channel(ctx.guild.id)
+        check_chann = await self.db.get_goodbye_channel(ctx.guild.id)
         
         #If there isn't a channel set
-        if check_chann[0] is None:
+        if check_chann is None:
             
-            await ctx.send("Welcome messages are turned off")
+            await ctx.send("Goodbye messages are turned off")
             return
-
+          
         #If there is a channel set
         if check_chann is not None:
 
             #Get the current text
             #Using a function from the database
-            the_text = await self.db.get_w_text(ctx.guild.id)
+            the_text = await self.db.get_g_text(ctx.guild.id)
 
             #If there is no message set in db
             #Show the default
@@ -194,7 +197,7 @@ class Welcome(Cog):
             
                 #Make embed
                 e = discord.Embed(
-                    title="**Default Welcome Message**", 
+                    title="**Default Goodbye Message**", 
                     description="**{mention} just left {guild}. Sorry to see you go!**\n__*Member Count: {members} Members*__")
                 
                 e.timestamp = datetime.utcnow()
@@ -204,7 +207,7 @@ class Welcome(Cog):
             if the_text is not None:
                 #Make embed
                 e = discord.Embed(
-                    title="**Current Welcome Message**", 
+                    title="**Current Goodbye Message**", 
                     description=f"**Message:** {str(the_text)}")
             
                 e.timestamp = datetime.utcnow()
@@ -212,9 +215,9 @@ class Welcome(Cog):
             #Send either of the embeds
             await ctx.send(embed=e)
 
-    @welcome.command(
-        brief="{Delete Your Set Welcome Channel}", 
-        usage="welcome rtext", 
+    @goodbye.command(
+        brief="{Delete Your Set Goodbye Channel}", 
+        usage="goodbye rtext", 
         aliases=['removechannel', 'removechann', 'rch', 'rc'])
     @guild_only()
     @bot_has_permissions(manage_channels=True, use_external_emojis=True)
@@ -236,18 +239,18 @@ class Welcome(Cog):
             return user == ctx.author and str(reaction.emoji) in custom_emojis
             
         #Get the message that user set
-        get_channel = await self.db.get_welcome_channel(ctx.guild.id)
+        get_channel = await self.db.get_goodbye_channel(ctx.guild.id)
 
         #If there isn't a set message
-        if get_channel[0] is None:
+        if not get_channel:
             await ctx.send("There is no channel to remove")
             return
         
         #If there is a set message
-        if get_channel is not None:
+        if get_channel:
 
             e = discord.Embed(
-                description="⚠️ **Are you sure you want to delete your Welcome channel? Deleting will also turn off Welcome messages**")
+                description="⚠️ **Are you sure you want to delete your goodbye channel? Deleting will also turn off goodbye messages**")
                 
             fields = [("\200", 
                       f"__*React With Either: {green_mark} or {red_mark} to Confirm*__", 
@@ -298,12 +301,12 @@ class Welcome(Cog):
                 if str(reaction.emoji) == green_mark:
                     await m.remove_reaction(green_mark, ctx.author)
                     
-                    #Function to remove the channel from database
-                    await self.db.remove_w_channel(ctx.guild.id)
+                    #Function to remove the text from database
+                    await self.db.remove_g_channel(ctx.guild.id)
                     
                     #New embeds to edit the original
                     e = discord.Embed(
-                        description=f"**Deleting Channel and Turning off Welcome Messages...**")
+                        description=f"**Deleting Channel and Turning off Goodbye Messages...**")
                 
                     await m.edit(embed=e)
                     
@@ -311,7 +314,7 @@ class Welcome(Cog):
                     
                     edit = discord.Embed(
                         color=0x0F4707, 
-                        description=f"**{green_mark} Successfully Deleted <#{get_channel}> and Turned off Welcome Messages**")
+                        description=f"**{green_mark} Successfully Deleted <#{get_channel[0]}> and Turned off Goodbye Messages**")
                         
                     #Edit the previous embed
                     await m.edit(embed=edit)
@@ -324,7 +327,7 @@ class Welcome(Cog):
                     #Make a new embed
                     #To edit the original
                     et = discord.Embed(
-                        description=f"**{red_mark} Channel Won't be Deleted and Welcome Messages are Still Enabled**")
+                        description=f"**{red_mark} Channel Won't be Deleted and Goodbye Messages are Still Enabled**")
                     et.set_footer(
                         text=ctx.author)
                     et.timestamp = datetime.utcnow()
@@ -337,9 +340,9 @@ class Welcome(Cog):
                     
                     return
         
-    @welcome.command(
-        brief="{Delete Your Custom Welcome Message}", 
-        usage="welcome rtext", 
+    @goodbye.command(
+        brief="{Delete Your Custom Goodbye Message}", 
+        usage="rtext", 
         aliases=['removemsg', 'removemessage', 'removetext', 'rmsg', 'rmessage'])
     @guild_only()
     @bot_has_permissions(manage_channels=True, use_external_emojis=True)
@@ -360,16 +363,16 @@ class Welcome(Cog):
         def check_react(reaction, user):
             return user == ctx.author and str(reaction.emoji) in custom_emojis
             
-        checkchannel = await self.db.get_welcome_channel(ctx.guild.id)
+        checkchannel = await self.db.get_goodbye_channel(ctx.guild.id)
         
         if checkchannel is None:
-            await ctx.send("Welcome Messages are  Turned off")
+            await ctx.send("Goodbye Messages are  Turned off")
             return
-
+          
         if checkchannel is not None:
             
             #Get the message that user set
-            get_db_msg = await self.db.get_w_text(ctx.guild.id)
+            get_db_msg = await self.db.get_g_text(ctx.guild.id)
 
             #If there isn't a set message
             if not get_db_msg:
@@ -380,7 +383,7 @@ class Welcome(Cog):
             if get_db_msg:
 
                 e = discord.Embed(
-                    description="⚠️ **Are you sure you want to delete your Welcome message?**")
+                    description="⚠️ **Are you sure you want to delete your goodbye message?**")
                 
                 fields = [("\200", 
                           f"__*React With Either: {green_mark} or {red_mark} to Confirm*__", 
@@ -432,10 +435,10 @@ class Welcome(Cog):
                         await m.remove_reaction(green_mark, ctx.author)
                     
                         #Function to remove the text from database
-                        await self.db.remove_w_text(ctx.guild.id)
+                        await self.db.remove_g_text(ctx.guild.id)
                     
                         e = discord.Embed(
-                            description=f"**Deleting Welcome Message...**")
+                            description=f"**Deleting Goodbye Message...**")
                 
                         await m.edit(embed=e)
                     
@@ -444,7 +447,7 @@ class Welcome(Cog):
                         #New embed to edit the previous
                         edit = discord.Embed(
                             color=0x0F4707, 
-                            description=f"**{green_mark} Successfully Deleted Welcome Message:** {str(get_db_msg)}")
+                            description=f"**{green_mark} Successfully Deleted Goodbye Message:** {str(get_db_msg)}")
                         
                         #Edit the previous embed
                         await m.edit(embed=edit)
@@ -468,33 +471,31 @@ class Welcome(Cog):
                     
                         return
                   
-    @welcome.command(
+    @goodbye.command(
         brief="{Get a preview of your embed}", 
-        usage="welcome preview", 
+        usage="goodbye preview", 
         aliases=['prv', 'pview', 'pv'])
     @guild_only()
     @has_permissions(manage_channels=True)
     @bot_has_permissions(manage_channels=True)
     async def preview(self, ctx):
-
-      guild = ctx.guild
       
       #Defining member as the author
       member = ctx.author
 
       #Check if there's a channel set
-      check_channel = await self.db.get_welcome_channel(ctx.guild.id)
-
+      check_channel = await self.db.get_goodbye_channel(ctx.guild.id)
+      
       #If there isn't a channel set
-      if check_channel[0] is None:
-          await ctx.send("There's Nothing to Preview if Welcome Messages are Turned Off")
+      if check_channel is None:
+          await ctx.send("There's Nothing to Preview if Goodbye Messages are Turned Off")
           return
 
       #If there is a channel set
       elif check_channel is not None:
           
           #Check if there's a message set
-          check_text = await self.db.get_w_text(ctx.guild.id)
+          check_text = await self.db.get_g_text(ctx.guild.id)
 
           #If there is a message set
           #Send that
@@ -513,18 +514,18 @@ class Welcome(Cog):
               #Adjust the embed to what the user
               #Set the variables to
               e = discord.Embed(
-                  colour=0x0F4707, 
+                  colour=0x420000, 
                   description=str(check_text).format(members=members, mention=mention, user=user, guild=guild))
 
               e.set_thumbnail(
                   url=f"{member.avatar_url}")
 
               e.set_author(
-                  name=f"Welcome {member.name}",
+                  name=f"Goodbye {member.name}",
                   icon_url=f"{member.avatar_url}")
 
               e.set_footer(
-                  text=f"{member} Joined {guild}", 
+                  text=f"{member} Left {guild}", 
                   icon_url=f"{guild.icon_url}")
               e.timestamp = datetime.utcnow()
               
@@ -537,18 +538,18 @@ class Welcome(Cog):
           if check_text is None:
             
               e = discord.Embed(
-                  colour=0x0F4707, 
-                  description=f"**Welcome {member.mention} to {guild}! We hope you enjoy your stay!**\n__*Member Count: {len(list(guild.members))} Members*__")
+                  colour=0x420000, 
+                  description=f"**{member.mention} just left {ctx.guild}. Sorry to see you go!**\n\n__*Member Count: {len(list(ctx.guild.members))} Members*__")
 
               e.set_thumbnail(
                   url=f"{member.avatar_url}")
 
               e.set_author(
-                  name=f"Welcome {member.name}", 
+                  name=f"Goodbye {member.name}", 
                   icon_url=f"{member.avatar_url}")
 
               e.set_footer(
-                  text=f"{member} Joined {ctx.guild}", 
+                  text=f"{member} Left {ctx.guild}", 
                   icon_url=f"{ctx.guild.icon_url}")
 
               e.timestamp = datetime.utcnow()
@@ -560,10 +561,10 @@ class Welcome(Cog):
 
     #Saying goodbye to Members
     @Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_remove(self, member):
 
       #Check if there's a channel set
-      check_channel = await self.db.get_welcome_channel(member.guild.id)
+      check_channel = await self.db.get_goodbye_channel(member.guild.id)
       
       #If there isn't a channel set
       if check_channel is None:
@@ -573,7 +574,7 @@ class Welcome(Cog):
       elif check_channel is not None:
           
           #Check if there's a message set
-          check_text = await self.db.get_w_text(member.guild.id)
+          check_text = await self.db.get_g_text(member.guild.id)
 
           #If there is a message set
           #Send that
@@ -596,18 +597,18 @@ class Welcome(Cog):
               #Adjust the embed to what the user
               #Set the variables to
               e = discord.Embed(
-                  colour=0x0F4707, 
+                  colour=0x420000, 
                   description=str(check_text).format(members=members, mention=mention, user=user, guild=guild))
 
               e.set_thumbnail(
                   url=f"{member.avatar_url}")
 
               e.set_author(
-                  name=f"Welcome {member.name}",
+                  name=f"Goodbye {member.name}",
                   icon_url=f"{member.avatar_url}")
 
               e.set_footer(
-                  text=f"{member} Joined {member.guild}", 
+                  text=f"{member} Left {member.guild}", 
                   icon_url=f"{member.guild.icon_url}")
               e.timestamp = datetime.utcnow()
               
@@ -620,18 +621,18 @@ class Welcome(Cog):
           if check_text is None:
 
               e = discord.Embed(
-                  colour=0x0F4707, 
-                  description=f"**Welcome {member.mention} to {member.guild}! We hope you enjoy your stay!**\n__*Member Count: {len(list(member.guild.members))} Members*__")
+                  colour=0x420000, 
+                  description=f"**{member.mention} just left {member.guild}. Sorry to see you go!**\n\n__*Member Count: {len(list(member.guild.members))} Members*__")
 
               e.set_thumbnail(
                   url=f"{member.avatar_url}")
 
               e.set_author(
-                  name=f"Welcome {member.name}", 
+                  name=f"Goodbye {member.name}", 
                   icon_url=f"{member.avatar_url}")
 
               e.set_footer(
-                  text=f"{member} Joined {member.guild}", 
+                  text=f"{member} Left {member.guild}", 
                   icon_url=f"{member.guild.icon_url}")
 
               e.timestamp = datetime.utcnow()
@@ -641,48 +642,6 @@ class Welcome(Cog):
                 
           await channel.send(embed=e)
 
-    #Sends an embed to show the default prefix
-    #When bot joins a guild
-    @Cog.listener()
-    async def on_guild_join(self, guild):
-      
-      names = ['comman', 'bot']
-      channel = discord.utils.find(
-          lambda channel:any(
-            map(lambda w: w in channel.name, names)),
-            guild.text_channels) #When the bot joins a server, this will check for a bot commands channel to send an embed
-      
-      #If a bot commands channel doesn't exist
-      #It'll look for a general channel
-      if not channel: 
-        
-          newchann = ['gener', 'chat', 'welc', 'memb']
-          new = discord.utils.find(
-              lambda new:any(
-                map(lambda n: n in new.name, newchann)),
-                guild.text_channels)
-            
-          e = discord.Embed(
-              description="**What's up everyone! Type in `!help` to see all of my available commands and get started!**\n\n")
-              
-          e.set_thumbnail(
-              url=self.bot.user.avatar_url)
-          
-          e.timestamp = datetime.utcnow()
-        
-          await new.send(embed=e)
-            
-      e = discord.Embed(
-          description="**What's up everyone! Type `!help` to see all of my commands and get started!**\n\n")
-          
-      e.set_thumbnail(
-          url=self.bot.user.avatar_url)
-      
-      e.timestamp = datetime.utcnow()
-      
-      await channel.send(embed=e)
-
-
 #Setup the cog   
 def setup(bot):
-    bot.add_cog(Welcome(bot))
+    bot.add_cog(Goodbye(bot))
