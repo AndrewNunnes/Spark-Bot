@@ -123,28 +123,6 @@ class Category(commands.Cog):
     else:
       if len(name) < 2:
         await ctx.send("New name must be at least 2 letters long")
-    
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-      
-
-
 
 def setup(bot):
   bot.add_cog(Category(bot))
