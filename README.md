@@ -15,6 +15,10 @@
 * `!welcome/goodbye preview>` -> Shows a preview of your welcome/goodbye embed 
 * `!welcome/goodbye rmsg/rchannel>` -> Interactively asks you if you want to confirm the custom message/channel deletion
 
+# Tons of Minecraft/Fun Commands!
+* `!minecraft` Will give a menu of all current commands
+* `!help` to see all the Fun Commands! {Unrelated to Minecraft}
+
 # Role Management Commands
 * `!addrole <user> <rolename>` -> Adds a Role to a User
 * `!removerole <user> <rolename>` -> Removes a User's Role
