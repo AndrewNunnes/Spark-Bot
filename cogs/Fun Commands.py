@@ -11,7 +11,7 @@ import typing
 
 import asyncio
 
-import random
+from random import choice, randint
 
 from datetime import datetime
 
@@ -198,6 +198,7 @@ class Fun(Cog, name="Fun Category"):
 
                 #Make embed
                 e = discord.Embed(
+                    title="Meme Link", 
                     url=meme_url, 
                     timestamp=datetime.utcnow())
                 
@@ -385,18 +386,37 @@ class Fun(Cog, name="Fun Category"):
         usage="pp", 
         aliases=['penis', 'ppsize', 'penissize', 'penisize'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def pp(self, ctx):
         
         #The response for the embed to send
-        res = "Your Penis: 8{}D".format("=" * random.randint(1, 15))
+        penis = f"8{'=' * randint(1,25)}D"
         #Multiplies our '=' by a random choice of 1-15
+        
+        #A list to go through
+        first_list = [
+          "Your pp", 
+          "Your penis", 
+          "Your package"
+          ]
+          
+        #Get a random choice
+        first = choice(first_list)
+        
+        #List of stuff to go through
+        title_list = [
+          "PP Analizer", 
+          "PP Inspector", 
+          "PP Rater"
+          ]
+          
+        title = choice(title_list)
         
         #Make the embed
         e = discord.Embed(
-            title="PP Analizer", 
-            description=res, 
-            color=randint(0xffffff, 0))
+            title=title, 
+            description=f"*{first} {penis}*", 
+            color=randint(0, 0xffffff))
         
         #Send the embed
         await ctx.send(embed=e)
@@ -406,7 +426,7 @@ class Fun(Cog, name="Fun Category"):
         usage="gay", 
         aliases=['gayrater', 'gayrate'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def gay(self, ctx):
         
         #Makes stuff shorter
@@ -415,15 +435,16 @@ class Fun(Cog, name="Fun Category"):
         #Our responses for the embed
         #To send
         res = [
-              "{} You're {}% Gay 🏳️‍🌈🏳️‍🌈🏳️‍🌈".format(mem.mention, random.randint(1, 125)), 
+              f"You're {randint(15, 125)}% Gay 🏳️‍🌈🏳️‍🌈🏳️‍🌈", 
               
-              "{} Stop Being so Gay, you were rated {}% Gay 🏳️‍🌈🏳️‍🌈🏳️‍🌈".format(mem.mention, random.randint(1, 125))
+              f"{mem.mention} Stop Being so Gay, you were rated {randint(15, 135)}% Gay 🏳️‍🌈🏳️‍🌈🏳️‍🌈"
               ]
+              
         #Make embed
         e = discord.Embed(
             title="Gay Patrol 🔫", 
-            description=random.choice(res), 
-            color=random.randint(0xffffff, 0x000000))
+            description=choice(res), 
+            color=randint(0, 0xffffff))
             
         #Send embed
         await ctx.send(embed=e)
@@ -507,73 +528,77 @@ class Fun(Cog, name="Fun Category"):
                   '356.653.56', 
                   '101.12.8.6053', 
                   '255.255. 255.0']
+        
+        #Random time to wait for
+        sec = randint(1, 3)
 
         e = discord.Embed(
             title=f"**Hacking: {member.mention}** 0%...", 
-            color=random.randint(0x000000, 0xffffff))
+            color=randint(0x000000, 0xffffff))
         
         m = await ctx.send(embed=e)
         
-        await asyncio.sleep(3)
+        await asyncio.sleep(sec)
         
         e = discord.Embed(
             title=f"Searching for contacts... {{19%}}", 
-            color=random.randint(0x000000, 0xffffff))
+            color=randint(0x000000, 0xffffff))
         
         await m.edit(embed=e)
         
-        await asyncio.sleep(2)
+        await asyncio.sleep(sec)
         
         e = discord.Embed(
             title=f"Searching for any friends if there is any {{34%}}", 
-            color=random.randint(0x000000, 0xffffff))
+            color=randint(0x000000, 0xffffff))
             
         await m.edit(embed=e)
         
-        await asyncio.sleep(2)
+        await asyncio.sleep(sec)
         
         e = discord.Embed(
             title=f"Getting IP... {{55%}}", 
-            color=random.randint(0x000000, 0xffffff))
+            color=randint(0x000000, 0xffffff))
         
         await m.edit(embed=e)
         
-        await asyncio.sleep(2)
+        await asyncio.sleep(sec)
         
         e = discord.Embed(
             title=f"Got IP {random.choice(fakeips)} {{69%}}", 
-            color=random.randint(0x000000, 0xffffff))
+            color=randint(0x000000, 0xffffff))
             
         await m.edit(embed=e)
         
-        await asyncio.sleep(2)
+        await asyncio.sleep(sec)
         
-        e = discord.Embed(title=f"Getting password... {{84%}}", color=random.randint(0x000000, 0xffffff))
+        e = discord.Embed(
+            title=f"Getting password... {{84%}}", 
+            color=randint(0x000000, 0xffffff))
         
         await m.edit(embed=e)
         
-        await asyncio.sleep(2)
+        await asyncio.sleep(sec)
         
         e = discord.Embed(
             title=f"Got password {random.choice(passwords)} {{99%}}", 
-            color=random.randint(0x000000, 0xffffff))
+            color=randint(0x000000, 0xffffff))
         
         await m.edit(embed=e)
         
-        await asyncio.sleep(2)
+        await asyncio.sleep(sec)
         
         embed = discord.Embed(
             title=f"**Hacking: {member}** 100%", 
-            color=random.randint(0x000000, 0xffffff))
+            color=randint(0x000000, 0xffffff))
             
         await m.edit(embed=embed)
         
-        await asyncio.sleep(2)
+        await asyncio.sleep(sec)
         
         embed = discord.Embed(title=f"{member} info ", description=f"*Email `{member}@gmail.com` Password `{random.choice(passwords)}`  IP `{random.choice(fakeips)}`*", color=random.randint(0x000000, 0xffffff))
         embed.set_footer(text="You've totally been hacked 😏")
         await m.edit(embed=embed)
-        await asyncio.sleep(3)
 
     @command(
       brief="{Info on an Insta Acc}", 
@@ -581,6 +606,8 @@ class Fun(Cog, name="Fun Category"):
       aliases=['instagram'])
     @cooldown(1, 1, BucketType.user)
     async def insta(self, ctx, *, user_name):
+      
+        redmark = "<:redmark:738415723172462723>"
 
         async with ctx.typing():
             # Request profile information from API
@@ -613,14 +640,21 @@ class Fun(Cog, name="Fun Category"):
 
                     #Send error if no instagram profile was found with given username
                     elif response.status == 422:
-                        await self.bot.generate_embed(ctx, desc="**Instagram Username Not Found!**")
+                        e = discord.Embed(
+                            description=f"{redmark} __*{mem.mention}, that Account doesn't exist*__", 
+                            color=0x420000)
+                        
+                        await ctx.send(embed=e)
                         return
-
+                
+                #Close the session
                 await session.close()
 
             # Setting bools to ticks/cross emojis
-            verif = "<:greenmark:738415677827973152>" if verified else "<:redmark:73841"
-            priv = "<:greenmark:738415677827973152>" if private else "<:redmark:73841"
+            verif = "<:greenmark:738415677827973152>" if verified else redmark
+            priv = "<:greenmark:738415677827973152>" if private else redmark
+            
+            biography = biography if biography else "No Bio"
 
             # Set the page url to the last post or the profile based on privacy settings
             page_url = images[0]["page_url"] if not private else f"https://www.instagram.com/{username}/"
