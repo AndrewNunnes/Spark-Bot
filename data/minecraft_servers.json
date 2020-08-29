@@ -1,5 +1,8 @@
-[{
-    "ip": "mc.hypixel.net", 
+[
+  {
+    "name": "Hypixel", 
+    
+    "ip": "play.hypixel.net", 
     
     "port": 25565, 
     
@@ -9,63 +12,89 @@
     
     "verified": true, 
     
-    "note": ""
-    }, 
+    "image": "https://betterapi.net/mc/serverfavi?host=play.hypixel.net"
     
-    {
-        
-        "ip": "play.pixelmoncraft.com", 
-        
-        "port": 25565, 
-        
-        "version": "Java Edition 1.12.2", 
-        
-        "type": "Pixelmon", 
-        
-        "verified": true, 
-        
-        "note": ""
-        }, 
-        
-        {
-            "ip": "2b2t.org", 
-            
-            "port": 25565, 
-            
-            "version": "Java Edition 1.12.2", 
-            
-            "type": "Anarchy", 
-            
-            "verified": true, 
-            
-            "note": ""
-            }, 
-            
-            {
-                "ip": "brawl.com", 
-                
-                "port": 25565, 
-                
-                "version": "Java Edition 1.15.2", 
-                
-                "type": "Network", 
-                
-                "verified": true, 
-                
-                "note": ""
-                }, 
-                
-                {
-                    "ip": "172.10.17.177", 
-                    
-                    "port": 25565, 
-                    
-                    "version": "Java Edition 1.15.2", 
-                    
-                    "type": "Survival", 
-                    
-                    "verified": false, 
-                    
-                    "note": "To join this server, you need to join the [Discord server](https://discord.gg/VtE3rtV) first!"
-                    }
-                ]
+  }, 
+  
+  {
+    "name": "Pixelmon Craft", 
+    
+    "ip": "play.pixelmoncraft.com", 
+    
+    "port": 25565, 
+    
+    "version": "Java Edition 1.12.2", 
+    
+    "type": "Pixelmon", 
+    
+    "verified": true, 
+    
+    "image": "https://betterapi.net/mc/serverfavi?host=play.pixelmoncraft.com"
+  }, 
+  
+  {
+    "name": "2b2t", 
+    
+    "ip": "2b2t.org", 
+    
+    "port": 25565, 
+    
+    "version": "Java Edition 1.12.2", 
+    
+    "type": "Anarchy", 
+    
+    "verified": true, 
+    
+    "image": "https://betterapi.net/mc/serverfavi?host=2b2t.org"
+    
+  }, 
+  
+  {
+    "name": "Brawl Games", 
+    
+    "ip": "brawl.com", 
+    
+    "port": 25565, 
+    
+    "version": "Java Edition 1.15.2", 
+    
+    "type": "Network", 
+    
+    "verified": true, 
+    
+    "image": "https://betterapi.net/mc/serverfavi?host=brawl.com"
+    
+  }, 
+  
+  {
+    "name": "Xenon",
+    
+    "ip": "172.10.17.177", 
+    
+    "port": 25565, 
+    
+    "version": "Java Edition 1.15.2", 
+    
+    "type": "Survival", 
+    
+    "verified": false, 
+    
+    "image": "https://betterapi.net/mc/serverfavi?host=172.10.17.177"
+  },
+  
+  {
+    "name": "Mineplex", 
+    
+    "ip": "us.mineplex.com", 
+    
+    "port": 25464, 
+    
+    "version": "Java Edition 1.8-1.16", 
+    
+    "type": "Network", 
+    
+    "verified": true, 
+    
+    "image": "https://betterapi.net/mc/serverfavi?host=us.mineplex.com"
+  }
+]
