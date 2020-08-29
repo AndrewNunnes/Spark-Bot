@@ -1,6 +1,6 @@
 
 #•----------Modules----------•#
-import aiohttp
+from aiohttp import ClientSession
 
 import asyncio
 
@@ -14,11 +14,16 @@ import json
 
 from datetime import datetime
 
-from random import choice
+from random import choice, randint
+
+from typing import Optional, Union
+
+import random
 
 import socket
 
-from discord.ext import commands
+from discord.ext.commands import command, BucketType, bot_has_permissions, guild_only, \
+cooldown, Cog, is_owner
 
 from functools import partial
 
@@ -32,173 +37,145 @@ from pyraklib.protocol.UNCONNECTED_PONG import UNCONNECTED_PONG
 
 #•----------Class----------•#
 
-class Minecraft(commands.Cog, name="Minecraft Category"):
+class Minecraft(Cog, name="Minecraft Category"):
 
     def __init__(self, bot):
         self.bot = bot
 
-        #Define our aiohttp ClientSessio
-        self.ses = aiohttp.ClientSession(loop=self.bot.loop)
+        #Define our aiohttp ClientSession
+        #To make apis easier to access
+        self.ses = ClientSession(loop=self.bot.loop)
 
         self.g = self.bot.get_cog("Global")
 
         with open("data/build_ideas.json", "r") as stuff:
             _json = json.load(stuff)
             self.first = _json["first"]
-            self.prenouns = _json["prenouns"]
+            self.pronouns = _json["prenouns"]
             self.nouns = _json["nouns"]
             self.colors = _json["colors"]
             self.sizes = _json["sizes"]
+            
+#•----------Functions-----------•#
     
     #Run the ClientSession
     #Then close the session when complete
     def cog_unload(self):
-        print("Cog unloded")
         self.bot.loop.run_until_complete(self.ses.close())
 
-    def vanilla_pe_ping(self, ip, port):
-        ping = UNCONNECTED_PING()
-        ping.pingID = 4201
-        ping.encode()
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setblocking(0)
-        try:
-            s.sendto(ping.buffer, (socket.gethostbyname(ip), port))
-            sleep(1)
-            recvData = s.recvfrom(2048)
-        except BlockingIOError:
-            return False, 0
-        except socket.gaierror:
-            return False, 0
-        pong = UNCONNECTED_PONG()
-        pong.buffer = recvData[0]
-        pong.decode()
-        sInfo = str(pong.serverName)[2:-2].split(";")
-        pCount = sInfo[4]
-        return True, pCount
-
-    def standard_je_ping(self, combined_server):
-        try:
-            status = MinecraftServer.lookup(combined_server).status()
-        except Exception:
-            return False, 0, None
-
-        return True, status.players.online, status.latency
-
-    async def unified_mc_ping(self, server_str, _port=None, _ver=None):
-        if ":" in server_str and _port is None:
-            split = server_str.split(":")
-            ip = split[0]
-            port = int(split[1])
-        else:
-            ip = server_str
-            port = _port
-
-        if port is None:
-            str_port = ""
-        else:
-            str_port = f":{port}"
-
-        if _ver == "je":
-            # ONLY JE servers
-            standard_je_ping_partial = partial(self.standard_je_ping, f"{ip}{str_port}")
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                s_je_online, s_je_players, s_je_latency = await self.bot.loop.run_in_executor(pool,
-                                                                                              standard_je_ping_partial)
-            if s_je_online:
-                return {"online": True, "player_count": s_je_players, "ping": s_je_latency, "version": "Java Edition"}
-
-            return {"online": False, "player_count": 0, "ping": None, "version": None}
-        elif _ver == "api":
-            # JE & PocketMine
-            resp = await self.ses.get(f"https://api.mcsrvstat.us/2/{ip}{str_port}")
-            jj = await resp.json()
-            if jj.get("online"):
-                return {"online": True, "player_count": jj.get("players", {}).get("online", 0), "ping": None,
-                        "version": jj.get("software")}
-            return {"online": False, "player_count": 0, "ping": None, "version": None}
-        elif _ver == "be":
-            # Vanilla MCPE / Bedrock Edition (USES RAKNET)
-            vanilla_pe_ping_partial = partial(self.vanilla_pe_ping, ip, port if port is not None else 19132)
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                pe_online, pe_p_count = await self.bot.loop.run_in_executor(pool, vanilla_pe_ping_partial)
-            if pe_online:
-                return {"online": True, "player_count": pe_p_count, "ping": None, "version": "Vanilla Bedrock Edition"}
-            return {"online": False, "player_count": 0, "ping": None, "version": None}
-        else:
-            tasks = [
-                self.bot.loop.create_task(self.unified_mc_ping(ip, port, "je")),
-                self.bot.loop.create_task(self.unified_mc_ping(ip, port, "api")),
-                self.bot.loop.create_task(self.unified_mc_ping(ip, port, "be"))
-            ]
-
-            for task in tasks:
-                while not task.done():
-                    await asyncio.sleep(.05)
-
-            for task in tasks:
-                if task.result().get("online") is True:
-                    return task.result()
-
-            return {"online": False, "player_count": 0, "ping": None, "version": None}
-            
-    #@commands.command(brief="{Menu for Minecraft Commands}")
-  #  async def minecraft(self, ctx):
-      
-    #  cog = self.bot.get_cog('Minecraft')
-   #   commands = cog.get_commands()
-      #command_desc = [c.short_doc for c in cog.walk_commands()]
-   #   commandnames = [f"_*{c.name}*_ - `{c.brief}`" for c in cog.walk_commands()]
-      
-    #  e = discord.Embed(
-   #     title=f"__*{cog.qualified_name}*__", 
-    #    description="_*() - Optional\n<> - Required*_", 
-      #  color=0x6F5913)
-   #   e.add_field(
-    #    name="_*Your Available Commands*_", 
-    #    value="\n".join(commandnames))
-   #   e.timestamp = datetime.datetime.utcnow()
-      
-    #  await ctx.send(embed=e)
-      
-
-    @commands.command(name="mcping", brief="{Get Info on a Minecraft Server}")
-    async def mc_ping(self, ctx, server: str, port: int = None):
-        async with ctx.typing():
-            status = await self.unified_mc_ping(server, port)
-
-            title = f"<:a:730460448339525744> {server}{(':' + str(port)) if port is not None else ''} is online."
-            if status.get("online") is False:
-                embed = discord.Embed(color=discord.Color.green(),
-                                      title=f"<:b:730460448197050489> {server}{(':' + str(port)) if port is not None else ''} is offline.")
-                await ctx.send(embed=embed)
-                return
-
-        embed = discord.Embed(color=discord.Color.green(), title=title, description=f"Version: {status.get('version')}")
-        embed.add_field(name="Players Online", value=status.get("player_count"))
-        ping = status.get("ping", "Not Available")
-        embed.add_field(name="Latency", value=ping if ping != "None" else "Not Available")
-
-        await ctx.send(embed=embed)
+    async def nice(self, ctx):
+        com_len = len(f'{ctx.prefix}{ctx.invoked_with} ')
+        return ctx.message.clean_content[com_len:]
         
-    @commands.command(
-        brief="{Get a User's Skin}")
-    @commands.cooldown(1, 2.5, commands.BucketType.user)
-    @commands.guild_only()
-    @commands.bot_has_permissions(use_external_emojis=True, embed_links=True)
+    #Goes through message and replaces all 
+    #Instances of keys with their values in a dict
+    async def lang_convert(self, ctx, msg, lang):
+        
+        keys = list(lang)
+        
+        #Iterate through list of 'lang' argument
+        for k in keys:
+            msg = msg.replace(k, lang[k])
+            
+        #If user's message is too long
+        if len(msg) > 750:
+            e = discord.Embed(
+                description=f"<:redmark:738415723172462723> That message is too long to convert")
+            await ctx.send(embed=e)
+        else:
+            await ctx.send(msg)
+
+          
+#•-----------Commands----------•#
+
+    @command(
+        name='mcping', 
+        brief="{Check Status of a MC Server}", 
+        usage="mcping <server_ip>",
+        aliases=['serverping', 'mcstatus'])
+    @cooldown(1, 2.5, BucketType.user)
+    @guild_only()
+    async def mcping(self, ctx, host, port: int = None):
+        
+        port_str = ''
+        if port is not None:
+            port_str = f':{port}'
+        combined = f'{host}{port_str}'
+
+        async with ctx.typing():
+            #Get the status from api
+            res = await self.ses.get(f'https://theapi.info/mc/mcping?host={combined}') 
+            jj = await res.json()
+
+        if jj['online'] is not True:
+            e = discord.Embed(
+                color=0x420000, 
+                title=f'<:offline:728377784207933550> {combined} is offline')
+            await ctx.send(embed=e)
+            return
+
+        player_list = jj.get('players_names', [])  # list
+        if player_list is None:
+            player_list = []
+
+        players_online = jj['players_online']  # int
+
+        e = discord.Embed(
+            color=randint(0, 0xffffff), 
+            title=f'<:online:728377717090680864> {combined} is online', 
+            description=f"*Version:* {jj['version'].get('brand', 'Unknown')}")
+
+        e.add_field(
+            name='__*Latency/Ping*__', 
+            value=jj['latency'])
+
+        player_list_cut = player_list[:24]
+
+        if jj['version']['method'] != 'query' and len(player_list_cut) < 1:
+            e.add_field(
+                name=f'__*Online Players ({players_online}/{jj["players_max"]})*__',
+                value='*Player list is not available for this server*',
+                inline=True)
+                
+        else:
+            extra = ''
+            if len(player_list_cut) < players_online:
+                extra = f', and {players_online - len(player_list_cut)} others...'
+
+            e.add_field(
+                name=f'__*Online Players ({players_online}/{jj["players_max"]})*__',
+                value='`' + '`, `'.join(player_list_cut) + '`' + extra,
+                inline=False)
+
+        e.set_image(
+            url=f'https://theapi.info/mc/mcpingimg?host={combined}&imgonly=true&v={random.random()*100000}')
+
+        if jj['favicon'] is not None:
+            e.set_thumbnail(
+                url=f'https://theapi.info/mc/serverfavi?host={combined}')
+
+        await ctx.send(embed=e)
+
+    @command(
+        brief="{Get a User's Skin}", 
+        usage="skin <player/uuid>", 
+        aliases=['stealskin', 'mcskin'])
+    @cooldown(1, 2.5, BucketType.user)
+    @guild_only()
+    @bot_has_permissions(use_external_emojis=True, embed_links=True)
     async def skin(self, ctx, *, gamertag: str):
         
         #Define author to make stuff shorter
         mem = ctx.author
         
-        redmark = "<:redmark:738415723172462723"
+        redmark = "<:redmark:738415723172462723>"
       
         response = await self.ses.get(f"https://api.mojang.com/users/profiles/minecraft/{gamertag}")
         
         #If there is no player found
         if response.status == 204:
             e = discord.Embed(
-                description=f"{redmark} __*{mem.mention}, That Player doesn't Exist", 
+                description=f"{redmark} __*{mem.mention}, That Player doesn't Exist*__", 
                 color=0x420000)
             await ctx.send(embed=e)
             return
@@ -220,7 +197,7 @@ class Minecraft(commands.Cog, name="Minecraft Category"):
         if "error" in content:
             if content["error"] == "TooManyRequestsException":
                 e = discord.Embed(
-                    description=f"{redmark} __*{mem.mention}, You have to Slow Down", 
+                    description=f"{redmark} __*{mem.mention}, You have to Slow Down*__", 
                     color=0x420000)
                 await ctx.send(embed=e)
                 return
@@ -286,14 +263,14 @@ class Minecraft(commands.Cog, name="Minecraft Category"):
         #Send embed
         await ctx.send(embed=e)
         
-    @commands.command(
+    @command(
         brief="{Get a List of Name History on MC Player}", 
+        usage="names <player/uuid>", 
         aliases=['namehistory', 'namelist'])
-    @commands.guild_only()
-    @commands.cooldown(1, 2.5, commands.BucketType.user)
-    @commands.is_owner()
-    @commands.bot_has_permissions(use_external_emojis=True)
-    async def names(self, ctx, gamertag: str):
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
+    async def names(self, ctx, *, gamertag: str):
       
         #Make the embed first
         e = discord.Embed(
@@ -316,128 +293,293 @@ class Minecraft(commands.Cog, name="Minecraft Category"):
                 description=f"{redmark} __*{mem.mention}, That Player Couldn't be Found*__")
             await ctx.send(embed=e)
             return
-          
-        #Get the api for our embed
-        res = await self.ses.get(
-            f"https://some-random-api.ml/mc?username={gamertag}")
         
-        #Storing the aiohttp session as a var
-        mn = await res.json()
-        #Define the dict/json we're getting
-        data = mn
+        try:
+            #Get the api for our embed
+            res = await self.ses.get(
+                f"https://some-random-api.ml/mc?username={gamertag}")
         
-        #Change 'origanal' in the api
-        #To 'original'
-        data['name_history'][0]['changedToAt'] = "Original Name"
+            #Storing the aiohttp session as a var
+            mn = await res.json()
+            #Define the dict/json we're getting
+            data = mn
         
-        #Change case where month is 0
-        data['name_history'][3]['changedToAt'] = "1/29/2017"
+            #Change 'origanal' in the api
+            #To 'original'
+            data['name_history'][0]['changedToAt'] = "Original Name"
         
-        #Store the username as a variable  
-        name1 = data['username']
+            #Change case where month is 0
+            data['name_history'][3]['changedToAt'] = "1/29/2017"
         
-        #Store the user name history
-        #As a variable
-        history = data['name_history'][::-1]
+            #Store the username as a variable  
+            name1 = data['username']
         
-        #Make a variable we will add on to
-        #Later
-        num = 0
-        #Reverse all the numbers
-        num_list = list(range(len(history)))[::-1]
+            #Store the user name history
+            #As a variable
+            history = data['name_history'][::-1]
         
-        #Iterate through the list of dicts
-        for item in history:
-            username = item['name']
-            user_date = item['changedToAt']
-            #Check to make sure we don't count
-            #Original name
-            if item['changedToAt'] == "Original Name":
-                namedate = user_date
-            else:
-                namedate = datetime.strptime(user_date, "%m/%d/%Y").strftime('%a/%b %d/%Y')
+            #Make a variable we will add on to later
+            num = 0
+            #Reverse all the numbers
+            num_list = list(range(len(history)))[::-1]
+        
+            #Iterate through the list of dicts
+            for item in history:
+                username = item['name']
+                user_date = item['changedToAt']
+                #Check to make sure we don't count
+                #Original name
+                if item['changedToAt'] == "Original Name":
+                    namedate = user_date
+                else:
+                    namedate = datetime.strptime(user_date, "%m/%d/%Y").strftime('%a/%b %d/%Y')
             
-            #Make fields
-            fields = [("•------------------•", 
-                     f"**{num_list[num]+1}.** `{username}` - {namedate}", True)]
+                #Make fields
+                fields = [("•------------------•", 
+                         f"**{num_list[num]+1}.** `{username}` - {namedate}", True)]
                      
-            #Adds to the variable we stored above
-            num += 1
+                #Adds to the variable we stored above
+                num += 1
 
-            #Add fields
-            for n, v, i in fields:
-                e.add_field(
-                    name=n, 
-                    value=v, 
-                    inline=i)
+                #Add fields
+                for n, v, i in fields:
+                    e.add_field(
+                        name=n, 
+                        value=v, 
+                        inline=i)
 
-        #The skin's head as a link/png
-        skin_head = f"https://minotar.net/avatar/{gamertag}/50.png"
+            #The skin's head as a link/png
+            skin_head = f"https://minotar.net/avatar/{gamertag}/50.png"
         
-        #Set the embed author
-        e.set_author(
-            name=f"{gamertag}'s Name History", 
-            icon_url=skin_head)
+            #Set the embed author
+            e.set_author(
+                name=f"{gamertag}'s Name History", 
+                icon_url=skin_head)
             
-        e.set_thumbnail(
-            url=f"https://minotar.net/bust/{gamertag}/100.png")
+            e.set_thumbnail(
+                url=f"https://minotar.net/bust/{gamertag}/100.png")
             
-        #e.set_thumbnail(
-            #url=f"https://minotar.net/helm/{gamertag}/75.png)")
+            #Set footer
+            e.set_footer(
+                text=f"Requested by {mem}")
+            e.timestamp = datetime.utcnow()
                 
-        #Set footer
+            #Send embed
+            await ctx.send(embed=e)
+            
+        except KeyError:
+            e = discord.Embed(
+                description=f"{redmark} __*{mem.mention}, that isn't a Valid Player*__", 
+                color=0x420000)
+            await ctx.send(embed=e)
+            return
+      
+    @command(
+        brief="Nothing to see here")
+    @is_owner()
+    async def testcape(self, ctx, *, gamertag: str):
+        
+        cape_url = f"https://optifine.net/cape/{gamertag}"
+        cape = await self.ses.get(cape_url)
+        
+        e = discord.Embed()
+        
+        e.set_author(
+            name="test")
+          
+        e.set_image(
+            url=cape_url)
+            
+        await ctx.send(embed=e)
+        
+    @command(
+        brief="{See a Player's Cape}", 
+        usage="cape <player/uuid>")
+    @is_owner()
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    async def cape(self, ctx, *, gamertag: str):
+        
+        #Make a custom emoji a variable
+        redmark = "<:redmark:738415723172462723>"
+        
+        #Define the author as something shorter
+        mem = ctx.author
+        
+        r = await self.ses.post("https://api.mojang.com/profiles/minecraft", json=[gamertag])
+        
+        j = json.loads(await r.text())
+        #If a user couldn't be found
+        if not j:
+            e = discord.Embed(
+                description=f"{redmark} __*{mem.mention}, that isn't a valid player*__", 
+                color=0x420000)
+            await ctx.send(embed=e)
+            return
+        
+        #api we're getting
+        cape_url = f"https://mc-heads.net/cape/{gamertag}"
+        #Store the api we're getting as a variable
+        cape = await self.ses.get(cape_url)
+        
+        #If there isn't a cape for that player
+        if cape.status == 404:
+            e = discord.Embed(
+                description=f"{redmark} __*{mem.mention}, **{gamertag}** doesn't have a cape*__", 
+                color=0x420000)
+            await ctx.send(embed=e)
+            return
+        
+        #Make our fancy embed 
+        e = discord.Embed()
+
+        #List of random choices we want to get    
+        ran = [
+          f"{gamertag}'s Epic Cape", 
+          
+          f"{gamertag}'s Awesome Cape", 
+          f"{gamertag}'s Sexy Cape"]
+
+        #Set the author name as a random choice
+        #From the list above
+        e.set_author(
+            name=choice(ran), 
+            icon_url=f"https://minotar.net/avatar/{gamertag}")
+        
+        e.set_image(
+            url=cape_url)
+        
         e.set_footer(
             text=f"Requested by {mem}")
         e.timestamp = datetime.utcnow()
-                
-        #Send embed
+        
         await ctx.send(embed=e)
-
-    @commands.command(
+        
+    @command(
         name="uuid", 
         brief="{Get a UUID with a Username}",
-        usage="uuid <player>")
-    @commands.cooldown(1, 2.5, commands.BucketType.user)
-    @commands.guild_only()
+        usage="uuid <player>", 
+        aliases=[''])
+    @cooldown(1, 2.5, BucketType.user)
+    @guild_only()
+    @bot_has_permissions(embed_links=True, use_external_emojis=True)
     async def get_uuid(self, ctx, *, gamertag: str):
         
-        #Get the api
-        r = await self.ses.post("https://api.mojang.com/profiles/minecraft", json=[gamertag])
+        redmark = "<:redmark:738415723172462723>"
         
-        #j[0]['id'] \/
-        j = json.loads(await r.text())  
-        #If a user couldn't be found
-        if not j:
-            await ctx.send(
-                embed=discord.Embed(color=discord.Color.green(), description="That user could not be found."))
+        #Makes stuff shorter
+        mem = ctx.author
+        
+        #If the user tries to use a uuid
+        if len(gamertag) > 30:
+            e = discord.Embed(
+                description=f"{redmark} __*{mem.mention}, you can't use uuid's*__", 
+                color=0x420000)
+            await ctx.send(embed=e)
             return
-        #Make the embed to send
-        e = discord.Embed(
-            description=f"*UUID for **{gamertag}**:* ``{j[0]['id']}``")
         
-        #Make thumbnail
-        #The head of the username/skin
-        e.set_thumbnail(
-            url=f"https://minotar.net/avatar/{gamertag}/100.png")
+        try:
+            #Get the api
+            r = await self.ses.post("https://api.mojang.com/profiles/minecraft", json=[gamertag])
         
-        #Send embed
-        await ctx.send(embed=e)
+            #j[0]['id'] \/
+            j = json.loads(await r.text())  
+            #If a user couldn't be found
+            if not j:
+                e = discord.Embed(
+                    description=f"{redmark} __*{mem.mention}, that isn't a Valid Player*__", 
+                    color=0x420000)
+                await ctx.send(embed=e)
+                return
+          
+            #Make the embed to send
+            e = discord.Embed(
+                title="Search UUID's here", 
+                url="https://mcuuid.net", 
+                description=f"\n*UUID for **{gamertag}** -> {j[0]['id']}*\n\n")
+        
+            e.set_thumbnail(
+                url=f"https://minotar.net/bust/{gamertag}/100.png")
+        
+            e.set_footer(
+                text=f"Requested by {mem}")
+            e.timestamp = datetime.utcnow()
+        
+            #Send embed
+            await ctx.send(embed=e)
+            
+        except KeyError:
+            e = discord.Embed(
+                description=f"{redmark} __*{mem.mention}, that isn't a Valid Player", 
+                color=0x420000)
+            await ctx.send(embed=e)
 
-    @commands.command(name="gamertag", brief="{Get a Gamertag with a UUID}")
-    @commands.cooldown(1, 1, commands.BucketType.user)
-    async def get_gamertag(self, ctx, uuid: str):
-        """`Get somebody's username with their UUID`"""
-        if not 30 < len(uuid) < 34:
-            await ctx.send(embed=discord.Embed(color=discord.Color.green(), description="That's not a valid mc uuid!"))
+    @command(
+        name="mcplayer", 
+        brief="{Get a Gamertag using a UUID}", 
+        usage="mcplayer <uuid>", 
+        aliases=['gamertag', 'mcuser', 'mcname'])
+    @cooldown(1, 2.5, BucketType.user)
+    @guild_only()
+    @bot_has_permissions(embed_links=True, use_external_emojis=True)
+    async def get_gamertag(self, ctx, *, uuid):
+        
+        #Define our custom emoji
+        redmark = "<:redmark:738415723172462723>"
+        
+        #Define author as something easier
+        mem = ctx.author
+        
+        #Check if a uuid is given
+        #uuid's are over 30 characters
+        if len(uuid) < 30:
+            e = discord.Embed(
+                description=f"{redmark} __*{mem.mention}, That isn't a Valid MC UUID*__", 
+                color=0x420000)
+            await ctx.send(embed=e)
             return
-        response = await self.ses.get(f"https://api.mojang.com/user/profiles/{uuid}/names")
-        if response.status == 204:
-            await ctx.send(embed=discord.Embed(color=discord.Color.green(), description="That player doesn't exist!"))
-            return
-        j = json.loads(await response.text())
-        name = j[len(j) - 1]["name"]
-        await ctx.send(embed=discord.Embed(color=discord.Color.green(), description=f"{uuid}: ``{name}``"))
-
+        
+        try: 
+            #Get the api
+            response = await self.ses.get(f"https://api.mojang.com/user/profiles/{uuid}/names")
+        
+            #If a player isn't valid
+            if response.status == 204:
+                e = discord.Embed(
+                    description=f"{redmark} __*{mem.mention}, That Player doesn't exist*__", 
+                    color=0x420000)
+                await ctx.send(embed=e)
+                return
+        
+            #Get the name 
+            j = json.loads(await response.text())
+            name = j[len(j) - 1]["name"]
+        
+            #Make the embed
+            e = discord.Embed(
+                title="Convert UUID's to Players Here", 
+                url="https://mcuuid.net", 
+                description=f"*Name for **{uuid}** -> {name}*")
+        
+            #Set the thumbnail as player's skin
+            #Just for aesthetics yk
+            e.set_thumbnail(
+                url=f"https://minotar.net/bust/{uuid}/100.png")
+        
+            e.set_footer(
+                text=f"Requested by {mem}")
+            e.timestamp = datetime.utcnow()
+        
+            #Send embed
+            await ctx.send(embed=e)
+            
+        #If the uuid doesn't match a player
+        except KeyError:
+            e = discord.Embed(
+                description=f"{redmark} __*{mem.mention}, that isn't a Valid Player*__", 
+                color=0x420000)
+            await ctx.send(embed=e)
+        
     @command(
         brief="{Converts your Text into Villager Noises}", 
         usage="villagerspeak <text>", 
@@ -461,7 +603,8 @@ class Minecraft(commands.Cog, name="Minecraft Category"):
         
     @command(
         brief="{Unenchant text}", 
-        usage="unenchant <enchantment_text>")
+        usage="unenchant <enchantment_text>", 
+        aliases=['unchant'])
     @guild_only()
     @cooldown(1, 2.5, BucketType.user)
     async def unenchant(self, ctx, *, msg):
@@ -473,7 +616,8 @@ class Minecraft(commands.Cog, name="Minecraft Category"):
         
     @command(
         brief="{Get a Random Cursed Minecraft Image}", 
-        usage="cursed")
+        usage="cursed", 
+        aliases=['mccursed', 'cursedmc'])
     @guild_only()
     @cooldown(1, 2.5, BucketType.user)
     async def cursed(self, ctx):
@@ -481,73 +625,197 @@ class Minecraft(commands.Cog, name="Minecraft Category"):
         images = self.g.cursedImages
         
         e = discord.Embed(
-            color=0x420000)
+            color=randint(0, 0xffffff))
+            
         e.set_image(
             url="http://olimone.ddns.net/images/cursed_minecraft/" + random.choice(images))
         
         await ctx.send(embed=e)
 
-    @commands.command(name="mcsales", brief="{Get the Total Sales on Minecraft}")
-    @commands.cooldown(1, 1, commands.BucketType.user)
+    @command(
+        name="mcsales", 
+        brief="{Get the Total Sales on Minecraft}", 
+        usage="mcsales")
+    @guild_only()
+    @cooldown(1, 1, BucketType.user)
     async def mc_sales(self, ctx):
-        """`Shows all the sales of minecraft`"""
+      
         r = await self.ses.post("https://api.mojang.com/orders/statistics",
                                 json={"metricKeys": ["item_sold_minecraft", "prepaid_card_redeemed_minecraft"]})
         j = json.loads(await r.text())
         await ctx.send(embed=discord.Embed(color=discord.Color.dark_green(),
                                            description=f"**{j['total']}** total Minecraft copies sold, **{round(j['saleVelocityPerSeconds'], 3)}** copies sold per second."))
 
-    @commands.command(name="randomserver", brief="{Get a Random Server}")
+    @command(
+        name="randomserver", 
+        brief="{Get a Random Minecraft Server}", 
+        usage="randomserver", 
+        aliases=['mcserver'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
     async def random_mc_server(self, ctx):
+      
+        #Define a variable
+        #For getting a random choice from mc server.json
         s = choice(self.g.mc_servers)
+        
         try:
+            #If the server's online
+            #Use online custom emoji
             online = MinecraftServer.lookup(s['ip'] + ":" + str(s['port'])).status()
-            stat = "<:online:692764696075304960>"
+            stat = "<:online:728377717090680864>"
+          
+        #If the server's offline
+        #Use an offline custom emoji
         except Exception:
-            stat = "<:offline:692764696431951872>"
-        await ctx.send(embed=discord.Embed(color=discord.Color.green(),
-                                           description=f"{stat} \uFEFF {online}``{s['ip']}:{s['port']}`` {s['version']} ({s['type']})\n{s['note']}"))
-
-    @commands.command(name="buildidea", brief="{Get a Random Build Idea}")
+            stat = "<:offline:728377784207933550>"
+        
+        #Make it look like the bot's typing in chat
+        #In case it takes long to send the embed
+        async with ctx.typing():
+          
+            mark = "<:greenmark:738415677827973152>" if s['verified'] is True else "<:redmark:738415723172462723>"
+            
+            #Make embed
+            e = discord.Embed(
+                timestamp=datetime.utcnow(), 
+                description=f"*Status for **{s['name']}** -> {stat}*")
+            
+            #Make fields
+            fields = [
+                    ("__*Server IP*__", s['ip'], True), 
+                    
+                    ("__*Server Port*__", s['port'], True), 
+                    
+                    ("__*Version*__",  
+                    f"{s['version']}{{{s['type']}}}", True), 
+                    
+                    ("__*Verified?*__", 
+                    f"{mark} {s['verified']}", True)
+                    ]
+            
+            #Add the fields
+            for n, v, i in fields:
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
+        
+            e.set_footer(
+                text=f"Requested by {ctx.author}")
+                
+            e.set_thumbnail(
+                url=s['image'])
+        
+            #Send embed
+            await ctx.send(embed=e)
+            
+    @command(
+        name="mcidea", 
+        brief="{Get a Random Build Idea}", 
+        usage='mcidea', 
+        aliases=['buildidea'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
     async def build_idea(self, ctx):
-        """`Gives a random Minecraft Build Idea`"""
+      
         if choice([True, False]):
-            await ctx.send(embed=discord.Embed(color=discord.Color.dark_green(),
-                                               description=f"{choice(self.first)} {choice(self.prenouns)}{choice(['!', ''])}"))
+            e = discord.Embed(
+                description=f"*{choice(self.first)} {choice(self.pronouns)}{choice(['!', ''])}*", 
+                color=randint(0, 0xffffff))
+            await ctx.send(embed=e)
+            
         else:
-            await ctx.send(embed=discord.Embed(color=discord.Color.dark_green(),
-                                               description=f"{choice(self.first)} a {choice(self.sizes)}, {choice(self.colors)} {choice(self.nouns)}{choice(['!', ''])}"))
+            e = discord.Embed(
+                description=f"*{choice(self.first)} a {choice(self.sizes)}, {choice(self.colors)} {choice(self.nouns)}{choice(['!', ''])}*", 
+                color=randint(0, 0xffffff))
+            await ctx.send(embed=e)
 
-    @commands.command(name="mccolorcodes", brief="{Colorcodes for Minecraft Text}")
+    @command(
+        name="mccolors", 
+        brief="{Colorcodes for Minecraft Text}", 
+        usage="mccolors", 
+        aliases=['mccolorcodes'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
     async def mc_color_codes(self, ctx):
-        """`Gets the colorcodes for Minecraft Text`"""
-        embed = discord.Embed(color=discord.Color.dark_green(),
-                              description="Text in Minecraft can be formatted using different codes and\nthe section (``§``) sign.")
-        embed.set_author(name="Minecraft Formatting Codes")
-        embed.add_field(name="Color Codes", value="<:red:697541699706028083> **Red** ``§c``\n"
-                                                  "<:yellow:697541699743776808> **Yellow** ``§e``\n"
-                                                  "<:green:697541699316219967> **Green** ``§a``\n"
-                                                  "<:aqua:697541699173613750> **Aqua** ``§b``\n"
-                                                  "<:blue:697541699655696787> **Blue** ``§9``\n"
-                                                  "<:light_purple:697541699546775612> **Light Purple** ``§d``\n"
-                                                  "<:white:697541699785719838> **White** ``§f``\n"
-                                                  "<:gray:697541699534061630> **Gray** ``§7``\n")
-        embed.add_field(name="Color Codes", value="<:dark_red:697541699488055426> **Dark Red** ``§4``\n"
-                                                  "<:gold:697541699639050382> **Gold** ``§6``\n"
-                                                  "<:dark_green:697541699500769420> **Dark Green** ``§2``\n"
-                                                  "<:dark_aqua:697541699475472436> **Dark Aqua** ``§3``\n"
-                                                  "<:dark_blue:697541699488055437> **Dark Blue** ``§1``\n"
-                                                  "<:dark_purple:697541699437592666> **Dark Purple** ``§5``\n"
-                                                  "<:dark_gray:697541699471278120> **Dark Gray** ``§8``\n"
-                                                  "<:black:697541699496444025> **Black** ``§0``\n")
-        embed.add_field(name="Formatting Codes", value="<:bold:697541699488186419> **Bold** ``§l``\n"
-                                                       "<:strikethrough:697541699768942711> ~~Strikethrough~~ ``§m``\n"
-                                                       "<:underline:697541699806953583> __Underline__ ``§n``\n"
-                                                       "<:italic:697541699152379995> *Italic* ``§o``\n"
-                                                       "<:obfuscated:697541699769204736> ||Obfuscated|| ``§k``\n"
-                                                       "<:reset:697541699697639446> Reset ``§r``\n")
-        await ctx.send(embed=embed)
+      
+        #Define author as something easier
+        mem = ctx.author
+        
+        #Make our embed
+        e = discord.Embed(
+            description="*Text in Minecraft can be formatted using different codes and using the {``§``} sign*")
+        
+        #Set the embed author  
+        e.set_author(
+            name="Minecraft Text Color Formatting")
+        
+        #Make our fields
+        fields = [("__*Bright Colors*__", 
+                  "<:red:749067570379882496> **Red** ``§c``" +
+                  
+                  "\n<:yellow:749080901253857331> **Yellow** ``§e``" +
+                  
+                  "\n<:green:749080915082215454> **Green** ``§a``" +
+                  
+                  "\n<:aqua:749108387093938177> **Aqua** ``§b``" +
+                  
+                  "\n<:blue:749080929552695428> **Blue** ``§9``" +
+                  
+                  "\n<:light_purple:749102028046729266> **Light Purple** ``§d``\n" +
+                  
+                  "\n<:white:749101731136274502> **White** ``§f``" +
+                  
+                  "\n<:lightgray:749101578014687343> **Gray** ``§7``", True), 
+                  
+                  ("__*Dark Colors*__", 
+                  "<:dark_red:749101827995205642> **Dark Red** ``§4``\n" +
+                  
+                  "<:darkyellow:749102067750010884> **Gold** ``§6``\n" +
+                  
+                  "<:darkgreen:749101908911980678> **Dark Green** ``§2``\n" +
+                  
+                  "<:dark_aqua:749108577180057650> **Dark Aqua** ``§3``\n" +
+                  
+                  "<:darkblue:749101874338201601> **Dark Blue** ``§1``\n" +
+                  
+                  "<:darkpurple:749101989564121179> **Dark Purple** ``§5``\n" +
+                  
+                  "<:darkgray:749101943737155615> **Dark Gray** ``§8``\n" +
+                  
+                  "<:black:749102125224689676> **Black** ``§0``\n", True), 
+                  
+                  ("__*Formatting/Markdown*__", 
+                  "<:bold:749106727353581619> **Bold** ``§l``\n" +
+                  
+                  "<:emoji_21:749106924225691658> ~~Strikethrough~~ ``§m``\n" +
+                  
+                  "<:underline:749106690774794250> __Underline__ ``§n``\n" +
+                  
+                  "<:italic:749105941214920766> *Italic* ``§o``\n" +
+                  
+                  "<:obfuscated:749106114662105139> ||Obfuscated|| ``§k``\n" +
+                  
+                  "<:reset:749108115039060050> Reset ``§r``\n", True)]
+        
+        #Add our fields
+        for n, v, i in fields:
+            e.add_field(
+                name=n, 
+                value=v, 
+                inline=i)
+        
+        e.set_footer(
+            text=f"Requested by {mem}", 
+            icon_url=mem.avatar_url)
+        
+        #Send the embed
+        await ctx.send(embed=e)
 
-
+#•----------Setup/Add this Cog----------•#    
+        
 def setup(bot):
-    bot.add_cog(Minecraft))
+    bot.add_cog(Minecraft(bot))
