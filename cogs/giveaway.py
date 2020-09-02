@@ -18,8 +18,8 @@ def convert(argument):
 #Returns:
   #- time : Returns the amount of time depending on the letter we choose
 #"""
-  args = argument.lower()
-  matches = re.findall(time_regex, args)
+  args = argument.lower().split(" ")
+  matches = re.findall(time_regex, "".join(args))
   time = 0
   for key, value in matches:
     try:
@@ -86,23 +86,27 @@ class Giveaway(commands.Cog, name="Giveaway Category"):
               
   @commands.command(
     brief="{Interactively Sets Up the Giveaway}", 
-    usage="startgiveaway")
+    usage="startgiveaway", 
+    aliases=['giveawaystart', 'startgv', 'gvstart'])
   @commands.guild_only()
   @commands.has_permissions(kick_members=True)
   async def startgiveaway(self, ctx):
     """
     Sloppy Version but still works perfectly
     """
+    #Check if the user replying to the bot
+    #Is the author
     def is_me(m):
       return m.author == ctx.author
+      
     await ctx.send("Aight lets start setting up the giveaway\nWhat channel will it be in?") #Starts setting up the giveaway
     while True:
       try:
-        msg = await self.bot.wait_for('message', timeout=60.0, check=is_me)
-        channel_converter = discord.ext.commands.TextChannelConverter() #Converts the channel mentioned
-        channel = await channel_converter.convert(ctx, msg.content)
+          msg = await self.bot.wait_for('message', timeout=60.0, check=is_me)
+          channel_converter = discord.ext.commands.TextChannelConverter() #Converts the channel mentioned
+          channel = await channel_converter.convert(ctx, msg.content)
       except commands.BadArgument:
-        await ctx.send("Bruh that channel doesn't even exist. Try again")
+          await ctx.send("Bruh that channel doesn't even exist. Try again")
             #Raises exception made in the TimeConverter
       else:
           await ctx.send(f"Great, the giveaway will start in {channel.mention}\nBut how many winners will there be? (Choose between `1-25`)")
@@ -117,11 +121,11 @@ class Giveaway(commands.Cog, name="Giveaway Category"):
           msg = await self.bot.wait_for('message', timeout=60.0, check=is_me)
         else:
           await ctx.send(f"Ok there will be {bro} winners\nHow much time should this giveaway last for?\nPlease say one of these options: `#d|#h|#m|#s`")
-          msg = await self.bot.wait_for('message', timeout=60.0, check=is_me)
+          msg2 = await self.bot.wait_for('message', timeout=60.0, check=is_me)
           break
     while True:
         try:
-          time = int(convert(msg.content))
+          time = int(convert(msg2.content))
           #convert is the word from the TimeConverter Function at the top of the file, to convert the x amount of d|h|m|s
         except ValueError:
           await ctx.send("That isn't an option. Please choose x amount of `d|h|m|s`")
@@ -131,28 +135,40 @@ class Giveaway(commands.Cog, name="Giveaway Category"):
     await ctx.send(f"Aight, the giveaway will last {time}s\nNow what are you giving away?")
     msg = await self.bot.wait_for('message', timeout=60.0, check=is_me)
     prize = msg.content #The item we're giving away
-    print("This works")
     await ctx.send(f"Aight cool, the giveaway is now starting in :\n{channel.mention}")
           
     await asyncio.sleep(1.75)
           
-    giveawayembed = discord.Embed(title="🎉 __**GIVEAWAY**__ 🎉", description=f"__*REACT With 🎉 to participate!*__", colour=discord.Color.darker_grey())
+    giveawayembed = discord.Embed(
+        description=f"__*REACT With 🎉 to participate!*__", 
+        color=discord.Color.darker_blue())
+
+    giveawayembed.add_field(
+        name="_*Prize:*_", 
+        value=f"🏆 {prize}")
+    giveawayembed.add_field(
+        name=f"_*Lasts:*_", 
+        value=f"__**{time}s**__")
     
-    giveawayembed.add_field(name="_*Prize:*_", value=f"🏆 {prize}")
-    giveawayembed.add_field(name=f"_*Lasts:*_", value=f"__**{time}s**__")
+    giveawayembed.set_author(
+        name=f"Hosted by: {ctx.author.name}", 
+        icon_url=ctx.author.avatar_url)
     
-    giveawayembed.set_author(name=f"Hosted by: {ctx.author.name}", icon_url=ctx.author.avatar_url)
-    
-    giveawayembed.set_footer(text=f"{bro} Winners | Ends ")
+    giveawayembed.set_footer(
+        text=f"{bro} Winners | Ends ")
     
     giveawayembed.timestamp = datetime.datetime.utcnow() + datetime.timedelta(seconds=time)
                 
-    sendgiveaway = await channel.send(embed=giveawayembed)
+    sendgiveaway = await channel.send(
+        content="🎉 **New Giveaway!** 🎉", 
+        embed=giveawayembed)
     await sendgiveaway.add_reaction('🎉')
 
     for number in range(int(time), 0, -5): 
         #Edits the original giveaway embed to create a countdown for the timer
-      timecounter = discord.Embed(title="🎉 __**GIVEAWAY**__ 🎉", description=f"__*REACT With 🎉 to participate!*__\n\n", colour=discord.Color.darker_grey())
+      timecounter = discord.Embed(
+          description=f"__*REACT With 🎉 to participate!*__\n\n", 
+          colour=discord.Color.darker_blue())
       
       timecounter.set_footer(text=f"{bro} Winner(s) | Ends ")
       
