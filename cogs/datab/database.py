@@ -235,32 +235,27 @@ class Database(commands.Cog):
         
 #•----------Mute/Unmute System----------•#
     
-    #Function to insert the 
-    #Targets id, role id, and end time
-    async def mute_members(self, trgt, rid, endtm):
+    #Function used to add the mute to a member
+    async def add_mute(self, mid, rid, endt, gid):
         
-        result = await self.execute("INSERT OR IGNORE INTO mutes(user_id, role_id, end_time) VALUES(?, ?, ?)", trgt, rid, endtm)
-        #print(result)
+        result = await self.execute("INSERT INTO mutes(user_id, role_id, end_time, guild_id) VALUES (?, ?, ?, ?)", mid, rid, endt, gid)
         
         await self.commit()
+        
+        return result
+
+    #Function used to get the member's roles
+    async def get_mutes(self, mid, gid):
+        
+        result = await (await self.execute("SELECT role_id FROM mutes WHERE user_id = ? AND guild_id = ?", mid, gid)).fetchone()
         
         return result
     
-    #Function to get the target's role ids
-    async def get_roles(self, uid):
+    #Function used to unmute the member(s)
+    async def un_mute(self, mid):
         
-        result = await (await self.execute("SELECT role_id FROM mutes WHERE user_id = ? AND guild_id = ?", uid, gid)).fetchone()
-        #print(result)
+        result = await self.execute("DELETE FROM mutes WHERE user_id = ?", mid)
         
-        await self.commit()
-        
-        return result
-        
-    #Function to unmute the member
-    async def unmute_member(self, uid):
-        
-        result = await self.execute("DELETE FROM mutes WHERE user_id = ?", uid, gid)
-
         await self.commit()
         
         return result
@@ -314,3 +309,4 @@ class Database(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Database(bot))
+    
