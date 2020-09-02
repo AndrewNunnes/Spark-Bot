@@ -53,22 +53,27 @@ class Config(Cog):
           
     @config.command(
       brief="{Change the Bot's Prefix}", 
-      usage="prefix <new_prefix>")
+      usage="config prefix <new_prefix>", 
+      aliases=['pre', 'pref', 'newprefix'])
     @guild_only()
     @cooldown(1, 5, BucketType.user)
     @has_permissions(manage_guild=True)
-    async def prefix(self, ctx, *, pre: str):
-        data = cogs._json.read_json('prefixes')
-        data[str(ctx.message.guild.id)] = pre
-        cogs._json.write_json(data, 'prefixes')
+    async def prefix(self, ctx, pre: Optional[str]):
         
-        #If a new prefix isn't said
-        if not pre:
-            await ctx.send(f"The server prefix is set to {ctx.prefix}. Use {ctx.prefix}prefix to change it")
+        try:
+            data = cogs._json.read_json('prefixes')
+            data[str(ctx.message.guild.id)] = pre
+            cogs._json.write_json(data, 'prefixes')
         
-        #If a new prefix is given
-        else:
-            await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}prefix <newprefix>` to change it again")
+            #If a new prefix isn't said
+            if not pre:
+                await ctx.send(f"The server prefix is set to {ctx.prefix}. Use {ctx.prefix}config prefix to change it")
+        
+            #If a new prefix is given
+            else:
+                await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}config prefix <newprefix>` to change it again")
+        except Exception as e:
+            await ctx.send(e)
 
 #•----------Command Menus----------•#
 #•--{Gets the cogs and Show their Commands--•#
@@ -178,13 +183,13 @@ class Config(Cog):
 
     @config.command(
       brief="{Menu for Role Management}", 
-      usage="role")
+      usage="config role")
     @guild_only()
     @has_permissions(manage_roles=True)
     @cooldown(1, 1.5, BucketType.user)
     async def role(self, ctx):
       
-        cog = self.gc.get_cog_by_class('Role Management')
+        cog = self.gc.get_cog_by_class('Role')
 
         e = discord.Embed(
             title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__",
