@@ -207,7 +207,7 @@ class Fun(Cog, name="Fun Category"):
             redmark = "<:redmark:738415>"
             
             #Only works if you have an api key inside the website
-            url = f"https://api.themoviedb.org/3/search/movie?api_key=91841633d0b2b91d9e313adcce2cc2c7&query={title}"
+            url = f"https://api.themoviedb.org/3/search/movie?api_key=Your_api_key={title}"
             r = await self.ses.get(url)
             resp = await r.json()
             
