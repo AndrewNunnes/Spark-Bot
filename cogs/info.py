@@ -30,7 +30,7 @@ from typing import Optional
 
 from discord import __version__ as discord_version
 
-from discord.ext.commands import command, BucketType, cooldown, bot_has_permissions, guild_only, Cog, has_permissions
+from discord.ext.commands import command, BucketType, cooldown, bot_has_permissions, guild_only, Cog, has_permissions, BadUnionArgument
 
 #from psutil import Process, virtual_memory
 
@@ -142,7 +142,7 @@ class Info(Cog, name="Info Category"):
       brief='{Shows info about the Bot}', 
       usage='binfo'
     )
-    @cooldown(1, 1.5, type=BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(use_external_emojis=True, embed_links=True)
     async def binfo(self, ctx):
 
@@ -217,7 +217,7 @@ class Info(Cog, name="Info Category"):
       brief="{Info about the Server}", 
       usage="sinfo")
     @guild_only()
-    @cooldown(1, 1.5, type=BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(embed_links=True)
     async def sinfo(self, ctx):
 
@@ -290,7 +290,7 @@ class Info(Cog, name="Info Category"):
       usage="uinfo (member)", 
       aliases=['ui', 'userinfo'])
     @guild_only()
-    @cooldown(1, 1.5, type=BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def uinfo(self, ctx, member: discord.Member = None):
 
         #Checks if a member is mentioned 
@@ -361,6 +361,7 @@ class Info(Cog, name="Info Category"):
       usage="roleinfo <role>", 
       aliases=['ri', 'rinfo'])
     @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
     async def info(self, ctx, *, role: discord.Role):
           
         #See when the role was created
@@ -379,7 +380,7 @@ class Info(Cog, name="Info Category"):
             human_list = f"{' , '.join(map(str, (member.mention for member in list(reversed(role.members))[:25])))} and **{length}** more"
         #If there is less than 25 members
         else:
-            human_list = f"{' , '.join(map(str, (member.mention for member in (list(reversed(role.members[1:]))))))}"
+            human_list = f"{' , '.join(map(str, (member.mention for member in (list(reversed(role.members))))))}"
         
         #If there is no members 
         human_lt = "No Members" if human_list == "" else human_list
@@ -433,8 +434,11 @@ class Info(Cog, name="Info Category"):
         usage="chinfo <#channel>", 
         aliases=['channelinfo'])
     @guild_only()
-    async def chinfo(self, ctx, channel: Union[discord.TextChannel, discord.VoiceChannel]):
-    
+    @cooldown(1, 2.5, BucketType.user)
+    async def chinfo(self, ctx, channel: Optional[Union[discord.TextChannel, discord.VoiceChannel]]=None):
+        
+        channel = ctx.channel if not channel else channel
+        
         #If there is more than 15 Members in VC
         if len(channel.members) > 15:
             length = len(channel.members) - 15
@@ -443,7 +447,7 @@ class Info(Cog, name="Info Category"):
     
         #If there is less than 15 members in VC
         else:
-            member_list = f"{' , '.join(map(str, (member.mention for member in list(reversed(channel.members[1:])))))}"
+            member_list = f"{' , '.join(map(str, (member.mention for member in list(reversed(channel.members)))))}"
     
         #Check there is no members
         mem_list = "No Members" if member_list == "" else member_list
@@ -492,7 +496,7 @@ class Info(Cog, name="Info Category"):
         #If user mentions a text channel
         elif isinstance(channel, discord.TextChannel):
       
-            channel = ctx.channel if channel else channel
+            channel = ctx.channel if not channel else channel
       
             #Define the channel's topic
             topic = channel.topic
@@ -516,7 +520,7 @@ class Info(Cog, name="Info Category"):
 
             #Make embed
             e = discord.Embed(
-                 description=f"**General Info for {channel.mention}**")
+                description=f"**General Info for {channel.mention}**")
 
             #Make fields
             fields = [("__*ID*__", channel.id, False), 
@@ -573,27 +577,24 @@ class Info(Cog, name="Info Category"):
     @guild_only()
     #@bot_has_permissions(embed_links=True)
     @cooldown(1, 1.5, type=BucketType.user)
-    async def avatar(self, ctx, member: discord.Member = None):
+    async def avatar(self, ctx, member: Optional[discord.Member] = None):
 
         #Checks if a member is mentioned or not
         member = ctx.author if not member else member
 
-        #Redefining member as userinfo 
-        #Just to make it easier to read
-        userinfo = member
-
-        embed = discord.Embed(
-          title=f"{userinfo.name}'s Avatar", 
-          color=0x420000, 
+        e = discord.Embed(
+          title=f"{member}'s Avatar", 
+          url=str(member.avatar_url), 
           timestamp = datetime.utcnow())
 
-        embed.set_author(name=f"Command requested by: {ctx.message.author}")
+        e.set_footer(
+            text=f"Requested by {ctx.message.author}")
 
-        #Getting the member's avatar url
-        #And formatting as png
-        embed.set_image(url=userinfo.avatar_url_as(format='png'))
+        e.set_image(
+            url=str(member.avatar_url))
 
-        await ctx.send(embed=embed)
+        await ctx.send(embed=e)
 
 def setup(bot):
     bot.add_cog(Info(bot))
+    
