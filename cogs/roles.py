@@ -1,7 +1,8 @@
 #•----------Modules----------•#
 import discord
 
-from discord.ext.commands import command, Cog, guild_only, has_permissions, bot_has_permissions, BadArgument, Greedy
+from discord.ext.commands import command, Cog, guild_only, has_permissions, bot_has_permissions, BadArgument, Greedy, \
+cooldown, BucketType
 
 import asyncio
 
@@ -25,12 +26,82 @@ class Role(Cog, name="Role Category"):
     @command(
       name="roleposition", 
       brief="{Change the Position of a Role}", 
-      usage="roleposition <#position>") #usage="{Change the position of a Role}")
+      usage="roleposition <role> <#position>", 
+      aliases=['rposition', 'rpos', 'rolepos']) 
     @guild_only()
     @has_permissions(manage_roles=True)
     @bot_has_permissions(manage_roles=True)
     async def position(self, ctx, role: discord.Role, *, position: int):
-      pass
+      
+        redmark = "<:redmark:738415723172462723>" 
+        
+        greenmark = "<:greenmark:738415677827973152>"
+        
+        mem = ctx.author
+        
+        if not position:
+            e = discord.Embed(
+                description=f"{redmark} __*{mem.mention}, you need to give a valid number*__", 
+                color=0x420000)
+            await ctx.send(embed=e)
+            return
+          
+        rolepos = role.position
+        
+        await role.edit(position=position, reason="Changing position of a role")
+        
+        e = discord.Embed(
+            description=f"{greenmark} __*Successfully changed position for **{role.mention}** from **{rolepos}** to **{role.position}** *__")
+        await ctx.send(embed=e)
+    
+    @command(
+        brief="{Assign a Role to a Specified role}", 
+        usage="raall <giving_role> <existing_role>", 
+        aliases=['roleassign', 'rassign'])
+    @guild_only()
+    @has_permissions(manage_roles=True)
+    @bot_has_permissions(manage_roles=True, use_external_emojis=True)
+    @cooldown(1, 2.5, BucketType.user)
+    async def raall(self, ctx, giving: discord.Role, *, exist: discord.Role):
+        
+        greenmark = "<:greenmark:738415677827973152>" 
+        
+        redmark = "<:redmark:738415723172462723>"
+        
+        #Iterate through the members
+        #Inside of the existing role
+        for member in exist.members:
+            #Add the role we're giving to 
+            #Everyone with exist role
+            await member.add_roles(giving)
+        
+        #Make embed
+        e = discord.Embed(
+            description=f"{greenmark} __*Successfully gave the **{giving.mention}** Role to everyone with the **{exist.mention}** Role*__")
+        await ctx.send(embed=e)
+        
+    @command(
+        brief="{Remove a Role from Everyone with the Specified Role}", 
+        usage="rrall <role_to_remove> <role_to_remove_from>",
+        aliases=['rremoveall'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    @bot_has_permissions(manage_roles=True, use_external_emojis=True)
+    @has_permissions(manage_roles=True)
+    async def rrall(self, ctx, removing: discord.Role, *, _from: discord.Role):
+        
+        greenmark = "<:greenmark:738415677827973152>"
+        
+        #Iterate through the members
+        #Inside of removing role
+        for member in _from.members:
+            #Remove the role from every member
+            await member.remove_roles(removing)
+        
+        #Make embed
+        e = discord.Embed(
+            description=f"{greenmark} __*Successfully Removed **{removing.mention}** from everyone with the **{_from.mention}** Role*__")
+        await ctx.send(embed=e)
     
     @command(
       name="rolename", 
@@ -39,6 +110,7 @@ class Role(Cog, name="Role Category"):
     @guild_only()
     @bot_has_permissions(manage_roles=True)
     @has_permissions(manage_roles=True)
+    @cooldown(1, 2.5, BucketType.user)
     async def name(self, ctx, role: discord.Role, *, name=None):
     
       #If user doesn't give a new name
@@ -237,54 +309,114 @@ class Role(Cog, name="Role Category"):
       await ctx.send(embed=e)
           
     @command(
-        name="roleperms", 
-        brief="{Get a List of Perms for a Role}", 
-        usage="roleperms <role>", 
-        aliases=['rolepermission', 'rperms', 'rolepermissions'])
+        brief="{Get a List of Perms for a Role/Member}", 
+        usage="perms <role>/(member)", 
+        aliases=['permission', 'permissions'])
     @guild_only()
     @bot_has_permissions(use_external_emojis=True)
-    async def perms(self, ctx, *, role: discord.Role):
-    
-        #perms = [f'{perm.title().replace("_", " ")} {("= <:greenmark:738415677827973152>" if value else "= <:redmark:738415723172462723>")}' for perm, value in role.permissions]
+    async def perms(self, ctx, *, item: Optional[Union[discord.Role, discord.Member]]):
         
-        #Make embed
-        e = discord.Embed(
-            description=f"__*Permissions for {role.mention} {{*Color in Hex: {role.color}*}}*__")
+        greenmark = "<:greenmark:738415677827973152>" 
+        redmark = "<:redmark:738415723172462723>"
+        garbage = "<:trash:734043301187158082>"
         
-        #Iterate through list of perms
-        for perm, value in role.permissions:
-            
-            #Use our custom emojis
-            #To show if perms are true or not
-            green_red = f'{("True <:greenmark:738415677827973152>" if value else "False <:redmark:738415723172462723>")}'
-            
-            #Make fields
-            fields = [(f'{perm.title().replace("_", " ")}', green_red, True)]
-            
-            #Add fields
-            for n, v, i in fields:
-                e.add_field(
-                    name=n, 
-                    value=v, 
-                    inline=i)
-            
-        e.set_thumbnail(
-            url=ctx.author.avatar_url)
-            
-        e.set_footer(
-            text=f"Requested by {ctx.author}")
-  
-        e.timestamp = datetime.utcnow()
-      
-        await ctx.send(embed=e)
-      
-    @perms.error
-    async def perms_error(self, ctx, error):
-        if isinstance(error, BadArgument):
-            await ctx.send("That isn't a valid role")
+        #Make optional to mention a member
+        item = item if item else ctx.author
+        
+        if isinstance(item, discord.Member):
+            #Iterating through list of guild perms
+            perms = [f"{perm.title().replace('_', ' ')} = {greenmark if value else redmark}" for perm, value in item.guild_permissions]
+        
         else:
-            raise(error)
-          
+            #Iterating through list of general perms
+            perms = [f"{perm.title().replace('_', ' ')} = {greenmark if value else redmark}" for perm, value, in item.permissions]
+        
+        #Split the list of perms into 2
+        middle = len(perms) // 2
+        f_half = perms[:middle]
+        s_half = perms[middle:]
+        
+        #List of contents go through
+        #Inside of our embeds
+        contents = [f_half, s_half]
+        
+        #Max pages we want for this embed
+        pages = 2
+        #The current page we're on
+        #Defaults to 0
+        cur_page = 1
+        
+        e = discord.Embed(
+            description=f"{contents[cur_page-1]}")
+            
+        e.set_author(
+            name=f"Page {cur_page}/{pages}")
+        
+        #Store the first embed we're sending
+        msg = await ctx.send(embed=e)
+        
+        #Reactions to add
+        emotes = ['⬅️', '➡️', '⏹']
+        for react in emotes:
+            #Add the reactions
+            await msg.add_reaction(react)
+        
+        #Custom check to check for the author of the command
+        #And check for the right emojis
+        def checkauth(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in ['⬅️', '➡️', '⏹']
+        
+        while True:
+            try:
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0, check=checkauth)
+            
+            #If user takes too long to react
+            except asyncio.TimeoutError:
+                err = discord.Embed(
+                    description=f"{redmark} __*{ctx.author.mention}, you took too long to react*__", 
+                    color=0x420000)
+                await msg.edit(embed=err)
+                await msg.clear_reactions()
+                break
+              
+            else:
+                #Check for the specific emoji
+                #And if the user isn't trying to go to the negative side 
+                #Of pages
+                if str(reaction.emoji) == '⬅️' and cur_page > 1:
+                    await msg.remove_reaction(reaction, user)
+                    cur_page -= 1
+                    
+                    e = discord.Embed(
+                        description=f"{contents[cur_page-1]}")
+                    e.set_author(
+                        name=f"Page {cur_page}/{pages}")
+                    
+                    await msg.edit(embed=e)
+                #Check for the specific emoji
+                #And if the user tries to go forward too much
+                elif str(reaction.emoji) == '➡️' and cur_page != pages:
+                    await msg.remove_reaction(reaction, user)
+                    cur_page += 1
+                    
+                    e = discord.Embed(
+                        description=f"{contents[cur_page-1]}")
+                    e.set_author(
+                        name=f"Page {cur_page}/{pages}")
+                        
+                    await msg.edit(embed=e)
+                
+                #Used to delete the embed
+                elif str(reaction.emoji) == '⏹':
+                    await msg.clear_reactions()
+                    e = discord.Embed(
+                        description=f"{garbage} __*Removing this embed in 5 seconds...*__", 
+                        color=0x420000)
+                    await msg.edit(embed=e, delete_after=5)
+                
+                else:
+                    await msg.remove_reaction(reaction, user)
+    
     @command(
         name="createrole", 
         brief="{Create a New Role}", 
