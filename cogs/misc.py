@@ -8,11 +8,15 @@ import random
 
 from datetime import datetime
 
-from discord.ext.commands import BucketType, command, bot_has_permissions, guild_only, Cog, cooldown, has_permissions
+from discord.ext.commands import BucketType, command, bot_has_permissions, guild_only, Cog, cooldown, has_permissions, MissingRequiredArgument
 
 from typing import Optional
 
 #•----------Class----------•#
+
+def to_emoji(c):
+    base = 0x1f1e6
+    return chr(base+c)
 
 class Misc(Cog, name="Misc Category"):
 
@@ -22,36 +26,66 @@ class Misc(Cog, name="Misc Category"):
         self.bot = bot
         
 #•----------Commands----------•#
-
+    
+    @command(
+        brief="{Leave any Feedback for the Owner of the Bot}", 
+        usage="feedback <message_here>")
+    @guild_only()
+    @cooldown(1, 86400.0, BucketType.user)
+    async def feedback(self, ctx, *, fb):
+        pass
+        
     #Booster Command  
     @command(
-      brief="{List of Boosters for the Server}", 
-      usage="boosters")
+        brief="{List of Boosters for the Server}", 
+        usage="boosters", 
+        aliases=['sboosters', 'boosts', 'boosterlist'])
     @guild_only()
     @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(use_external_emojis=True)
     async def boosters(self, ctx):
 
-        #Saving the guild's boosters
-        #As a variable
-        booster_list = ctx.guild.premium_subscribers
+        booster_list = []
+        
+        boost = ctx.guild.premium_subscribers
 
-        #Checking to see if there is no boosters
-        if booster_list == []:
-            boosters = "No Boosters"
+        #If there's over 25 boosters
+        if len(boost) > 25:
+            #Subtract 25
+            length = boost - 25
+              
+            #Showing the 25 members and if there's more
+            #We show the leftover
+            booster_list = f"{' , '.join(map(str, (member.mention for member in list(reversed(boost))[:25])))} and **{length}** more..."
+            
         else:
-            boosters = booster_list
+            #Show all members if less than 25
+            booster_list = f"{' , '.join(map(str, (member.mention for member in list(reversed(boost[1:])))))}"
 
+        #Make a variable to make stuff easier
+        boosters = "No Members" if booster_list == [] else booster_list
+
+        #Make embed
         e = discord.Embed(
-            title=f"<:booster:741407205575622696> __*List of Boosters for {{{ctx.guild.name}}}*__", 
-            description=f"{boosters}", 
-            color=0x420000)
+            title=f"<:booster:741407205575622696> __**List of Boosters for {{{ctx.guild.name}}}**__", 
+            color=0x420000, 
+            timestamp=datetime.utcnow())
+            
+        #Make fields
+        fields = [
+                ("*Members who Boosted*", 
+                    
+                f"{boosters}", True)]
+            
+        #Add fields
+        for n, v, i in fields:
+            e.add_field(
+                name=n, 
+                value=v, 
+                inline=i)
 
-        e.add_field(
-            name=f"__*Total*__", 
-            value=f'{len(booster_list)} Boosters')
-      
-        e.timestamp = datetime.utcnow()
+        e.set_footer(
+            text=f"{len(boost)} Total")
       
         await ctx.send(embed=e)
 
@@ -64,9 +98,9 @@ class Misc(Cog, name="Misc Category"):
     async def suggest(self, ctx, *, sug):
       
         #If the suggestion is too long
-        if len(sug) > 850:
+        if len(sug) > 750:
             e = discord.Embed(
-                description="<:redmark:738415723172462723> __*Suggestion can't be longer than 850 Characters*__", 
+                description="<:redmark:738415723172462723> __*Suggestion can't be longer than 750 Characters*__", 
                 color=0x420000)
             await ctx.send(embed=e)
             return
@@ -81,13 +115,15 @@ class Misc(Cog, name="Misc Category"):
        
         #Make embed
         e = discord.Embed(
+            title="__*New Suggestion!*__", 
+            description=f"{sug}\n** **", 
             color=0x420000)
           
         e.set_thumbnail(
             url=ctx.author.avatar_url)
       
         e.set_footer(
-            text=f"Taken by {ctx.author}")
+            text=f"Provided by {ctx.author}")
           
         e.timestamp = datetime.utcnow()
       
@@ -96,10 +132,7 @@ class Misc(Cog, name="Misc Category"):
       
         #Make the embed fields
         fields = [
-                  ("**New Suggestion!**", 
-                  sug, False), 
-                
-                  ("**React to Leave your Opinion!**", 
+                  ("__*React to Leave your Opinion!*__", 
                   "<:greenmark:738415677827973152> - __*Good*__" +
                   "\n<:redmark:738415723172462723> - __*Bad*__" +
                   "\n<:maybemark:738418156808175616> - __*Maybe/Ok*__", True)]
@@ -126,7 +159,6 @@ class Misc(Cog, name="Misc Category"):
       usage="poll")
     @guild_only()
     @cooldown(1, 3, BucketType.user)
-    @has_permissions(manage_messages=True)
     async def poll(self, ctx, *, question):
 
         #A list of messages to delete when we're all done
@@ -164,21 +196,15 @@ class Misc(Cog, name="Misc Category"):
 
     @poll.error
     async def poll_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
+        if isinstance(error, MissingRequiredArgument):
             return await ctx.send('Missing the question.', delete_after=4)
-        else:
-            raise(error)
 
     @command(
       brief="{Start a poll quickly}", 
       usage="quickpoll <at_least_2_questions>")
     @cooldown(1, 3, BucketType.user)
     @guild_only()
-    @has_permissions(manage_messages=True)
     async def quickpoll(self, ctx, *questions_and_choices: str):
-        """Makes a poll quickly.
-        The first argument is the question and the rest are the choices.
-        """
 
         if len(questions_and_choices) < 3:
             return await ctx.send('Need at least 1 question with 2 choices.', delete_after=5)
