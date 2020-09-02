@@ -19,16 +19,18 @@
 * `!minecraft` Will give a menu of all current commands
 * `!help` to see all the Fun Commands! {Unrelated to Minecraft}
 
-# Role Management Commands
-* `!addrole <user> <rolename>` -> Adds a Role to a User
-* `!removerole <user> <rolename>` -> Removes a User's Role
-* `!rolename <new_name>` -> Change the name of an existing Role
-* `!rolecolor <new_color>` -> Change the color of a role (Supports Hex Code)
-* `!roleperms <rolename>` -> List of Permissions the Role has
-* `!roleinfo <rolename>` -> Info about a Role
-* `!rolelist` -> List of First 25 Roles in a Server
-* `!createrole <role_name> (color) (reason_for_creating)` -> Create a new role for your server
-* `!deleterole <rolename>` -> Deleted a Role from a Server
+# Moderation Commands
+* `configmenu` -> Shows a menu of different management commands/categories
+* `warn <@member>` -> Warn a member
+* `warns <@member>` -> Gives a menu of all a member's warns
+* `delwarn <@member> <warn_case>` -> Lets you delete a specific member's warn
+* `clearwarns <@member>` -> Clears all of a member's warns
+* `mute <@member(s)> (time)` -> Mutes member(s) either indefinitely or for a specific time if given
+* `unmute <@member(s)>` -> Unmutes member(s)
+* `kick <@member>` -> Kicks a member from the server
+* `ban <@member>` -> Bans a member
+* `unban <user#1234>` -> Unbans a user with their discrim
+* `clean <number_of_messages>` -> Cleans a specified amount of messages
 
 # More Misc Commands/Features
 * `!startgiveaway` -> Interactive Giveaway Setup
