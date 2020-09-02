@@ -66,6 +66,9 @@ with open('data/listening_status.json', 'r', encoding='utf8') as listen:
 with open('data/watching_status.json', 'r', encoding='utf8') as watch:
     #Load our json
     bot.watch = json.load(watch)
+    
+with open('data/emojified.json', 'r', encoding='utf8') as em:
+    bot.emojified = json.load(em)
 
 #•--------------Change Status---------------•#
 
@@ -125,6 +128,17 @@ async def connect_db():
     member_id INTEGER PRIMARY KEY, 
     guild_id INTEGER, 
     FOREIGN KEY (guild_id) REFERENCES guilds (id)
+    );
+    
+    CREATE TABLE IF NOT EXISTS mutes (
+    user_id INTEGER, 
+    role_id INTEGER, 
+    end_time TEXT, 
+    reason TEXT, 
+    guild_id INTEGER,
+    PRIMARY KEY (user_id, guild_id), 
+    FOREIGN KEY (guild_id) REFERENCES guilds (id), 
+    FOREIGN KEY (user_id) REFERENCES members (member_id)
     );
 
     CREATE TABLE IF NOT EXISTS warns (
@@ -189,19 +203,17 @@ async def on_message(message):
       if str(message.guild.id) in data:
           prefix = data[str(message.guild.id)]
           if message.content.startswith(prefix):
-            return
-      else:
-        if not str(message.guild.id) in data:
-            prefix = '!'
+              return
+            
+      elif not str(message.guild.id) in data:
+          prefix = '!'
           
-        prefixembed = discord.Embed(
-          description=f"What's up {message.author.mention}. My prefix is `{prefix}`\nFeel free to change it with `{prefix}prefix <newprefix>`", 
-          color=discord.Color.darker_grey())
-      
-      
-        prefixembed.timestamp = datetime.datetime.utcnow()
+          prefixembed = discord.Embed(
+              description=f"What's up {message.author.mention}. My prefix is `{prefix}`\nFeel free to change it with `{prefix}config prefix <newprefix>`")
+
+          prefixembed.timestamp = datetime.datetime.utcnow()
     
-        await message.channel.send(embed=prefixembed)
+          await message.channel.send(embed=prefixembed)
   
     await bot.process_commands(message)
     
@@ -214,20 +226,19 @@ if __name__ == '__main__':
     for file in os.listdir(cwd+"/cogs/datab/"):
         file_name(f'datab.{file}')
         
+    for file in os.listdir(cwd+"/cogs/other/"):
+        file_name(f'other.{file}')
+        
     for file in os.listdir(cwd+"/cogs/"):
         file_name(file)
         
     for file in os.listdir(cwd+"/cogs/events/"):
         file_name(f'events.{file}')
         
-    for file in os.listdir(cwd+"/cogs/other/"):
-        file_name(f'other.{file}')
-
-        #Ignore all these old versions
-                #if file.endswith(".py") and not file.startswith("_"):
-                    #client.load_extension(f"cogs.{file[:-3]}")
-    
 #for ext in [file.stem for file in pathlib.Path('cogs').glob('**/*.py')]:
     #client.load_extension(f"cogs.{ext}")
+    
+#for ext in[".".join(p.parts)[:-len(".py")] for p in pathlib.Path('cogs').glob('**/*.py')]:
+  #client.load_extension(ext)
 
 bot.run('bruh')
