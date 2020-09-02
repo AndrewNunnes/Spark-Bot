@@ -180,7 +180,7 @@ class Owner(Cog, name="Owner Category"):
     @is_owner()
     async def upcoming(self, ctx):
         
-        url = "https://api.themoviedb.org/3/movie/upcoming?api_key=91841633d0b2b91d9e313adcce2cc2c7"
+        url = "https://api.themoviedb.org/3/movie/upcoming?api_key=Your_api_key"
         r = await self.ses.get(url)
         
         respon = await r.json()
@@ -233,7 +233,7 @@ class Owner(Cog, name="Owner Category"):
     @is_owner()
     async def upcmovie(self, ctx):
         
-        url = "https://api.themoviedb.org/3/movie/upcoming?api_key=91841633d0b2b91d9e313adcce2cc2c7"
+        url = "https://api.themoviedb.org/3/movie/upcoming?api_key=Your_api_key"
         #Get the url with aiohttp session
         r = await self.ses.get(url)
         
@@ -292,7 +292,7 @@ class Owner(Cog, name="Owner Category"):
         
         #Api key needed to have this work
         #Check their website to make one
-        url = f"https://api.themoviedb.org/3/tv/popular?api_key=91841633d0b2b91d9e313adcce2cc2c7"
+        url = f"https://api.themoviedb.org/3/tv/popular?api_key=Your_api_key"
         r = await self.ses.get(url)
 
         #Convert into a json format
