@@ -3,27 +3,71 @@
 
 import discord
 
-from discord.ext.commands import command, bot_has_permissions, has_permissions, guild_only, Cog, BadArgument, BadUnionArgument
+from discord.ext.commands import command, bot_has_permissions, has_permissions, guild_only, Cog, \
+BadArgument, BadUnionArgument, cooldown, is_owner, BucketType
 
 from typing import Optional, Union
 
-import typing
-
 import asyncio
 
-from datetime import datetime
+import datetime
 
+from aiohttp import ClientSession
+
+import io
 #•----------Class----------•#
 
 class Channels(Cog):
-  
+
   """`{Channel Management}`"""
   
   def __init__(self, bot):
     self.bot = bot
+    
+    #Define our aiohttp clientsession
+    #For easier access in other functions
+    self.ses = ClientSession(loop=self.bot.loop)
+    
+#•----------Functions----------•#
+  #Run aiohttp session
+  #And close when complete
+  def cog_unload(self):
+      self.bot.loop.run_until_complete(self.ses.close())
 
 #•---------Commands----------•#
-  
+
+  @command(
+      brief="{Nuke a Channel}",
+      usage="nuke (#channel)")
+  @guild_only()
+  @cooldown(1, 25.0, BucketType.user)
+  @has_permissions(manage_channels=True)
+  @bot_has_permissions(manage_channels=True)
+  async def nuke(self, ctx, channel: discord.TextChannel=None):
+    
+      #Makes it optional to choose a channel to delete
+      #Or just delete the current channel
+      channel = ctx.channel if channel is None else channel
+      
+      #Clone the channel first  
+      chan = await channel.clone(
+          reason="Nuked")
+      
+      #url we're getting
+      gif_url = "http://i-download.imgflip.com/4d4pzc.gif"
+      #Get the url
+      resp = await self.ses.get(gif_url)
+      #If the url doesn't exist
+      if resp.status != 200:
+          return
+        
+      data = io.BytesIO(await resp.read())
+
+      await chan.send("Nuked this channel 🤯", file=discord.File(data, gif_url))
+
+      #Then delete the channel command was invoked in
+      await channel.delete(reason="To Nuke")
+
   @command(
     brief="{Create a New Channel}", 
     usage="newtc <name> (category) (slowmode_delay[in seconds]) (reason)", 
