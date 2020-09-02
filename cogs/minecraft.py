@@ -1,4 +1,3 @@
-
 #•----------Modules----------•#
 from aiohttp import ClientSession
 
@@ -24,6 +23,8 @@ import socket
 
 from discord.ext.commands import command, BucketType, bot_has_permissions, guild_only, \
 cooldown, Cog, is_owner
+
+from MojangAPI import Client, DataService
 
 from functools import partial
 
@@ -61,7 +62,7 @@ class Minecraft(Cog, name="Minecraft Category"):
     #Run the ClientSession
     #Then close the session when complete
     def cog_unload(self):
-        self.bot.loop.run_until_complete(self.ses.close())
+        self.bot.loop.create_task(self.ses.close())
 
     async def nice(self, ctx):
         com_len = len(f'{ctx.prefix}{ctx.invoked_with} ')
@@ -272,12 +273,10 @@ class Minecraft(Cog, name="Minecraft Category"):
     @bot_has_permissions(use_external_emojis=True)
     async def names(self, ctx, *, gamertag: str):
       
-        #Make the embed first
-        e = discord.Embed(
-            description="{Shown from Most `Recent` to `Oldest`}")
-        
         #Define custom emoji as a var
         redmark = "<:redmark:738415723172462723>"
+        
+        garbage = "<:trash:734043301187158082>"
         
         #Defining author as something easier
         mem = ctx.author
@@ -294,110 +293,169 @@ class Minecraft(Cog, name="Minecraft Category"):
             await ctx.send(embed=e)
             return
         
-        try:
-            #Get the api for our embed
-            res = await self.ses.get(
-                f"https://some-random-api.ml/mc?username={gamertag}")
+        #Get the api for our embed
+        res = await self.ses.get(
+            f"https://some-random-api.ml/mc?username={gamertag}")
         
-            #Storing the aiohttp session as a var
-            mn = await res.json()
-            #Define the dict/json we're getting
-            data = mn
+        #Storing the aiohttp session as a var
+        mn = await res.json()
+        #Define the dict/json we're getting
+        data = mn
         
-            #Change 'origanal' in the api
-            #To 'original'
-            data['name_history'][0]['changedToAt'] = "Original Name"
+        #Change 'origanal' in the api
+        #To 'original'
+        data['name_history'][0]['changedToAt'] = "Original Name"
         
-            #Change case where month is 0
-            data['name_history'][3]['changedToAt'] = "1/29/2017"
+        #Change case where month is 0
+        data['name_history'][3]['changedToAt'] = "1/29/2017"
         
-            #Store the username as a variable  
-            name1 = data['username']
-        
-            #Store the user name history
-            #As a variable
-            history = data['name_history'][::-1]
-        
-            #Make a variable we will add on to later
-            num = 0
-            #Reverse all the numbers
-            num_list = list(range(len(history)))[::-1]
-        
-            #Iterate through the list of dicts
-            for item in history:
-                username = item['name']
-                user_date = item['changedToAt']
-                #Check to make sure we don't count
-                #Original name
-                if item['changedToAt'] == "Original Name":
-                    namedate = user_date
-                else:
-                    namedate = datetime.strptime(user_date, "%m/%d/%Y").strftime('%a/%b %d/%Y')
+        #Store the user name history
+        #As a variable
+        history = data['name_history'][::-1]
             
-                #Make fields
-                fields = [("•------------------•", 
-                         f"**{num_list[num]+1}.** `{username}` - {namedate}", True)]
+        #Split the names into chunks of 3
+        #name_chunks = [history[i:i + 3] for i in range(0, len(history), 3)]
+          
+        #Max number of pages we can have
+        page_max = len(history)
+            
+        #Start the pages (Defaults to first {1})
+        page = 1
+            
+        #Empty list to store the embed fields later on
+        embed_list = []
+        
+        #Make a variable we will add on to later
+        num = 0
+        #Reverse all the numbers
+        num_list = list(range(len(history)))[::-1]
+        
+        #Iterate through the list of dicts
+        for item in history:
+            #Empty list of name fields
+            nfields = []
+                
+            username = item['name']
+            user_date = item['changedToAt']
+            #Check to make sure we don't count
+            #Original name
+            if item['changedToAt'] == "Original Name":
+                namedate = user_date
+            else:
+                namedate = datetime.strptime(user_date, "%m/%d/%Y").strftime('%a/%b %d/%Y')
+            
+            #Add these fields to our empty list
+            #Of name fields above
+            nfields.append((
+                    "•------------------•", 
+                    
+                    f"**{num_list[num]+1}.** `{username}` - {namedate}", True))
+            
+            e = discord.Embed(
+                description=f"**{gamertag}'s Name History**", 
+                timestamp=datetime.utcnow())
+
+            fields = nfields
                      
-                #Adds to the variable we stored above
-                num += 1
-
-                #Add fields
-                for n, v, i in fields:
-                    e.add_field(
-                        name=n, 
-                        value=v, 
-                        inline=i)
-
+            #Add fields
+            for n, v, i in fields:
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
+                    
             #The skin's head as a link/png
             skin_head = f"https://minotar.net/avatar/{gamertag}/50.png"
         
             #Set the embed author
             e.set_author(
-                name=f"{gamertag}'s Name History", 
-                icon_url=skin_head)
-            
+                name=f"Page {page}/{page_max}")
+
+            e.set_footer(
+                text=f"Ordered by Most Recent to Oldest")
+
             e.set_thumbnail(
                 url=f"https://minotar.net/bust/{gamertag}/100.png")
             
-            #Set footer
-            e.set_footer(
-                text=f"Requested by {mem}")
-            e.timestamp = datetime.utcnow()
+            #Add this embed to our empty list of embeds
+            embed_list.append(e)
                 
-            #Send embed
-            await ctx.send(embed=e)
+            #Add to the number variable above
+            num += 1 
+                
+            #Add to the page variable
+            page += 1
             
-        except KeyError:
-            e = discord.Embed(
-                description=f"{redmark} __*{mem.mention}, that isn't a Valid Player*__", 
-                color=0x420000)
-            await ctx.send(embed=e)
-            return
+        #Default pages to first page {1}
+        page = 1
+                
+        #Send embed
+        m = await ctx.send(embed=embed_list[page-1])
+            
+        #List of reactions to add
+        react = ['⬅️', '➡️', '⏹']
+        #Add the reactions
+        for emotes in react:
+            await m.add_reaction(emotes)
+        
+        #Custom check for when checking user reactions
+        def checkauth(reaction, user):
+            return user == ctx.author and reaction.message.id == m.id and str(reaction.emoji) in ['⬅️', '➡️', '⏹']
+        
+        while True:
+            try:
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0, check=checkauth)
+            
+            except asyncio.TimeoutError:
+                e = discord.Embed(
+                    description=f"{redmark} __*{ctx.author.mention}, you took too long to react", 
+                    color=0x420000)
+                await m.edit(embed=e)
+                await m.clear_reactions()
+                #Break the loop
+                break
+            
+            else:
+                if str(reaction.emoji) == '➡️' and page != page_max:
+                    await m.remove_reaction(reaction, user)
+                    page += 1
+                    #Edit the original embed with
+                      #Our list of embeds
+                    await m.edit(embed=embed_list[page-1])
+
+                elif str(reaction.emoji) == '⬅️' and page > 1:
+                    await m.remove_reaction(reaction, user)
+                    
+                    page -= 1
+                    #Edit original embed
+                    #With list of embeds
+                    await m.edit(embed=embed_list[page-1])
+                
+                elif str(reaction.emoji) == '⏹':
+                    
+                    await m.clear_reactions()
+                    
+                    em = discord.Embed(
+                        description=f"{garbage} __*Removing this embed in 5 seconds...*__", 
+                        color=0x420000)
+                    
+                    await m.edit(embed=em, delete_after=5)
+              
+                else:
+                    await m.remove_reaction(reaction, user)
+            
+        #except KeyError:
+            #e = discord.Embed(
+                #description=f"{redmark} __*{mem.mention}, that isn't a Valid Player*__", 
+                #color=0x420000)
+            #await ctx.send(embed=e)
+            #return
       
-    @command(
-        brief="Nothing to see here")
-    @is_owner()
-    async def testcape(self, ctx, *, gamertag: str):
-        
-        cape_url = f"https://optifine.net/cape/{gamertag}"
-        cape = await self.ses.get(cape_url)
-        
-        e = discord.Embed()
-        
-        e.set_author(
-            name="test")
-          
-        e.set_image(
-            url=cape_url)
-            
-        await ctx.send(embed=e)
-        
     @command(
         brief="{See a Player's Cape}", 
         usage="cape <player/uuid>")
     @is_owner()
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
     async def cape(self, ctx, *, gamertag: str):
         
         #Make a custom emoji a variable
@@ -406,54 +464,56 @@ class Minecraft(Cog, name="Minecraft Category"):
         #Define the author as something shorter
         mem = ctx.author
         
-        r = await self.ses.post("https://api.mojang.com/profiles/minecraft", json=[gamertag])
+        async with ctx.typing():
+            r = await self.ses.post("https://api.mojang.com/profiles/minecraft", json=[gamertag])
         
-        j = json.loads(await r.text())
-        #If a user couldn't be found
-        if not j:
-            e = discord.Embed(
-                description=f"{redmark} __*{mem.mention}, that isn't a valid player*__", 
-                color=0x420000)
-            await ctx.send(embed=e)
-            return
+            j = json.loads(await r.text())
+            #If a user couldn't be found
+            if not j:
+                e = discord.Embed(
+                    description=f"{redmark} __*{mem.mention}, that isn't a valid player*__", 
+                    color=0x420000)
+                await ctx.send(embed=e)
+                return
         
-        #api we're getting
-        cape_url = f"https://mc-heads.net/cape/{gamertag}"
-        #Store the api we're getting as a variable
-        cape = await self.ses.get(cape_url)
-        
-        #If there isn't a cape for that player
-        if cape.status == 404:
-            e = discord.Embed(
-                description=f"{redmark} __*{mem.mention}, **{gamertag}** doesn't have a cape*__", 
-                color=0x420000)
-            await ctx.send(embed=e)
-            return
-        
-        #Make our fancy embed 
-        e = discord.Embed()
+            #Use the MojangAPI 
+            #To search for a mc user's cape
+            user = await Client.User.createUser(gamertag)
+            cape = await user.getProfile()
+            print(cape)
 
-        #List of random choices we want to get    
-        ran = [
-          f"{gamertag}'s Epic Cape", 
+            #If there isn't a cape for that player
+            if cape.cape is None:
+                e = discord.Embed(
+                    description=f"{redmark} __*{mem.mention}, **{gamertag}** doesn't have a cape*__", 
+                    color=0x420000)
+                await ctx.send(embed=e)
+                return
+        
+            #List of random choices we want to get    
+            ran = [
+              f"{gamertag}'s Epic Cape", 
           
-          f"{gamertag}'s Awesome Cape", 
-          f"{gamertag}'s Sexy Cape"]
+              f"{gamertag}'s Awesome Cape", 
+              f"{gamertag}'s Sexy Cape"]
+            
+            e = discord.Embed()
 
-        #Set the author name as a random choice
-        #From the list above
-        e.set_author(
-            name=choice(ran), 
-            icon_url=f"https://minotar.net/avatar/{gamertag}")
+            #Set the author name as a random choice
+            #From the list above
+            e.set_author(
+                name=choice(ran), 
+                icon_url=f"https://minotar.net/avatar/{gamertag}")
         
-        e.set_image(
-            url=cape_url)
+            #Set the image as the user's cape
+            e.set_image(
+                url=cape.cape)
         
-        e.set_footer(
-            text=f"Requested by {mem}")
-        e.timestamp = datetime.utcnow()
+            e.set_footer(
+                text=mem)
+            e.timestamp = datetime.utcnow()
         
-        await ctx.send(embed=e)
+            await ctx.send(embed=e)
         
     @command(
         name="uuid", 
@@ -631,6 +691,41 @@ class Minecraft(Cog, name="Minecraft Category"):
             url="http://olimone.ddns.net/images/cursed_minecraft/" + random.choice(images))
         
         await ctx.send(embed=e)
+        
+    @command()
+    @is_owner()
+    async def testmc(self, ctx):
+        
+        dung = await DataService.Data.getStatistics(item_sold_dungeons=True)
+
+        mc = await DataService.Data.getStatistics(item_sold_minecraft=True)
+
+        #Make the embed
+        e = discord.Embed(
+            color=randint(0, 0xffffff), 
+            title="Total Sales for Minecraft")
+        
+        #Make our fields
+        fields = [
+                  ("__*Total Minecraft Copies*__", 
+                  f"Total: **{mc['total']}** Total Copies" +
+                  f"\nSold last **24** Hours: {mc['last24h']}" +
+                  f"\nSold per Second: **{round(mc['saleVelocityPerSeconds'], 3)}** Copies sold a Sec", True), 
+                  
+                  ("__*Minecraft Dungeon Sales*__", 
+                  f"Total: **{dung['total']}**" +
+                  f"\nSold Last **24** Hours: **{dung['last24h']}** Sold", True)
+                  ]
+        
+        #Add our fields
+        for n, v, i in fields:
+            e.add_field(
+                name=n, 
+                value=v, 
+                inline=i)
+          
+        #Send embed
+        await ctx.send(embed=e)
 
     @command(
         name="mcsales", 
@@ -639,7 +734,7 @@ class Minecraft(Cog, name="Minecraft Category"):
     @guild_only()
     @cooldown(1, 1, BucketType.user)
     async def mc_sales(self, ctx):
-      
+
         r = await self.ses.post("https://api.mojang.com/orders/statistics",
                                 json={"metricKeys": ["item_sold_minecraft", "prepaid_card_redeemed_minecraft"]})
         j = json.loads(await r.text())
