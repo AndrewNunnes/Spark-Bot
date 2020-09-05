@@ -3,7 +3,7 @@
 import discord
 
 from discord.ext.commands import BucketType, has_permissions, bot_has_permissions, \
-guild_only, cooldown, Cog, command, MissingRequiredArgument
+guild_only, cooldown, Cog, command, MissingRequiredArgument, is_owner
 
 from discord import Spotify
 
@@ -80,49 +80,161 @@ class Fun(Cog, name="Fun Category"):
             await ctx.send(msg)
 
 #•-----------Commands----------•#
-        
-    @command(
-        brief="{Shows a Menu for Minecraft Commands}", 
-        usage="minecraft")
-    @cooldown(1, 2.5, BucketType.user)
-    @guild_only()
-    async def minecraft(self, ctx):
-      
-      #Defining the author
-      #Makes stuff shorter
-      mem = ctx.author
-      
-      #Get the cog by it's class
-      #Using a function from another file
-      cog = self.gc.get_cog_by_class('Minecraft')
-      
-      #Make embed
-      e = discord.Embed(
-        title=f"<:grass:734647227523268668> __*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__")
-      
-      #Iterate through the Subcommands
-      for c in cog.walk_commands():
-          
-          #Make fields
-          fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", 
-                    c.brief, True)]
-          
-          #Add fields
-          for n, v, i in fields:
-              e.add_field(
-                  name=n, 
-                  value=v, 
-                  inline=i)
-                  
-      e.set_thumbnail(
-          url=mem.avatar_url)
-      e.set_footer(
-          text=mem)
-
-      e.timestamp = datetime.utcnow()
     
-      await ctx.send(embed=e)
-      
+    @command(
+        brief="{Menu for Minecraft Commands what else?}", 
+        usage="minecraft", 
+        aliases=['mc', 'mcmenu', 'minecraftmenu'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
+    async def minecraft(self, ctx):
+        
+        garbage = "<:trash:734043301187158082>"
+        redmark = "<:redmark:738415723172462723>"
+        
+        #Get the cog by it's class
+        cog = self.gc.get_cog_by_class('Minecraft')
+        
+        #Get the commands and store as a variable
+        c = cog.get_commands()
+
+        #Split the commands into 2 pages
+        first = c[:len(c)//2]
+        second = c[len(c)//2:]
+
+        #Max pages we want for this embed
+        pages = 2
+        #The current page we're on
+        #Defaults to 0
+        cur_page = 1
+        
+        e = discord.Embed(
+            title=cog.qualified_name, 
+            description="*() - Optional\n<> - Required*", 
+            timestamp=datetime.utcnow())
+        
+        for comm in first:
+        
+            fields = [(f"• **{comm.name} :** `{ctx.prefix}{comm.usage}`", comm.brief, False)]
+        
+            for n, v, i in fields:
+                e.add_field(
+                    name=n, 
+                    value=v, 
+                    inline=i)
+        
+        e.set_thumbnail(
+            url=ctx.author.avatar_url)
+        e.set_author(
+            name=f"Page {cur_page}/{pages}")
+        
+        e.set_footer(
+            text=f"Requested by {ctx.author}")
+        
+        #Store the first embed we're sending
+        msg = await ctx.send(embed=e)
+        
+        #Reactions to add
+        emotes = ['⬅️', '➡️', '⏹']
+        for react in emotes:
+            #Add the reactions
+            await msg.add_reaction(react)
+        
+        #Custom check to check for the author of the command
+        #And check for the right emojis
+        #And check for the specific message
+        def checkauth(reaction, user):
+            return user == ctx.author and reaction.message.id == msg.id and str(reaction.emoji) in ['⬅️', '➡️', '⏹']
+        
+        while True:
+            try:
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0, check=checkauth)
+            
+            #If user takes too long to react
+            except asyncio.TimeoutError:
+                err = discord.Embed(
+                    description=f"{redmark} __*{ctx.author.mention}, you took too long to react*__", 
+                    color=0x420000)
+                await msg.edit(embed=err)
+                await msg.clear_reactions()
+                break
+              
+            else:
+                #Check for the specific emoji
+                #And if the user isn't trying to go to the negative side 
+                #Of pages
+                if str(reaction.emoji) == '⬅️' and cur_page > 1:
+                    await msg.remove_reaction(reaction, user)
+                    
+                    cur_page -= 1
+                    
+                    e = discord.Embed(
+                        title=f"{cog.qualified_name}", 
+                        description="*() - Optional\n<> - Required*", 
+                        timestamp=datetime.utcnow())
+                    e.set_thumbnail(
+                        url=ctx.author.avatar_url)
+
+                    for comm in first:
+        
+                        fields = [(f"• **{comm.name} :** `{ctx.prefix}{comm.usage}`", comm.brief, False)]
+        
+                        for n, v, i in fields:
+                            e.add_field(
+                                name=n, 
+                                value=v, 
+                                inline=i)
+
+                    e.set_author(
+                        name=f"Page {cur_page}/{pages}")
+                    e.set_footer(
+                        text=f"Requested by {ctx.author}")
+                    
+                    await msg.edit(embed=e)
+                #Check for the specific emoji
+                #And if the user tries to go forward too much
+                elif str(reaction.emoji) == '➡️' and cur_page != pages:
+                    await msg.remove_reaction(reaction, user)
+                    
+                    cur_page += 1
+                    
+                    e = discord.Embed(
+                        title=cog.qualified_name, 
+                        description="*() - Optional\n<> - Required*", 
+                        timestamp=datetime.utcnow())
+                    e.set_thumbnail(
+                        url=ctx.author.avatar_url)
+
+                    for comm in second:
+        
+                        fields2 = [(f"• **{comm.name} :** `{ctx.prefix}{comm.usage}`", comm.brief, False)]
+        
+                        for n, v, i in fields2:
+                            e.add_field(
+                                name=n, 
+                                value=v, 
+                                inline=i)
+
+                    e.set_author(
+                        name=f"Page {cur_page}/{pages}")
+                    
+                    e.set_footer(
+                        text=f"Requested by {ctx.author}")
+                    
+                    await msg.edit(embed=e)
+                    
+                #Used to delete the embed
+                elif str(reaction.emoji) == '⏹':
+                    await msg.clear_reactions()
+                    e = discord.Embed(
+                        description=f"{garbage} __*Removing this embed in 5 seconds...*__", 
+                        color=0x420000)
+                    await msg.edit(embed=e, delete_after=5)
+                
+                else:
+                    await msg.remove_reaction(reaction, user)
+                    
     @command(
         brief="{Insult a Member}",
         usage="roast <member>", 
@@ -207,7 +319,7 @@ class Fun(Cog, name="Fun Category"):
             redmark = "<:redmark:738415>"
             
             #Only works if you have an api key inside the website
-            url = f"https://api.themoviedb.org/3/search/movie?api_key=Your_api_key={title}"
+            url = f"https://api.themoviedb.org/3/search/movie?api_key=91841633d0b2b91d9e313adcce2cc2c7&query={title}"
             r = await self.ses.get(url)
             resp = await r.json()
             
@@ -303,7 +415,6 @@ class Fun(Cog, name="Fun Category"):
                 #Send the embed
                 await ctx.send(embed=e)
                 
-                #Break the loop
             #If the user isn't listening
             #To anything
             else:
@@ -312,6 +423,7 @@ class Fun(Cog, name="Fun Category"):
                     color=0x420000)
                 
                 await ctx.send(embed=e)
+                return
     
     @command(
         brief="{Hack a Member}", 
