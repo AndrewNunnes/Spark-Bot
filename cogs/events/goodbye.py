@@ -641,6 +641,15 @@ class Goodbye(Cog):
           channel = self.bot.get_channel(id=check_channel[0])
                 
           await channel.send(embed=e)
+     
+    #When the bot leaves a guild (server)
+    @Cog.listener()
+    async def on_guild_remove(self, guild):
+        
+        #Reset the prefix to the default
+        await self.db.drop_prefix(guild.id)
+
+#•----------Setup/Add this Cog----------•#
 
 #Setup the cog   
 def setup(bot):
