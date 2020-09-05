@@ -218,7 +218,7 @@ class Info(Cog, name="Info Category"):
       usage="sinfo")
     @guild_only()
     @cooldown(1, 1.5, BucketType.user)
-    @bot_has_permissions(embed_links=True)
+    @bot_has_permissions(use_external_emojis=True, embed_links=True)
     async def sinfo(self, ctx):
 
         # Getting permissions of the bot within the channel
@@ -250,10 +250,10 @@ class Info(Cog, name="Info Category"):
                   ("__*Owner*__", ctx.guild.owner, True), 
 
                   ("__*Members*__", 
-                  f"Total: {len(list(ctx.guild.members))}"
-                  f'\nStatuses: <:online:728377717090680864>{statuses[0]}, <:idle:728377738599071755>{statuses[1]}, <:dnd:728377763458973706>{statuses[2]}, <:offline:728377784207933550>{statuses[3]}'
-                  f"\nBanned: {bans}"
-                  f"\nHumans: {humans}"
+                  f"Total: {len(list(ctx.guild.members))}" +
+                  f'\nStatuses: <:online:728377717090680864>{statuses[0]}, <:idle:728377738599071755>{statuses[1]}, <:dnd:728377763458973706>{statuses[2]}, <:offline:728377784207933550>{statuses[3]}' +
+                  f"\nBanned: {bans}" +
+                  f"\nHumans: {humans}" +
                   f"\nBots: {bots}", True), 
 
                   ("__*Channels*__", f'<:textch:728377808518381679>{len(ctx.guild.text_channels)}\n<:voicech:728377834187259976>{len(ctx.guild.voice_channels)}', True), 
@@ -430,6 +430,202 @@ class Info(Cog, name="Info Category"):
         await ctx.send(embed=e)
 
     @command(
+        name="rolelist", 
+        brief="{List all Roles in Server/Member}", 
+        usage="rolelist (member)", 
+        aliases=['rlist', 'rlst'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    async def _list(self, ctx, item: Optional[discord.Member]):
+      
+        guild = ctx.guild
+        
+        #If a member is mentioned
+        if isinstance(item, discord.Member):
+            rolelist = item.roles
+            #Used to show in the embed's description
+            #'[1:]' removes the @@everyone role
+            #From being counted
+            role_count = f"*Roles for {item.display_name} | Total* **{{{len(rolelist[1:])}}}**"
+            #Used to show the embed's thumbnail
+            #As the member's avatar
+            thumbnail = item.avatar_url
+        
+        else:
+            #Variable for getting roles in guild
+            rolelist = guild.roles
+            #Used to show in the embed's description
+            #'[1:]' removes the @@everyone role
+            #From being counted
+            role_count = f"*Roles for {ctx.guild} | Total* **{{{len(rolelist[1:])}}}**"
+            #Used to show the embed's thumbnail
+            #As the guilds icon
+            thumbnail = ctx.guild.icon_url
+    
+        #Check if there is 
+        #Over 25 roles in the guild
+        if len(rolelist) > 25:
+            #Get the length of remaining roles
+            length = len(rolelist) - 25
+        
+            role = f"{' • '.join(map(str, (role.mention for role in list(reversed(rolelist))[:20])))} and **{length}** more"
+        
+        #If there is less than 25 roles
+        #In the guild
+        else:
+            role = f"{' • '.join(map(str, (role.mention for role in list(reversed(rolelist[1:])))))}"
+        
+        #Check if there is no roles to display
+        roles = "No Roles" if role == "" else role
+    
+        #Make and send embed
+        e = discord.Embed(
+            title=role_count, 
+            description=roles, 
+            timestamp=datetime.utcnow())
+        
+        e.set_footer(
+            text=f"Requested by {ctx.author}")
+        e.set_thumbnail(
+            url=thumbnail)
+
+        await ctx.send(embed=e)
+          
+    @command(
+        brief="{Get a List of Perms for a Role/Member}", 
+        usage="perms <role>/(member)", 
+        aliases=['permission', 'permissions'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
+    async def perms(self, ctx, *, item: Optional[Union[discord.Role, discord.Member]]):
+        
+        greenmark = "<:greenmark:738415677827973152>" 
+        redmark = "<:redmark:738415723172462723>"
+        garbage = "<:trash:734043301187158082>"
+        
+        #Make optional to mention a member
+        item = item if item else ctx.author
+        
+        if isinstance(item, discord.Member):
+            #Iterating through list of guild perms
+            perms = [f"{perm.title().replace('_', ' ')} = {greenmark if value else redmark}" for perm, value in item.guild_permissions]
+            #Member's avatar for the embed thumbnail
+            thumbnail = item.avatar_url
+
+        else:
+            #Iterating through list of general perms
+            perms = [f"{perm.title().replace('_', ' ')} = {greenmark if value else redmark}" for perm, value, in item.permissions]
+            #Guilds icon for the embed thumbnail
+            thumbnail = ctx.guild.icon_url
+        
+        #Split the list of perms into 2
+        middle = len(perms) // 2
+        f_half = "\n".join(perms[:middle])
+        s_half = "\n".join(perms[middle:])
+        
+        #List of contents go through
+        #Inside of our embeds
+        contents = [f_half, s_half]
+        
+        intro = f"__*Showing All Permissions for {item.mention}*__"
+        
+        #Max pages we want for this embed
+        pages = 2
+        #The current page we're on
+        #Defaults to 0
+        cur_page = 1
+        
+        e = discord.Embed(
+            description=f"{intro}\n\n{contents[cur_page-1]}", 
+            timestamp=datetime.utcnow())
+        e.set_thumbnail(
+            url=thumbnail)
+
+        e.set_author(
+            name=f"Page {cur_page}/{pages}")
+        
+        e.set_footer(
+            text=f"Requested by {ctx.author}")
+        
+        #Store the first embed we're sending
+        msg = await ctx.send(embed=e)
+        
+        #Reactions to add
+        emotes = ['⬅️', '➡️', '⏹']
+        for react in emotes:
+            #Add the reactions
+            await msg.add_reaction(react)
+        
+        #Custom check to check for the author of the command
+        #And check for the right emojis
+        #And check for the specific message
+        def checkauth(reaction, user):
+            return user == ctx.author and reaction.message.id == msg.id and str(reaction.emoji) in ['⬅️', '➡️', '⏹']
+        
+        while True:
+            try:
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=180.0, check=checkauth)
+            
+            #If user takes too long to react
+            except asyncio.TimeoutError:
+                err = discord.Embed(
+                    description=f"{redmark} __*{ctx.author.mention}, you took too long to react*__", 
+                    color=0x420000)
+                await msg.edit(embed=err)
+                await msg.clear_reactions()
+                break
+              
+            else:
+                #Check for the specific emoji
+                #And if the user isn't trying to go to the negative side 
+                #Of pages
+                if str(reaction.emoji) == '⬅️' and cur_page > 1:
+                    await msg.remove_reaction(reaction, user)
+                    cur_page -= 1
+                    
+                    e = discord.Embed(
+                        description=f"{intro}\n\n{contents[cur_page-1]}", 
+                        timestamp=datetime.utcnow())
+                    e.set_thumbnail(
+                        url=thumbnail)
+                    e.set_author(
+                        name=f"Page {cur_page}/{pages}")
+                    e.set_footer(
+                        text=f"Requested by {ctx.author}")
+                    
+                    await msg.edit(embed=e)
+                #Check for the specific emoji
+                #And if the user tries to go forward too much
+                elif str(reaction.emoji) == '➡️' and cur_page != pages:
+                    await msg.remove_reaction(reaction, user)
+                    cur_page += 1
+                    
+                    e = discord.Embed(
+                        description=f"{intro}\n\n{contents[cur_page-1]}", 
+                        timestamp=datetime.utcnow())
+                    e.set_thumbnail(
+                        url=thumbnail)
+                    e.set_author(
+                        name=f"Page {cur_page}/{pages}")
+                    
+                    e.set_footer(
+                        text=f"Requested by {ctx.author}")
+                        
+                    await msg.edit(embed=e)
+                
+                #Used to delete the embed
+                elif str(reaction.emoji) == '⏹':
+                    await msg.clear_reactions()
+                    e = discord.Embed(
+                        description=f"{garbage} __*Removing this embed in 5 seconds...*__", 
+                        color=0x420000)
+                    await msg.edit(embed=e, delete_after=5)
+                
+                else:
+                    await msg.remove_reaction(reaction, user)
+
+    @command(
         brief="{Info on a Channel}", 
         usage="chinfo <#channel>", 
         aliases=['channelinfo'])
@@ -595,6 +791,7 @@ class Info(Cog, name="Info Category"):
 
         await ctx.send(embed=e)
 
+#•----------Setup/Add this Cog----------•#
+
 def setup(bot):
     bot.add_cog(Info(bot))
-    
