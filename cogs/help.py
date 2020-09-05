@@ -168,7 +168,7 @@ class Helpdude(Cog):
           
         #Check to make sure no other users can click on the reactions
         def checkreact(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ['📖', '📰', '🎪', '🎉', '⚙️', '🔐', '🔗', '<:trash:734043301187158082>']
+            return user == ctx.author and reaction.message.id == m.id and str(reaction.emoji) in ['📖', '📰', '🎪', '🎉', '⚙️', '🔐', '🔗', '<:trash:734043301187158082>']
             
         while True:
             try:
@@ -212,7 +212,7 @@ class Helpdude(Cog):
                         #Make fields
                         fields = [
                                  (f"• **{c.name} :** `{ctx.prefix}{c.usage}`", 
-                                 c.usage, True)]
+                                 c.brief, True)]
                            
                         #Add fields      
                         for n, v, i in fields:
@@ -242,7 +242,7 @@ class Helpdude(Cog):
                         #Make fields
                         fields = [
                                  (f"• **{c.name} :** `{ctx.prefix}{c.usage}`", 
-                                 c.usage, True)]
+                                 c.brief, True)]
                            
                         #Add fields      
                         for n, v, i in fields:
@@ -274,7 +274,7 @@ class Helpdude(Cog):
                         #Make fields
                         fields = [
                                  (f"• **{c.name} :** `{ctx.prefix}{c.usage}`", 
-                                 c.usage, True)]
+                                 c.brief, True)]
                            
                         #Add fields      
                         for n, v, i in fields:
@@ -325,7 +325,7 @@ class Helpdude(Cog):
                         #Make fields
                         fields = [
                                  (f"• **{c.name} :** `{ctx.prefix}{c.usage}`", 
-                                 c.usage, True)]
+                                 c.brief, True)]
                            
                         #Add fields      
                         for n, v, i in fields:
@@ -357,7 +357,7 @@ class Helpdude(Cog):
                         #Make fields
                         fields = [
                                  (f"• **{c.name} :** `{ctx.prefix}{c.usage}`", 
-                                 c.usage, True)]
+                                 c.brief, True)]
                            
                         #Add fields      
                         for n, v, i in fields:
@@ -387,7 +387,7 @@ class Helpdude(Cog):
                         #Make fields
                         fields = [
                                  (f"• **{c.name} :** `{ctx.prefix}{c.usage}`", 
-                                 c.usage, True)]
+                                 c.brief, True)]
                            
                         #Add fields      
                         for n, v, i in fields:
