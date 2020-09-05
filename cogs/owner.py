@@ -2,7 +2,8 @@
 #•----------Modules----------•#
 import discord
 
-from discord.ext.commands import command, Cog, BucketType, is_owner, guild_only, Converter, Greedy
+from discord.ext.commands import command, Cog, BucketType, is_owner, guild_only, \
+Converter, Greedy, cooldown, has_permissions, bot_has_permissions
 
 from datetime import datetime
 
@@ -88,11 +89,83 @@ class Owner(Cog, name="Owner Category"):
         self.db = self.bot.get_cog('Database')
         
         self.ses = ClientSession(loop=self.bot.loop)
+        
+        #Set the role persist to False on default
+        self.per = False
     
     def cog_unload(self):
         self.bot.loop.create_task(self.ses.close())
         
 #•----------Commands----------•#
+    
+    @group(
+        brief="{Menu for Role Persist}", 
+        usage="rolepersist", 
+        aliases=['rpersist'])
+    @guild_only()
+    @cooldown(1, 2.0, BucketType.user)
+    @is_owner()
+    async def rolepersist(self, ctx):
+        
+        e = discord.Embed(
+            description="**Role Persist System**")
+        #Make the fields
+        fields = [
+                  (f"• **status :** `{ctx.prefix}rolepersist status`", "{Show the Current Status for Role Persist}", False), 
+        
+                  (f"• **turn :** `{ctx.prefix}rolepersist turn <on/off>`", "{Turn On/Off Role Persist}", False)]
+        
+        #Add the fields
+        for n, v, i in fields:
+            e.add_field(
+                name=n, 
+                value=v, 
+                inline=i)
+        
+        await ctx.send(embed=e)
+    
+    @rolepersist.command(
+        brief="{Show the Current Status for Role Persist}", 
+        usage="rolepersist status")
+    @guild_only()
+    @cooldown(1, 2.0, BucketType.user)
+    @is_owner()
+    async def status(self, ctx):
+        
+        #Used to check if role persist is on
+        rpersist = bool(self.per)
+        
+        rpers = "on" if rpersist else "off"
+        
+        #Used to show an emoji if role persist
+        #Is on/off
+        state = "<:online:728377717090680864>" if rpersist else "<:offline:728377784207933550>"
+        
+        e = discord.Embed(
+            description=f"{state} **Role Persist is currently {rpers}**", 
+            color=0x420000)
+        
+        await ctx.send(embed=e)
+        
+    @rolepersist.command(
+        brief="{Turn On/Off Role Persist}", 
+        usage="rolepersist turn <on/off>", 
+        aliases=['change'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    @is_owner()
+    async def turn(self, ctx, state: bool):
+        
+        #If the user says on
+        if state is True:
+            #Set our local variable to true
+            self.per = True
+            await ctx.send("<:online:728377717090680684> Role Persist has been turned on")
+        
+        else:
+            self.per = False
+            
+            await ctx.send("<:offline:7283777842079933550> Role Persist has been turned off")
 
     @command(
         brief="{Temporarily Ban a User}", 
@@ -180,7 +253,7 @@ class Owner(Cog, name="Owner Category"):
     @is_owner()
     async def upcoming(self, ctx):
         
-        url = "https://api.themoviedb.org/3/movie/upcoming?api_key=Your_api_key"
+        url = "https://api.themoviedb.org/3/movie/upcoming?api_key= Your_api_key"
         r = await self.ses.get(url)
         
         respon = await r.json()
@@ -233,7 +306,7 @@ class Owner(Cog, name="Owner Category"):
     @is_owner()
     async def upcmovie(self, ctx):
         
-        url = "https://api.themoviedb.org/3/movie/upcoming?api_key=Your_api_key"
+        url = "https://api.themoviedb.org/3/movie/upcoming?api_key= Your_api_key"
         #Get the url with aiohttp session
         r = await self.ses.get(url)
         
@@ -454,15 +527,15 @@ class Owner(Cog, name="Owner Category"):
                             
                     except Exception:
                       
-                        trace_back = traceback.format_exc()
+                        trace = traceback.format_exc()
                         
-                        if len(trace_back) < 850:
-                            length = len(trace_back) - 850
-
-                            trace = f"{' '.join(trace_back[:850])} and **{length}** more words..."
+                        if len(trace) > 850:
+                            length = len(trace) - 850
+                            
+                            trace = f"```{trace[:850]}``` and **{length}** more words..."
                         
                         else:
-                            trace = trace_back
+                            trace = f"```{trace}```"
                         
                         e.add_field(
                             name=f"__*Failed to reload*__ ``{ext}``",
@@ -533,16 +606,16 @@ class Owner(Cog, name="Owner Category"):
                             inline=True)
                             
                     except Exception:
-                        trace_back = traceback.format_exc()
+                        trace = traceback.format_exc()
                         
-                        if len(trace_back) < 850:
-                            length = len(trace_back) - 850
+                        if len(trace) > 850:
+                            length = len(trace) - 850
                             
-                            trace = f"{' '.join(trace_back[:850])} and **{length}** more words..."
+                            trace = f"```{trace[:850]}``` and **{length}** more words..."
                         
                         else:
-                            trace = trace_back
-
+                            trace = f"```{trace}```"
+                        
                         e.add_field(
                             name=f"__*Failed to load*__ ``{ext}``",
                             value=trace,
