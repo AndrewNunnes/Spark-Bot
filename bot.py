@@ -2,7 +2,9 @@
 
 import discord
 
-from discord.ext import commands, tasks
+from discord.ext.commands import command, Bot, when_mentioned_or
+
+from discord.ext import tasks
 
 import pathlib
 
@@ -30,12 +32,21 @@ import cogs._json
 #•--------------Functions--------------•#
 
 #Function for getting the prefix data from a json file
-def get_prefix(bot, message):
-    data = cogs._json.read_json('prefixes')
-    if not str(message.guild.id) in data:
-      return commands.when_mentioned_or('!')(bot, message)
-    return commands.when_mentioned_or(data[str(message.guild.id)])(bot, message)
+#def get_prefix(bot, message):
+    #data = cogs._json.read_json('prefixes')
+    #if not str(message.guild.id) in data:
+      #return when_mentioned_or('!')(bot, message)
+    #return when_mentioned_or(data[str(message.guild.id)])(bot, message)
 
+async def execute(sql, *param):
+    return await bot.db.execute(sql, param)
+
+#Function used to get the prefix from our guilds table   
+async def get_prefix_db(bot, message):
+    result = await (await execute("SELECT prefixes FROM guilds WHERE id = ?", message.guild.id)).fetchone()
+    
+    return when_mentioned_or(result[0])(bot, message)
+    
 #Function used to load extensions
 def file_name(file):
     if file.endswith(".py") and not file.startswith("_"):
@@ -43,7 +54,8 @@ def file_name(file):
       
 #•----------Define Bot Instance----------•#
 
-bot = commands.Bot(command_prefix=get_prefix, case_insensitive=True)
+bot = Bot(command_prefix=get_prefix_db, case_insensitive=True)
+#Remove default help command
 bot.remove_command('help')
 
 #•----------Other File Variables----------•#
@@ -106,8 +118,6 @@ async def on_ready():
     await channel.send("Now online")
 
     print("Bot is working")
-    #Change the bot's status
-    #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight take another L"))
 
 #•----------Connect to Database----------•#
 
@@ -121,7 +131,8 @@ async def connect_db():
     await bot.db.executescript("""
     
     CREATE TABLE IF NOT EXISTS guilds (
-    id INTEGER PRIMARY KEY
+    id INTEGER PRIMARY KEY, 
+    prefixes TEXT DEFAULT '?' NOT NULL
     );
     
     CREATE TABLE IF NOT EXISTS members (
@@ -173,48 +184,35 @@ async def connect_db():
 asyncio.get_event_loop().run_until_complete(connect_db())
 #client.loop.create_task(connect_db(bot))
 
-#•--------------Prefix--------------•#
-
-#Function for getting the prefix
-#From the database
-#def get_prefix(client, message):
-
-  #conn = await aiosqlite.connect('main.db')
-
-  #data = conn.fetchone("SELECT prefix FROM prefix_list WHERE GuildID = ?", message.guild.id)
-  #return when_mentioned_or(data)(client, message)
-
+#Variables for other stuff
 bot.cwd = cwd 
 
 @bot.event
 async def on_message(message):
   
-    #prefix = data[str(message.guild.id)]
-  
     #Makes sure the bot doesn't respond to itself
     if message.author == bot.user:
-      return
+        return
+    
     #Checks for a different bot in the server
     if message.author.bot:
-      return
+        return
+    
     #When the bot is mentioned, it'll respond with this embed
     if bot.user.mentioned_in(message):
-      data = cogs._json.read_json('prefixes')
-      if str(message.guild.id) in data:
-          prefix = data[str(message.guild.id)]
-          if message.content.startswith(prefix):
-              return
-            
-      elif not str(message.guild.id) in data:
-          prefix = '!'
-          
-          prefixembed = discord.Embed(
-              description=f"What's up {message.author.mention}. My prefix is `{prefix}`\nFeel free to change it with `{prefix}config prefix <newprefix>`")
+        
+        #Get the current prefix from the database
+        prefix = await (await execute("SELECT prefixes FROM guilds WHERE id = ?", message.guild.id)).fetchone()
+        
+        if message.content.startswith(prefix):
+            return
+        
+        if not prefix:
+            await message.channel.send("I don't have a prefix set")
 
-          prefixembed.timestamp = datetime.datetime.utcnow()
-    
-          await message.channel.send(embed=prefixembed)
-  
+        else:
+            await message.channel.send(f"*My prefix is `{prefix[0]}`! Feel free to change it with `{prefix[0]}prefix change <new_prefix>`!*")
+
     await bot.process_commands(message)
     
 #•---------------------------------•#
