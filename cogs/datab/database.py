@@ -60,6 +60,17 @@ class Database(commands.Cog):
       
         return await self.db.execute(sql, param)
         
+#•----------------Guilds----------------•#
+    
+    #Function used to add a new guild
+    #To the guilds table
+    async def add_guild(self, gid):
+      
+        result = await self.execute("INSERT OR IGNORE INTO guilds(id) VALUES(?)", gid)
+        
+        await self.commit()
+        return result
+        
 #•----------Welcome/Goodbye System----------•%
         
     #Function to set welcome channel
@@ -265,48 +276,33 @@ class Database(commands.Cog):
     #Function to get prefix
     async def get_prefix(self, gid):
         
-        result = await (await self.execute("SELECT prefix FROM prefix_list WHERE guild_id = ?", gid)).fetchone()
+        result = await (await self.execute("SELECT prefixes FROM guilds WHERE id = ?", gid)).fetchone()
         
-        #If there is no prefix set
-        #Return default
-        if result is None:
-            return "!"
-        #Else if there is a set prefix
-        #Return that
-        else:
-            return result[0]
-        
-        await self.commit()
-        await self.close()
-        
-        return result
+        return result[0]
 
     #Function to set the prefix   
-    async def set_prefix(self, gid, prefix):
+    async def set_prefix(self, gid, pre):
   
-        result = await (await self.execute("SELECT prefix FROM prefix_list WHERE guild_id = ?", gid)).fetchone()
+        result = await (await self.execute("SELECT prefixes FROM guilds WHERE id = ?", gid)).fetchone()
         
         if result is None:
-            await self.execute("INSERT INTO prefix_list(guild_id, prefix) VALUES(?, ?)", gid, prefix)
+            await self.execute("INSERT INTO guilds(id, prefixes) VALUES(?, ?)", gid, pre)
         elif result is not None:
-            await self.execute("UPDATE prefix_list SET prefix = ? WHERE guild_id = ?", prefix, gid)
+            await self.execute("UPDATE guilds SET prefixes = ? WHERE id = ?", pre, gid)
         
         await self.commit()
-        await self.close()
-        
+
         return result
     
-    #Function to set the prefix
-    async def delete_prefix(self, gid):
-
-        #Set the prefix column to Null
-        c = await self.execute("UPDATE prefix_list SET prefix = NULL WHERE guild_id = ?", gid)
+    #Function to delete the custom prefix
+    async def drop_prefix(self, gid):
+        
+        #Set the custom prefix to the default
+        result = await self.execute("UPDATE guilds SET prefixes = '?' WHERE id = ?", gid)
 
         await self.commit()
-        await self.close()
-        
-        return c
+
+        return result
 
 def setup(bot):
     bot.add_cog(Database(bot))
-    
