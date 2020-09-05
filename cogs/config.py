@@ -16,6 +16,8 @@ class Config(Cog):
     def __init__(self, bot):
         self.bot = bot
         
+        self.db = self.bot.get_cog('Database')
+        
         self.gc = self.bot.get_cog('Helpdude')
         
 #•------------Subcommands-----------•#
@@ -50,31 +52,86 @@ class Config(Cog):
             name=f"Requested by {ctx.author}")
         
         await ctx.send(embed=e)
+    
+    @group(
+        invoke_without_command=True, 
+        brief="{Commands for Configuring Prefixes}", 
+        usage="prefix", 
+        aliases=['pre', 'pref'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    async def prefix(self, ctx):
+        
+        e = discord.Embed(
+            description=f"__*Available Prefix Commands*__")
+        
+        e.set_footer(
+            text=f"Requested by {ctx.author}")
+        e.set_thumbnail(
+            url=ctx.author.avatar_url)
+      
+        fields = [("• **prefix change :** `{ctx.prefix}prefix change <new_prefix>`", 
+                  "{Change the Bot's Prefix}", False), 
+                  
+                  ("• **prefix reset :** `{ctx.prefix}prefix reset`", 
+                  "{Reset the Custom Prefix}", False)]
+        
+        for n, v, i in fields:
+            e.add_field(
+                name=n, 
+                value=v, 
+                inline=i)
+        
+        await ctx.send(embed=e)
           
-    @config.command(
-      brief="{Change the Bot's Prefix}", 
-      usage="config prefix <new_prefix>", 
-      aliases=['pre', 'pref', 'newprefix'])
+    @prefix.command(
+        brief="{Change the Bot's Prefix}", 
+        usage="prefix change <new_prefix>", 
+        aliases=['new', 'switch'])
     @guild_only()
     @cooldown(1, 5, BucketType.user)
     @has_permissions(manage_guild=True)
-    async def prefix(self, ctx, pre: Optional[str]):
+    async def change(self, ctx, pre: str=None):
         
-        try:
-            data = cogs._json.read_json('prefixes')
-            data[str(ctx.message.guild.id)] = pre
-            cogs._json.write_json(data, 'prefixes')
+        redmark = "<:redmark:738415723172462723>"
         
-            #If a new prefix isn't said
-            if not pre:
-                await ctx.send(f"The server prefix is set to {ctx.prefix}. Use {ctx.prefix}config prefix to change it")
+        #Get the current prefix of the guild
+        get_pre = await self.db.get_prefix(ctx.guild.id)
         
-            #If a new prefix is given
-            else:
-                await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}config prefix <newprefix>` to change it again")
-        except Exception as e:
-            await ctx.send(e)
+        #If a new prefix isn't said
+        if not pre:
+            return await ctx.send(f"The server prefix is set to `{get_pre}`. Use `{get_pre}config prefix` to change it")
 
+        #If a new prefix is given
+        else:
+            if len(pre) > 5:
+                e = discord.Embed(
+                    description=f"{redmark} __*{ctx.author.mention}, prefix can't be longer than 5 characters in length", 
+                    color=0x420000)
+                await ctx.send(embed=e)
+                return
+            
+            else:
+                #Set the new prefix for this guild
+                await self.db.set_prefix(ctx.guild.id, pre)
+            
+                await ctx.send(f"The server prefix has been set to `{pre}`. Use `{pre}config prefix <newprefix>` to change it again")
+    
+    @prefix.command(
+        brief="{Reset the Prefix}", 
+        usage="prefix reset", 
+        aliases=['delete', 'del'])
+    @guild_only()
+    @cooldown(1, 2.5, BucketType.user)
+    @has_permissions(manage_guild=True)
+    async def reset(self, ctx):
+        
+        #Set the prefix to the default 
+        #With out drop prefix function
+        await self.db.drop_prefix(ctx.guild.id)
+        
+        await ctx.send(f"*The prefix has been reset to `?`!*")
+    
 #•----------Command Menus----------•#
 #•--{Gets the cogs and Show their Commands--•#
 
