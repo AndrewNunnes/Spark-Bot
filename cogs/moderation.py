@@ -341,7 +341,7 @@ class Moderation(Cog, name="Moderation Category"):
         #Used to make sure only author can trigger reactions
         #And check for the right emojis
         def creact(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ['⬅️', '➡️']
+            return user == ctx.author and reaction.message.id == m.id and str(reaction.emoji) in ['⬅️', '➡️']
 
         #Create a while loop so we can..
         #React as many times as we want
