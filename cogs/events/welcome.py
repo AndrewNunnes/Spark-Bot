@@ -651,43 +651,51 @@ class Welcome(Cog):
     #When bot joins a guild
     @Cog.listener()
     async def on_guild_join(self, guild):
-      
-      names = ['comman', 'bot']
-      channel = discord.utils.find(
+        
+        #Insert this guild's id
+        #Into our guilds table
+        await self.db.add_guild(guild.id)
+        
+        #List of channel keywords to look for
+        names = ['comman', 'bot']
+        #Look for the channel keywords
+        #From the list above
+        channel = discord.utils.find(
           lambda channel:any(
             map(lambda w: w in channel.name, names)),
-            guild.text_channels) #When the bot joins a server, this will check for a bot commands channel to send an embed
-      
-      #If a bot commands channel doesn't exist
-      #It'll look for a general channel
-      if not channel: 
-        
-          newchann = ['gener', 'chat', 'welc', 'memb']
-          new = discord.utils.find(
-              lambda new:any(
-                map(lambda n: n in new.name, newchann)),
-                guild.text_channels)
-            
-          e = discord.Embed(
-              description="**What's up everyone! Type in `!help` to see all of my available commands and get started!**\n\n")
-              
-          e.set_thumbnail(
-              url=self.bot.user.avatar_url)
-          
-          e.timestamp = datetime.utcnow()
-        
-          await new.send(embed=e)
-            
-      e = discord.Embed(
-          description="**What's up everyone! Type `!help` to see all of my commands and get started!**\n\n")
-          
-      e.set_thumbnail(
-          url=self.bot.user.avatar_url)
-      
-      e.timestamp = datetime.utcnow()
-      
-      await channel.send(embed=e)
+            guild.text_channels) 
 
+        #If a bot commands channel doesn't exist
+        #It'll look for a general channel
+        if not channel: 
+        
+            newchann = ['gener', 'chat', 'welc', 'memb']
+            new = discord.utils.find(
+                lambda new:any(
+                  map(lambda n: n in new.name, newchann)),
+                  guild.text_channels)
+            
+            e = discord.Embed(
+                description="**What's up everyone! Type in `?help` to see all of my available commands and get started!**\n\n")
+              
+            e.set_thumbnail(
+                url=self.bot.user.avatar_url)
+          
+            e.timestamp = datetime.utcnow()
+        
+            await new.send(embed=e)
+            
+        e = discord.Embed(
+            description="**What's up everyone! Type `?help` to see all of my commands and get started!**\n\n")
+          
+        e.set_thumbnail(
+            url=self.bot.user.avatar_url)
+      
+        e.timestamp = datetime.utcnow()
+      
+        await channel.send(embed=e)
+
+#•----------Setup/Add this Cog----------•#
 
 #Setup the cog   
 def setup(bot):
