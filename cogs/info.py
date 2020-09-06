@@ -34,10 +34,41 @@ from discord.ext.commands import command, BucketType, cooldown, bot_has_permissi
 
 #from psutil import Process, virtual_memory
 
+#•----------Variables---------•#
+#Dict to go through when getting the guild region
+region = {
+  "eu-central": ":flag_eu: Central Europe", 
+  "europe": ":flag_eu: Central Europe", 
+  "singapore": ":flag_sg: Singapore", 
+  "india": ":flag_in: India", 
+  "japan": ":flag_jp: Japan", 
+  "us-central": ":flag_us: Central US", 
+  "sydney": ":flag_au: Sydney", 
+  "us-east": ":flag_us: Eastern US", 
+  "us-west": ":flag_us: Western US", 
+  "us-south": ":flag_us: Southern US", 
+  "eu-west": ":flag_eu: Western Europe", 
+  "london": ":flag_gb: London", 
+  "amsterdam": ":flag_nl: Amsterdam", 
+  "hongkong": ":flag_hk: Hong Kong", 
+  "russia": ":flag_ru: Russia", 
+  "southafrica": ":flag_za: Southern Africa", 
+  "brazil": ":flag_br: Brazil"
+}
+
 #•----------Functions----------•#
 
+#Used to give a nicer looking region string
+def get_region(disc_region, region_dict):
+    
+    for key in region_dict:
+        if key == disc_region:
+            return region_dict[key]
+        else:
+            pass
+    
+#Used to show the line count/file count of this bot
 def lineCount():
-    """Getting the line count of the project"""
 
     code = 0
     comments = 0
@@ -139,9 +170,9 @@ class Info(Cog, name="Info Category"):
 #•----------Commands----------•#
 
     @command(
-      brief='{Shows info about the Bot}', 
-      usage='binfo'
-    )
+        brief='{Shows info about the Bot}', 
+        usage='binfo', 
+        aliases=['botinfo', 'sparkinfo', 'about'])
     @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(use_external_emojis=True, embed_links=True)
     async def binfo(self, ctx):
@@ -214,12 +245,15 @@ class Info(Cog, name="Info Category"):
         await ctx.send(embed=stats)
 
     @command(
-      brief="{Info about the Server}", 
-      usage="sinfo")
+        brief="{Info about the Server}", 
+        usage="sinfo", 
+        aliases=['si', 'serverinfo'])
     @guild_only()
     @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(use_external_emojis=True, embed_links=True)
     async def sinfo(self, ctx):
+         
+        g = ctx.guild
 
         # Getting permissions of the bot within the channel
         perms = ctx.guild.me.permissions_in(ctx.message.channel)
@@ -227,52 +261,59 @@ class Info(Cog, name="Info Category"):
         #memberCount = len(set(self.bot.get_all_members()))
         humans = len(list(filter(lambda m: not m.bot, ctx.guild.members)))
         bots = len(list(filter(lambda m: m.bot, ctx.guild.members)))
+        
+        #Check if there's more than 20 emojis
+        if len(g.emojis) > 20:
+            length = len(g.emojis) - 20
+            
+            emojis = f"{' '.join(map(str, g.emojis[:20]))} and **{length}** more..."
+        #If there's less than 20 emojis
+        else:
+            emojis = " ".join(map(str, g.emojis))
+            
+        emojis = "No Emojis" if emojis == "" else emojis
 
         #Get statuses
-        statuses = [len(list(filter(lambda m: str(m.status) == "online" , ctx.guild.members))),
-                    len(list(filter(lambda m: str(m.status) == "idle" , ctx.guild.members))),
-                    len(list(filter(lambda m: str(m.status) == "dnd" , ctx.guild.members))),
-                    len(list(filter(lambda m: str(m.status) == "offline" , ctx.guild.members)))]
+        statuses = [len(list(filter(lambda m: str(m.status) == "online" , g.members))),
+                    len(list(filter(lambda m: str(m.status) == "idle" , g.members))),
+                    len(list(filter(lambda m: str(m.status) == "dnd" , g.members))),
+                    len(list(filter(lambda m: str(m.status) == "offline" , g.members)))]
 
         #Getting the # of bans
         #In the server
-        bans = len(await ctx.guild.bans()) if perms.ban_members else "N/A"
+        bans = len(await g.bans()) if perms.ban_members else "N/A"
 
         #Getting the # of invites
         #In the server
-        invites = len(await ctx.guild.invites()) if perms.manage_guild else "N/A"
+        invites = len(await g.invites()) if perms.manage_guild else "N/A"
 
         #List of fields to add to the embed
-        fields = [("__*Name*__", ctx.guild.name, True), 
-
-                  ("__*Region*__", ctx.guild.region, True), 
-
-                  ("__*Owner*__", ctx.guild.owner, True), 
-
-                  ("__*Members*__", 
-                  f"Total: {len(list(ctx.guild.members))}" +
-                  f'\nStatuses: <:online:728377717090680864>{statuses[0]}, <:idle:728377738599071755>{statuses[1]}, <:dnd:728377763458973706>{statuses[2]}, <:offline:728377784207933550>{statuses[3]}' +
+        fields = [
+                  ("__*Owner*__", g.owner.mention, False), 
+                  
+                  (f"__*Members*__ **{{{len(g.members)}}}**", 
+                  f'Statuses: <:online:728377717090680864>{statuses[0]}, <:idle:728377738599071755>{statuses[1]}, <:dnd:728377763458973706>{statuses[2]}, <:offline:728377784207933550>{statuses[3]}' +
                   f"\nBanned: {bans}" +
                   f"\nHumans: {humans}" +
                   f"\nBots: {bots}", True), 
-
-                  ("__*Channels*__", f'<:textch:728377808518381679>{len(ctx.guild.text_channels)}\n<:voicech:728377834187259976>{len(ctx.guild.voice_channels)}', True), 
                   
-                  ("__*# of Invites*__", invites, True)]
-
+                  ("__*Misc*__", 
+                  f"{get_region(str(g.region), region)}" +
+                  f'\n<:textch:728377808518381679> {len(ctx.guild.text_channels)} Text Channels' +
+                  f'\n<:voicech:728377834187259976> {len(ctx.guild.voice_channels)} Voice Channels' +
+                  f'\n🔗 {invites} Invites', True),
+                  
+                  (f"__*Emojis*__ **{{{len(g.emojis)}}}**", 
+                  emojis, True)]
+                  
         e = discord.Embed(
-            title=f'General Info for {ctx.guild}', 
-            color=0x420000)
-
+            title=f'__*{{General Info for {ctx.guild}}}*__')
+        
         #Getting the date this guild
         #Was created
         e.set_footer(
-            text=f'Created · {ctx.guild.created_at.strftime("%d/%m/%Y, %I:%H:%M")}')
+            text=f'Created On | {ctx.guild.created_at.strftime("%a/%b %d/%Y • %I:%M %p")}')
 
-        e.set_author(
-            name=f"Command requested by: {ctx.author}", 
-            icon_url=f"{ctx.author.avatar_url}")
-            
         e.set_thumbnail(
             url=ctx.guild.icon_url)
 
@@ -286,9 +327,9 @@ class Info(Cog, name="Info Category"):
         await ctx.send(embed=e)
 
     @command(
-      brief="{Info on a User}", 
-      usage="uinfo (member)", 
-      aliases=['ui', 'userinfo'])
+        brief="{Info on a User}", 
+        usage="uinfo (member)", 
+        aliases=['ui', 'userinfo'])
     @guild_only()
     @cooldown(1, 1.5, BucketType.user)
     async def uinfo(self, ctx, member: discord.Member = None):
