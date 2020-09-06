@@ -339,45 +339,40 @@ class Info(Cog, name="Info Category"):
         member = ctx.author if not member else member
 
         # Check if user roles is greater than 20
-        if len(member.roles) > 20:
+        if len(member.roles) > 12:
             # Retrieve the length of the remaining roles
-            length = len(member.roles) - 20
+            length = len(member.roles) - 12
 
-            # Store the first 20 roles in a string called "roles" (highest to lowest)
-            role = f"{' '.join(map(str, (role.mention for role in list(reversed(member.roles))[:20])))} and **{length}** more"
+            # Store the first 12 roles in a string called "roles" (highest to lowest)
+            role = f"{' '.join(map(str, (role.mention for role in list(reversed(member.roles))[:12])))} and **{length}** more"
 
-        #rolelist = [role.mention for role in member.roles[1:2047]]
         else:
-            # Display all roles as it is lower than 20
+            # Display all roles as it is lower than 12
             role = f"{' '.join(map(str, (role.mention for role in list(reversed(member.roles[1:])))))}"
 
         # Accounting for the edge case where the user has no roles to be displayed
         roles = "No Roles" if role == "" else role
+        
+        nick = "No Nick" if not member.nick else member.nick
 
-        fields = [("__*Discord Tag*__", member.name, True), 
-
-                  ("__*Nick*__", member.nick, True), 
-
-                  ("__*ID*__", member.id, True), 
-
-                  ("__*Created*__", member.created_at.strftime('%a %#d %B %Y, %I:%M %p'), True), 
-
-                  ("__*Joined*__", member.joined_at.strftime('%a %#d %B %Y, %I:%M %p'), True), 
-
-                  ("__*Roles*__", roles, False), 
-
-                  ("__*Top Role*__", member.top_role.mention, False), 
-
-                  ("__*Status*__", str(member.status).title(), True),
-
-                  ("__*Boosting Server*__", bool(member.premium_since), True),
-
-                  ("__*Bot?*__", member.bot, True)]
-
+        fields = [
+                  (f"__*Roles*__ **{{{len(member.roles[1:])}}}**", 
+                  f"Roles -> {roles}" +
+                  f"\nTop Role -> {member.top_role.mention}", False), 
+                  
+                  ("__*Account*__", 
+                  f"Status -> {str(member.status).title()}" +
+                  f"\nCreated On | {member.created_at.strftime('%a/%b %d/%Y • %I:%M %p')}" +
+                  f"\nJoined On | {member.joined_at.strftime('%a/%b %d/%Y • %I:%M %p')}", True),
+                  
+                  ("__*Misc*__", 
+                  f"Nick -> {nick}" +
+                  f"\nBoosting? -> {bool(member.premium_since)}" +
+                  f"\nBot? -> {member.bot}", False)]
+                  
         e = discord.Embed(
-            title=f"{{{member.name}'s General Info}}", 
-            color=0x420000)
-
+            description=f"*{{General Info for {member}}}*")
+            
         #Adding the fields
         #To the embed
         for name, value, inline in fields:
@@ -386,11 +381,11 @@ class Info(Cog, name="Info Category"):
                 value=value, 
                 inline=inline)
 
-        e.set_thumbnail(url=member.avatar_url)
+        e.set_thumbnail(
+            url=member.avatar_url)
 
         e.set_footer(
-            text=f'{member.name}', 
-            icon_url=member.avatar_url)
+            text=f"ID -> {member.id}")
 
         e.timestamp = datetime.utcnow()
 
