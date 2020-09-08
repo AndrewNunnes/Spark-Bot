@@ -8,9 +8,11 @@ import random
 
 from datetime import datetime
 
-from discord.ext.commands import BucketType, command, bot_has_permissions, guild_only, Cog, cooldown, has_permissions, MissingRequiredArgument
+from discord.ext.commands import BucketType, command, bot_has_permissions, guild_only, Cog, cooldown, has_permissions, MissingRequiredArgument, is_owner
 
 from typing import Optional
+
+from aiohttp import ClientSession
 
 #•----------Class----------•#
 
@@ -25,16 +27,13 @@ class Misc(Cog, name="Misc Category"):
     def __init__(self, bot):
         self.bot = bot
         
+        self.ses = ClientSession(loop=self.bot.loop)
+        
+    def cog_unload(self):
+        self.bot.loop.create_task(self.ses.close())
+        
 #•----------Commands----------•#
     
-    @command(
-        brief="{Leave any Feedback for the Owner of the Bot}", 
-        usage="feedback <message_here>")
-    @guild_only()
-    @cooldown(1, 86400.0, BucketType.user)
-    async def feedback(self, ctx, *, fb):
-        pass
-        
     #Booster Command  
     @command(
         brief="{List of Boosters for the Server}", 
@@ -63,7 +62,7 @@ class Misc(Cog, name="Misc Category"):
             booster_list = f"{' , '.join(map(str, (member.mention for member in list(reversed(boost[1:])))))}"
 
         #Make a variable to make stuff easier
-        boosters = "No Members" if booster_list == [] else booster_list
+        boosters = "No Members" if not booster_list else booster_list
 
         #Make embed
         e = discord.Embed(
@@ -75,7 +74,7 @@ class Misc(Cog, name="Misc Category"):
         fields = [
                 ("*Members who Boosted*", 
                     
-                f"{boosters}", True)]
+                f"{boosters}", False)]
             
         #Add fields
         for n, v, i in fields:
@@ -155,10 +154,10 @@ class Misc(Cog, name="Misc Category"):
             await m.add_reaction(react)
 
     @command(
-      brief="{Bot Interactively Starts a Poll}", 
-      usage="poll")
+        brief="{Bot Interactively Starts a Poll}", 
+        usage="poll")
     @guild_only()
-    @cooldown(1, 3, BucketType.user)
+    @cooldown(1, 2.5, BucketType.user)
     async def poll(self, ctx, *, question):
 
         #A list of messages to delete when we're all done
@@ -169,7 +168,7 @@ class Misc(Cog, name="Misc Category"):
             return m.author == ctx.author and m.channel == ctx.channel and len(m.content) <= 100
 
         for i in range(20):
-            messages.append(await ctx.send(f'Say poll option or {ctx.prefix}cancel to publish poll.'))
+            messages.append(await ctx.send(f'Say poll option or `publish` to publish poll.'))
 
             try:
                 entry = await self.bot.wait_for('message', check=check, timeout=60.0)
@@ -178,7 +177,7 @@ class Misc(Cog, name="Misc Category"):
 
             messages.append(entry)
 
-            if entry.clean_content.startswith(f'{ctx.prefix}cancel'):
+            if entry.clean_content.startswith('publish'):
                 break
 
             answers.append((to_emoji(i), entry.clean_content))
@@ -194,15 +193,10 @@ class Misc(Cog, name="Misc Category"):
         for emoji, _ in answers:
             await actual_poll.add_reaction(emoji)
 
-    @poll.error
-    async def poll_error(self, ctx, error):
-        if isinstance(error, MissingRequiredArgument):
-            return await ctx.send('Missing the question.', delete_after=4)
-
     @command(
-      brief="{Start a poll quickly}", 
-      usage="quickpoll <at_least_2_questions>")
-    @cooldown(1, 3, BucketType.user)
+        brief="{Start a poll quickly}", 
+        usage="quickpoll <at_least_2_questions>")
+    @cooldown(1, 2.5, BucketType.user)
     @guild_only()
     async def quickpoll(self, ctx, *questions_and_choices: str):
 
@@ -237,6 +231,7 @@ class Misc(Cog, name="Misc Category"):
         brief="{Apply for Moderator}", 
         usage="applymod")
     @cooldown(1, 3, BucketType.user)
+    @is_owner()
     @guild_only()
     async def applymod(self, ctx, member: discord.Member = None):
 
