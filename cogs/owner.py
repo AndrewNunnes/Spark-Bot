@@ -3,7 +3,7 @@
 import discord
 
 from discord.ext.commands import command, Cog, BucketType, is_owner, guild_only, \
-Converter, Greedy, cooldown, has_permissions, bot_has_permissions
+Converter, Greedy, cooldown, has_permissions, bot_has_permissions, group
 
 from datetime import datetime
 
@@ -13,13 +13,15 @@ from typing import Optional
 
 from aiohttp import ClientSession
 
-from random import randint
+from random import randint, choice
 
 import traceback
 
 import os
 
 import re
+
+from PIL import Image
 
 time_regex = re.compile("(?:(\d{1,5})(d|days|day|hours|hrs|hour|hr|h|m|minutes|minute|min|mins|seconds|second|sec|secs|s))+?")
 #Our dictionary of possible responses
@@ -98,74 +100,36 @@ class Owner(Cog, name="Owner Category"):
         
 #•----------Commands----------•#
     
-    @group(
-        brief="{Menu for Role Persist}", 
-        usage="rolepersist", 
-        aliases=['rpersist'])
-    @guild_only()
-    @cooldown(1, 2.0, BucketType.user)
+    @command()
     @is_owner()
-    async def rolepersist(self, ctx):
+    async def color(self, ctx):
         
+        #Our random color
+        color = randint(0x000000, 0xffffff)
+        
+        #Our image for our embed
+        im = Image.new('RGB', (512, 512), color=color)
+        #Save the image as a png file
+        im.save('ran_color.png')
+        
+        c = Image.open('ran_color.png')
+        c.thumbnail((512, 512))
+        c.show()
+        
+        #file = discord.File('ran_color.png', filename='ran_color.png')
+
+        desc = f"Hex Code -> **{color}**"
+
         e = discord.Embed(
-            description="**Role Persist System**")
-        #Make the fields
-        fields = [
-                  (f"• **status :** `{ctx.prefix}rolepersist status`", "{Show the Current Status for Role Persist}", False), 
+            title="Pick a Color Here", 
+            url="https://htmlcolorcodes.com", 
+            description=desc, 
+            color=color)
         
-                  (f"• **turn :** `{ctx.prefix}rolepersist turn <on/off>`", "{Turn On/Off Role Persist}", False)]
-        
-        #Add the fields
-        for n, v, i in fields:
-            e.add_field(
-                name=n, 
-                value=v, 
-                inline=i)
+        e.set_image(
+            url=f"attachment://{c}")
         
         await ctx.send(embed=e)
-    
-    @rolepersist.command(
-        brief="{Show the Current Status for Role Persist}", 
-        usage="rolepersist status")
-    @guild_only()
-    @cooldown(1, 2.0, BucketType.user)
-    @is_owner()
-    async def status(self, ctx):
-        
-        #Used to check if role persist is on
-        rpersist = bool(self.per)
-        
-        rpers = "on" if rpersist else "off"
-        
-        #Used to show an emoji if role persist
-        #Is on/off
-        state = "<:online:728377717090680864>" if rpersist else "<:offline:728377784207933550>"
-        
-        e = discord.Embed(
-            description=f"{state} **Role Persist is currently {rpers}**", 
-            color=0x420000)
-        
-        await ctx.send(embed=e)
-        
-    @rolepersist.command(
-        brief="{Turn On/Off Role Persist}", 
-        usage="rolepersist turn <on/off>", 
-        aliases=['change'])
-    @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
-    @is_owner()
-    async def turn(self, ctx, state: bool):
-        
-        #If the user says on
-        if state is True:
-            #Set our local variable to true
-            self.per = True
-            await ctx.send("<:online:728377717090680684> Role Persist has been turned on")
-        
-        else:
-            self.per = False
-            
-            await ctx.send("<:offline:7283777842079933550> Role Persist has been turned off")
 
     @command(
         brief="{Temporarily Ban a User}", 
@@ -253,7 +217,7 @@ class Owner(Cog, name="Owner Category"):
     @is_owner()
     async def upcoming(self, ctx):
         
-        url = "https://api.themoviedb.org/3/movie/upcoming?api_key= Your_api_key"
+        url = "https://api.themoviedb.org/3/movie/upcoming?api_key=91841633d0b2b91d9e313adcce2cc2c7"
         r = await self.ses.get(url)
         
         respon = await r.json()
@@ -306,7 +270,7 @@ class Owner(Cog, name="Owner Category"):
     @is_owner()
     async def upcmovie(self, ctx):
         
-        url = "https://api.themoviedb.org/3/movie/upcoming?api_key= Your_api_key"
+        url = "https://api.themoviedb.org/3/movie/upcoming?api_key=91841633d0b2b91d9e313adcce2cc2c7"
         #Get the url with aiohttp session
         r = await self.ses.get(url)
         
@@ -365,7 +329,7 @@ class Owner(Cog, name="Owner Category"):
         
         #Api key needed to have this work
         #Check their website to make one
-        url = f"https://api.themoviedb.org/3/tv/popular?api_key=Your_api_key"
+        url = f"https://api.themoviedb.org/3/tv/popular?api_key=91841633d0b2b91d9e313adcce2cc2c7"
         r = await self.ses.get(url)
 
         #Convert into a json format
@@ -529,10 +493,10 @@ class Owner(Cog, name="Owner Category"):
                       
                         trace = traceback.format_exc()
                         
-                        if len(trace) > 850:
-                            length = len(trace) - 850
+                        if len(trace) > 1024:
+                            length = len(trace) - 1024
                             
-                            trace = f"```{trace[:850]}``` and **{length}** more words..."
+                            trace = f"```{trace[:1024]}``` and **{length}** more words..."
                         
                         else:
                             trace = f"```{trace}```"
@@ -608,10 +572,10 @@ class Owner(Cog, name="Owner Category"):
                     except Exception:
                         trace = traceback.format_exc()
                         
-                        if len(trace) > 850:
-                            length = len(trace) - 850
+                        if len(trace) > 1024:
+                            length = len(trace) - 1024
                             
-                            trace = f"```{trace[:850]}``` and **{length}** more words..."
+                            trace = f"```{trace[:1024]}``` and **{length}** more words..."
                         
                         else:
                             trace = f"```{trace}```"
@@ -662,9 +626,17 @@ class Owner(Cog, name="Owner Category"):
                         inline=True)
                             
             await ctx.send(embed=e)
+    
+    @command(
+        brief="{DM a User}", 
+        usage="dm <user> <message>", 
+        aliases=['senddm'])
+    @is_owner()
+    @guild_only()
+    async def dm(self, ctx, user: discord.User, *, msg):
+        
+        await user.send(msg)
 
-
-            
     @command(
         brief="{Shutdown the Bot}", 
         usage="shutdown", 
