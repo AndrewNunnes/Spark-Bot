@@ -87,11 +87,11 @@ with open('data/emojified.json', 'r', encoding='utf8') as em:
 #Background task to change bot status
 @tasks.loop(seconds=1 * 900)
 async def change_status():
-  
+    
     seconds = 1 * 900
   
     await bot.change_presence(activity=discord.Game(name=random.choice(bot.playing)))
-    
+
     await asyncio.sleep(seconds)
     
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=random.choice(bot.listen)))
