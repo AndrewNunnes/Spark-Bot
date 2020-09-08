@@ -38,10 +38,11 @@ class Giveaway(commands.Cog, name="Giveaway Category"):
     self.bot = bot
   
   @commands.command(
-    brief="{Quicksetup for the Giveaway} [NOT DONE]", 
-    usage="quickgiveaway <#channel> <winners> <time> <prize>")
+      brief="{Quicksetup for the Giveaway} [NOT DONE]", 
+      usage="quickgiveaway <#channel> <winners> <time> <prize>")
   @commands.guild_only()
-  @commands.has_permissions(kick_members=True)
+  @commands.is_owner()
+  @commands.cooldown(1, 1.5, commands.BucketType.user)
   async def quickgiveaway(self, ctx):
     """
     Refined version of the giveaway below {NOT DONE}
@@ -89,7 +90,8 @@ class Giveaway(commands.Cog, name="Giveaway Category"):
     usage="startgiveaway", 
     aliases=['giveawaystart', 'startgv', 'gvstart'])
   @commands.guild_only()
-  @commands.has_permissions(kick_members=True)
+  @commands.is_owner()
+  @commands.has_permissions(manage_messages=True)
   async def startgiveaway(self, ctx):
     """
     Sloppy Version but still works perfectly
@@ -211,7 +213,8 @@ class Giveaway(commands.Cog, name="Giveaway Category"):
     brief="{Rerolls a New Winner for the Giveaway}", 
     usage="reroll <message_id>")
   @commands.guild_only()
-  @commands.has_permissions(kick_members=True)
+  @commands.is_owner()
+  @commands.has_permissions(manage_messages=True)
   async def reroll(self, ctx, message: discord.Message):
       """
       Ends the giveaway manually {NOT 100% FUNCTIONAL YET}
