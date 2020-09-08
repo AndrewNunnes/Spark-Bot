@@ -1,4 +1,3 @@
-
 #•----------Modules-----------•#
 import discord
 
@@ -40,10 +39,6 @@ class Fun(Cog, name="Fun Category"):
     def __init__(self, bot):
         self.bot = bot
         
-        #Used to get the functions
-        #From this cog
-        self.gc = self.bot.get_cog('Helpdude')
-        
         self.d = self.bot.emojified
         
         self.g = self.bot.get_cog('Global')
@@ -56,6 +51,12 @@ class Fun(Cog, name="Fun Category"):
     #And close when complete
     def cog_unload(self):
         self.bot.loop.create_task(self.ses.close())
+    
+    #Function used to get cogs by it's class name
+    def get_cog_class(self, name):
+        for cog in self.bot.cogs.values():
+            if cog.__class__.__name__ == name:
+                return cog
 
     async def nice(self, ctx):
         com_len = len(f'{ctx.prefix}{ctx.invoked_with} ')
@@ -94,7 +95,7 @@ class Fun(Cog, name="Fun Category"):
         redmark = "<:redmark:738415723172462723>"
         
         #Get the cog by it's class
-        cog = self.gc.get_cog_by_class('Minecraft')
+        cog = self.get_cog_class('Minecraft')
         
         #Get the commands and store as a variable
         c = cog.get_commands()
@@ -239,7 +240,7 @@ class Fun(Cog, name="Fun Category"):
         brief="{Insult a Member}",
         usage="roast <member>", 
         aliases=['bully'])
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @guild_only()
     async def roast(self, ctx, member: discord.Member):
         
@@ -270,7 +271,7 @@ class Fun(Cog, name="Fun Category"):
     @command(
       brief="{Get a Random Meme}", 
       usage="meme")
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @guild_only()
     async def meme(self, ctx):
 
@@ -311,12 +312,12 @@ class Fun(Cog, name="Fun Category"):
         usage="movie <movie_title>", 
         aliases=['searchmovie'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(use_external_emojis=True)
     async def movie(self, ctx, *, title):
         
         try:
-            redmark = "<:redmark:738415>"
+            redmark = "<:redmark:738415723172462723>>"
             
             #Only works if you have an api key inside the website
             url = f"https://api.themoviedb.org/3/search/movie?api_key=91841633d0b2b91d9e313adcce2cc2c7&query={title}"
@@ -376,7 +377,7 @@ class Fun(Cog, name="Fun Category"):
         brief="{See what song somebody's listening to}", 
         usage="spotify <member>")
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def spotify(self, ctx, user: discord.Member=None):
       
         user = user or ctx.author
@@ -429,6 +430,7 @@ class Fun(Cog, name="Fun Category"):
         brief="{Hack a Member}", 
         usage="hack <member>", 
         aliases=['hck'])
+    @cooldown(1, 1.5, BucketType.user)
     @guild_only()
     async def hack(self, ctx, member:discord.Member = None):
         
@@ -533,7 +535,8 @@ class Fun(Cog, name="Fun Category"):
       brief="{Info on an Insta Acc}", 
       usage="insta <insta_username>", 
       aliases=['instagram'])
-    @cooldown(1, 1, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
+    @guild_only()
     async def insta(self, ctx, *, user_name):
       
         redmark = "<:redmark:738415723172462723>"
@@ -633,7 +636,7 @@ class Fun(Cog, name="Fun Category"):
       brief="{Get a random fact}",
       usage="fact")
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def fact(self, ctx):
         
         async with ctx.typing():
@@ -660,14 +663,13 @@ class Fun(Cog, name="Fun Category"):
                 
             #Send embed
             await ctx.send(embed=e)
-
             
     @command(
         brief="{Get Lyrics for a Song}", 
         usage="lyrics <song_title>", 
         aliases=['songlyrics', 'lyric'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def lyrics(self, ctx, *, title):
         
         mem = ctx.author
@@ -749,7 +751,7 @@ class Fun(Cog, name="Fun Category"):
         brief="{Do Math}", 
         usage="math <math_stuff>")
     @guild_only()
-    @cooldown(1, 1.25, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def math(self, ctx):
 
         redmark = "<:redmark:738415723172462723>"
@@ -825,7 +827,7 @@ class Fun(Cog, name="Fun Category"):
         usage="sarcastic <text>", 
         aliases=['sarcasm', 'sarc'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def sarcastic(self, ctx, *, text):
         
         text = await self.nice(ctx)
@@ -852,7 +854,7 @@ class Fun(Cog, name="Fun Category"):
         brief="{Places a 👏 in between your Text}", 
         usage="clap <text>")
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def clap(self, ctx, *, msg):
         
         clapped = '👏' + ' 👏 '.join((await self.nice(ctx)).split(' ')) + ' 👏'
@@ -867,8 +869,9 @@ class Fun(Cog, name="Fun Category"):
         brief="{Emojify your Text}", 
         usage="emojify <text>", 
         aliases=['emofy'])
+    @is_owner()
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def emojify(self, ctx, *, msg):
         
         #Letters to try and emojify
@@ -899,7 +902,7 @@ class Fun(Cog, name="Fun Category"):
         usage="bubblewrap (#x#)", 
         aliases=['bwrap'])
     @guild_only()
-    @cooldown(1, 3, BucketType.user)
+    @cooldown(1, 2.5, BucketType.user)
     async def bubblewrap(self, ctx, size=None):
         
         #If a size isn't given
@@ -1019,7 +1022,7 @@ class Fun(Cog, name="Fun Category"):
         brief="{Make your Message a Fancy Embed}", 
         usage="embed <message>")
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def embed(self, ctx, *, d):
         
         #Define the author
@@ -1042,7 +1045,7 @@ class Fun(Cog, name="Fun Category"):
         brief="{Turn your words into a Banner}", 
         usage="banner <text>")
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def banner(self, ctx, *, text):
         
         #Used to format the user's text
