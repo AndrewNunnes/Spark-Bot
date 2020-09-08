@@ -60,7 +60,6 @@
 * config -> Gives a Menu of Other Server Management Commands
 
 #### *Misc Commands*
-* !startgiveaway -> Interactive Giveaway Setup
 * !suggest <suggestion> -> Sends user suggestions to a suggestion channel {If set up} 
 * !poll -> Starts an Interactive Poll Setup
 * quickpoll <questions_and_answers> -> Non-Interactive Poll Setup
