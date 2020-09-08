@@ -1,9 +1,9 @@
-
 #•----------Modules----------•#
 
 import discord
 
-from discord.ext.commands import command, guild_only, bot_has_permissions, has_permissions, Cog, group
+from discord.ext.commands import command, guild_only, bot_has_permissions, has_permissions, Cog, group, \
+cooldown, BucketType
 
 from datetime import datetime
 
@@ -29,6 +29,7 @@ class Goodbye(Cog):
         brief="{The Goodbye Menu what else?}", 
         usage="goodbye")
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(use_external_emojis=True)
     async def goodbye(self, ctx):
       
@@ -47,6 +48,7 @@ class Goodbye(Cog):
         
         #Make embed
         e = discord.Embed(
+            color=0x420000, 
             title=f"__*{cog.qualified_name}*__\n*() - Optional\n<> - Required*", 
             description="".join(desc))
                   
@@ -74,6 +76,7 @@ class Goodbye(Cog):
       usage="goodbye channel <#channel>"
     )
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(manage_channels=True)
     @has_permissions(manage_channels=True)
     async def channel(self, ctx, channel: discord.TextChannel):
@@ -86,6 +89,7 @@ class Goodbye(Cog):
           
           #Make and send embed
           e = discord.Embed(
+              color=0x420000, 
               description=f"**Goodbye Channel has been set to {channel.mention}**")
           
           e.timestamp = datetime.utcnow()
@@ -101,7 +105,7 @@ class Goodbye(Cog):
         aliases=['currentchannel', 'cc', 
                 'ccurrent', 'currentc'])
     @guild_only()
-    @bot_has_permissions(manage_channels=True)
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_channels=True)
     async def currentchann(self, ctx):
       
@@ -119,6 +123,7 @@ class Goodbye(Cog):
         if check_channel:
             
             e = discord.Embed(
+                color=0x420000, 
                 description=f"**Current channel is <#{check_channel[0]}>**")
                 
             e.timestamp = datetime.utcnow()
@@ -127,11 +132,11 @@ class Goodbye(Cog):
         await ctx.send(embed=e)
 
     @goodbye.command(
-      brief="{Change the goodbye message (There is also a default)}", 
-      usage="goodbye text <new_text_here>", 
-      aliases=['message', 'msg'])
+        brief="{Change the goodbye message (There is also a default)}", 
+        usage="goodbye text <new_text_here>", 
+        aliases=['message', 'msg'])
     @guild_only()
-    @bot_has_permissions(manage_channels=True)
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_channels=True)
     async def text(self, ctx, *, text):
       
@@ -159,6 +164,7 @@ class Goodbye(Cog):
         
             #Make and send embed
             e = discord.Embed(
+                color=0x420000, 
                 title="**Goodbye Message Set**",
                 description=f"**New Message:** {text}")
                 
@@ -172,8 +178,8 @@ class Goodbye(Cog):
         aliases=['currenttext', 
                  'currentext', 'currentmessage', 'cmsg', 'ctext', 'cmessage'])
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_channels=True)
-    @bot_has_permissions(manage_channels=True)
     async def currentmsg(self, ctx):
       
         check_chann = await self.db.get_goodbye_channel(ctx.guild.id)
@@ -197,6 +203,7 @@ class Goodbye(Cog):
             
                 #Make embed
                 e = discord.Embed(
+                    color=0x420000, 
                     title="**Default Goodbye Message**", 
                     description="**{mention} just left {guild}. Sorry to see you go!**\n__*Member Count: {members} Members*__")
                 
@@ -207,6 +214,7 @@ class Goodbye(Cog):
             if the_text is not None:
                 #Make embed
                 e = discord.Embed(
+                    color=0x420000, 
                     title="**Current Goodbye Message**", 
                     description=f"**Message:** {str(the_text)}")
             
@@ -220,7 +228,8 @@ class Goodbye(Cog):
         usage="goodbye rtext", 
         aliases=['removechannel', 'removechann', 'rch', 'rc'])
     @guild_only()
-    @bot_has_permissions(manage_channels=True, use_external_emojis=True)
+    @cooldown(1, 1.5, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
     @has_permissions(manage_channels=True)
     async def rchannel(self, ctx):
       
@@ -313,7 +322,7 @@ class Goodbye(Cog):
                     await asyncio.sleep(1)
                     
                     edit = discord.Embed(
-                        color=0x0F4707, 
+                        color=0x420000, 
                         description=f"**{green_mark} Successfully Deleted <#{get_channel[0]}> and Turned off Goodbye Messages**")
                         
                     #Edit the previous embed
@@ -327,6 +336,7 @@ class Goodbye(Cog):
                     #Make a new embed
                     #To edit the original
                     et = discord.Embed(
+                        color=0x420000, 
                         description=f"**{red_mark} Channel Won't be Deleted and Goodbye Messages are Still Enabled**")
                     et.set_footer(
                         text=ctx.author)
@@ -345,7 +355,8 @@ class Goodbye(Cog):
         usage="rtext", 
         aliases=['removemsg', 'removemessage', 'removetext', 'rmsg', 'rmessage'])
     @guild_only()
-    @bot_has_permissions(manage_channels=True, use_external_emojis=True)
+    @cooldown(1, 1.5, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
     @has_permissions(manage_channels=True)
     async def rtext(self, ctx):
       
@@ -446,7 +457,7 @@ class Goodbye(Cog):
                     
                         #New embed to edit the previous
                         edit = discord.Embed(
-                            color=0x0F4707, 
+                            color=0x420000, 
                             description=f"**{green_mark} Successfully Deleted Goodbye Message:** {str(get_db_msg)}")
                         
                         #Edit the previous embed
@@ -458,6 +469,7 @@ class Goodbye(Cog):
                         await m.remove_reaction(red_mark, ctx.author)
                     
                         et = discord.Embed(
+                            color=0x420000, 
                             description=f"**{red_mark} Custom Message won't be Deleted**")
                         et.set_footer(
                             text=ctx.author)
@@ -477,7 +489,6 @@ class Goodbye(Cog):
         aliases=['prv', 'pview', 'pv'])
     @guild_only()
     @has_permissions(manage_channels=True)
-    @bot_has_permissions(manage_channels=True)
     async def preview(self, ctx):
       
       #Defining member as the author
@@ -556,7 +567,6 @@ class Goodbye(Cog):
               
           await ctx.send(embed=e)
         
-
 #•----------Event----------•#
 
     #Saying goodbye to Members
