@@ -40,7 +40,7 @@ class Channels(Cog):
       brief="{Nuke a Channel}",
       usage="nuke (#channel)")
   @guild_only()
-  @cooldown(1, 25.0, BucketType.user)
+  @cooldown(1, 3.5, BucketType.guild)
   @has_permissions(manage_channels=True)
   @bot_has_permissions(manage_channels=True)
   async def nuke(self, ctx, channel: discord.TextChannel=None):
@@ -69,10 +69,11 @@ class Channels(Cog):
       await channel.delete(reason="To Nuke")
 
   @command(
-    brief="{Create a New Channel}", 
-    usage="newtc <name> (category) (slowmode_delay[in seconds]) (reason)", 
-    aliases=['createtextchannel', 'createtc'])
+      brief="{Create a New Channel}", 
+      usage="newtc <name> (category) (slowmode_delay[in seconds]) (reason)", 
+      aliases=['createtextchannel', 'createtc'])
   @guild_only()
+  @cooldown(1, 2.0, BucketType.user)
   @has_permissions(manage_channels=True)
   @bot_has_permissions(manage_channels=True)
   async def newtc(self, ctx, name, category: discord.CategoryChannel=None, slowmode: int=None, *, reason=None):
@@ -112,10 +113,11 @@ class Channels(Cog):
         raise(error)
       
   @command(
-    brief="{Create a New Voice Channel}", 
-    usage="newvc <name> (category) (bitrate[number]) (user_limit[number]) (reason)", 
-    aliases=['createvc', 'newvoicechannel'])
+      brief="{Create a New Voice Channel}", 
+      usage="newvc <name> (category) (bitrate[number]) (user_limit[number]) (reason)", 
+      aliases=['createvc', 'newvoicechannel'])
   @guild_only()
+  @cooldown(1, 2.0, BucketType.user)
   @has_permissions(manage_channels=True)
   @bot_has_permissions(manage_channels=True)
   async def newvc(self, ctx, name, category: discord.CategoryChannel=None, bitrate: int=None, user_limit: int=None, *, reason=None):
@@ -156,10 +158,11 @@ class Channels(Cog):
         raise(error)
       
   @command(
-    brief="{Delete a Channel}", 
-    usage="delete <channel>", 
-    aliases=['delchannel', 'deletech', 'deletechann', 'delchann'])
+      brief="{Delete a Channel}", 
+      usage="delete <channel>", 
+      aliases=['delchannel', 'deletech', 'deletechann', 'delchann'])
   @guild_only()
+  @cooldown(1, 2.0, BucketType.user)
   @has_permissions(manage_channels=True)
   @bot_has_permissions(manage_channels=True)
   async def deletechannel(self, ctx, channel: Union[discord.TextChannel, discord.VoiceChannel], *, reason=None):
@@ -171,9 +174,10 @@ class Channels(Cog):
     await ctx.send(f"Yo {ctx.author.mention}, I just deleted {channel} for you")
 
   @command(
-    brief="{Get a List of Channels in the Server}", 
-    usage="chlist", 
-    aliases=['channellist', 'channelist'])
+      brief="{Get a List of Channels in the Server}", 
+      usage="chlist", 
+      aliases=['channellist', 'channelist'])
+  @is_owner()
   @guild_only()
   async def chlist(self, ctx):
     pass
