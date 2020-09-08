@@ -24,8 +24,10 @@ class Role(Cog, name="Role Category"):
     @command(
         name="createrole", 
         brief="{Create a New Role}", 
-        usage="createrole <role_name> (color) (reason_for_creating)")
+        usage="createrole <role_name> (color) (reason_for_creating)", 
+        aliases=['rcreate', 'rolenew', 'newrole'])
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_roles=True)
     @bot_has_permissions(manage_roles=True)
     async def create(self, ctx, name=None, color: discord.Color=None, *, reason: Optional[str]="No Reason Provided"):
@@ -49,6 +51,7 @@ class Role(Cog, name="Role Category"):
         usage="deleterole <role>", 
         aliases=['roledelete', 'rdelete', 'roledel'])
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_roles=True)
     @bot_has_permissions(manage_roles=True)
     async def delete(self, ctx, *, role: discord.Role):
@@ -58,11 +61,12 @@ class Role(Cog, name="Role Category"):
         await ctx.send(f"{role} was successfully deleted")
 
     @command(
-      name="addrole", 
-      brief="{Add a Role to a Member}", 
-      usage="addrole <member> <role>", 
-      aliases=['addr', 'radd'])
+        name="addrole", 
+        brief="{Add a Role to a Member}", 
+        usage="addrole <member> <role>", 
+        aliases=['addr', 'radd'])
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_roles=True)
     @bot_has_permissions(manage_roles=True)
     async def add(self, ctx, member: discord.Member, *, role: discord.Role):
@@ -83,11 +87,12 @@ class Role(Cog, name="Role Category"):
         await ctx.send(embed=e)
       
     @command(
-      name="removerole", 
-      brief="{Remove a Role from a Member}", 
-      usage="removerole <member(s)> <role_name>", 
-      aliases=['roleremove', 'rremove'])
+        name="removerole", 
+        brief="{Remove a Role from a Member}", 
+        usage="removerole <member(s)> <role_name>", 
+        aliases=['roleremove', 'rremove'])
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_roles=True)
     @bot_has_permissions(manage_roles=True)
     async def remove(self, ctx, member: discord.Member, *, role: discord.Role):
@@ -115,7 +120,7 @@ class Role(Cog, name="Role Category"):
     @guild_only()
     @has_permissions(manage_roles=True)
     @bot_has_permissions(manage_roles=True, use_external_emojis=True)
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def raall(self, ctx, giving: discord.Role, *, exist: discord.Role):
         
         greenmark = "<:greenmark:738415677827973152>" 
@@ -139,7 +144,7 @@ class Role(Cog, name="Role Category"):
         usage="rrall <role_to_remove> <role_to_remove_from>",
         aliases=['rremoveall'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(manage_roles=True, use_external_emojis=True)
     @has_permissions(manage_roles=True)
     async def rrall(self, ctx, removing: discord.Role, *, _from: discord.Role):
@@ -158,11 +163,12 @@ class Role(Cog, name="Role Category"):
         await ctx.send(embed=e)
     
     @command(
-      name="roleposition", 
-      brief="{Change the Position of a Role}", 
-      usage="roleposition <role> <#position>", 
-      aliases=['rposition', 'rpos', 'rolepos']) 
+        name="roleposition", 
+        brief="{Change the Position of a Role}", 
+        usage="roleposition <role> <#position>", 
+        aliases=['rposition', 'rpos', 'rolepos']) 
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_roles=True)
     @bot_has_permissions(manage_roles=True)
     async def position(self, ctx, role: discord.Role, *, position: int):
@@ -189,13 +195,14 @@ class Role(Cog, name="Role Category"):
         await ctx.send(embed=e)
     
     @command(
-      name="rolename", 
-      brief="{Change the Name of a Role}", 
-      usage="rolename <role> <new_name>")
+        name="rolename", 
+        brief="{Change the Name of a Role}", 
+        usage="rolename <role> <new_name>", 
+        aliases=['rname'])
     @guild_only()
     @bot_has_permissions(manage_roles=True)
     @has_permissions(manage_roles=True)
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def name(self, ctx, role: discord.Role, *, name=None):
     
       #If user doesn't give a new name
@@ -218,10 +225,12 @@ class Role(Cog, name="Role Category"):
           await ctx.send(embed=e)
     
     @command(
-      name="rolecolor", 
-      brief="{Change the color of a Role}", 
-      usage="rolecolor <color> <role_name>")
+        name="rolecolor", 
+        brief="{Change the color of a Role}", 
+        usage="rolecolor <color> <role_name>", 
+        aliases=['rcolor'])
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_roles=True)
     @bot_has_permissions(manage_roles=True)
     async def color(self, ctx, color: discord.Color, *, role: discord.Role):
