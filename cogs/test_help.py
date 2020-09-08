@@ -1,7 +1,8 @@
 #•----------Modules----------•#
 import discord
 
-from discord.ext.commands import command, Cog, BucketType, guild_only, cooldown, bot_has_permissions, is_owner
+from discord.ext.commands import command, Cog, BucketType, guild_only, cooldown, \
+bot_has_permissions, is_owner, group
 
 import asyncio
 
@@ -29,82 +30,13 @@ class Helpdude(Cog):
 
 #•----------Commands----------•#
    
-    @command()
-    @is_owner()
-    async def pagehelp(self, ctx):
-
-      info = self.get_cog_by_class('Info')
-      
-      fun = self.get_cog_by_class('Fun')
-      
-      e = discord.Embed(
-          description="**{Category Index}**")
-      
-      fields = [
-             (f"__*{info.qualified_name}*__", info.description, True), 
-             
-             (f"__*{fun.qualified_name}*__", fun.description, True)]
-             
-      for n, v, i in fields:
-          e.add_field(
-              name=n, 
-              value=v, 
-              inline=i)
-      
-      info_commands = [f"**{c.name} :** `{ctx.prefix}{c.usage}`\n{c.brief}" for c in info.get_commands()]
-      
-      contents = [e, info_commands, "huh", "okay"]
-      
-      #Max amount of pages
-      pages = 4
-      #First page
-      cur_page = 1
-      
-      #Store the embed we're sending as a variable
-      #For editing and adding reactions
-      m = await ctx.send(
-          embed=contents[cur_page-1])
-      
-      await m.add_reaction('⬅️')
-      await m.add_reaction('➡️')
-      
-      #Check to make sure nobody else
-      #But the author triggers the reactions
-      def author(reaction, user):
-          return user == ctx.author and str(reaction.emoji) in ['⬅️', '➡️']
-          
-      while True:
-          try:
-              reaction, user = await self.bot.wait_for('reaction_add', check=author, timeout=60.0)
-          
-              if str(reaction.emoji) == "➡️" and cur_page != pages:
-                  await m.remove_reaction(reaction, user)
-                  cur_page += 1
-                  
-                  e = discord.Embed(
-                      description=f"{contents[cur_page-1]}")
-                  
-                  await m.edit(embed=e)
-                  
-              elif str(reaction.emoji) == "⬅️" and cur_page > 1:
-                  await m.remove_reaction(reaction, user)
-                  cur_page -= 1
-                  
-                  e = discord.Embed(
-                      description=f"{contents[cur_page-1]}")
-                  await m.edit(embed=e)
-              else:
-                  await m.remove_reaction(reaction, user)
-                  
-          except asyncio.TimeoutError:
-              await m.edit(content="Took too long")
-              break
-            
-    @command()
+    @command(
+        aliases=['helpold', 'oghelp', 'helpog'])
     @guild_only()
-    @cooldown(1, 1.5, BucketType.user)
-    @bot_has_permissions(use_external_emojis=True)
-    async def help(self, ctx, member: discord.Member=None):
+    @cooldown(1, 3.0, BucketType.user)
+    @bot_has_permissions(add_reactions=True)
+    @is_owner()
+    async def oldhelp(self, ctx, member: discord.Member=None):
         await ctx.message.delete()
         
         member = ctx.author if not member else member
@@ -465,6 +397,7 @@ class Helpdude(Cog):
 
     @command()
     @guild_only()
+    @is_owner()
     async def pages(self, ctx):
       
         info = self.get_cog_by_class('Info')
@@ -516,8 +449,9 @@ class Helpdude(Cog):
                 # ending the loop if user doesn't react after x seconds
 
     @command()
+    @is_owner()
     @guild_only()
-    async def testhelp(self, ctx, *cog):
+    async def coghelp(self, ctx, *cog):
 
         if not cog:
 
