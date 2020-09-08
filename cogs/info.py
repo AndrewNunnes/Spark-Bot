@@ -174,6 +174,7 @@ class Info(Cog, name="Info Category"):
         usage='binfo', 
         aliases=['botinfo', 'sparkinfo', 'about'])
     @cooldown(1, 1.5, BucketType.user)
+    @guild_only()
     @bot_has_permissions(use_external_emojis=True, embed_links=True)
     async def binfo(self, ctx):
 
@@ -250,7 +251,7 @@ class Info(Cog, name="Info Category"):
         aliases=['si', 'serverinfo'])
     @guild_only()
     @cooldown(1, 1.5, BucketType.user)
-    @bot_has_permissions(use_external_emojis=True, embed_links=True)
+    @bot_has_permissions(use_external_emojis=True)
     async def sinfo(self, ctx):
          
         g = ctx.guild
@@ -392,12 +393,12 @@ class Info(Cog, name="Info Category"):
         await ctx.send(embed=e)
 
     @command(
-      name="roleinfo", 
-      brief="{Get Info on a Role}", 
-      usage="roleinfo <role>", 
-      aliases=['ri', 'rinfo'])
+        name="roleinfo", 
+        brief="{Get Info on a Role}", 
+        usage="roleinfo <role>", 
+        aliases=['ri', 'rinfo'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def info(self, ctx, *, role: discord.Role):
           
         #See when the role was created
@@ -471,7 +472,7 @@ class Info(Cog, name="Info Category"):
         usage="rolelist (member)", 
         aliases=['rlist', 'rlst'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def _list(self, ctx, item: Optional[discord.Member]):
       
         guild = ctx.guild
@@ -532,7 +533,7 @@ class Info(Cog, name="Info Category"):
         usage="perms <role>/(member)", 
         aliases=['permission', 'permissions'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(use_external_emojis=True)
     async def perms(self, ctx, *, item: Optional[Union[discord.Role, discord.Member]]):
         
@@ -666,7 +667,7 @@ class Info(Cog, name="Info Category"):
         usage="chinfo <#channel>", 
         aliases=['channelinfo'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def chinfo(self, ctx, channel: Optional[Union[discord.TextChannel, discord.VoiceChannel]]=None):
         
         channel = ctx.channel if not channel else channel
@@ -801,14 +802,14 @@ class Info(Cog, name="Info Category"):
                 color=0x420000)
         
             await ctx.send(embed=e)
-
           
     @command(
-      brief="{User's Avatar}", 
-      usage="avatar (member)")
+        brief="{User's Avatar}", 
+        usage="avatar (member)", 
+        aliases=['av', 'ava', 'pfp'])
     @guild_only()
-    #@bot_has_permissions(embed_links=True)
-    @cooldown(1, 1.5, type=BucketType.user)
+    @bot_has_permissions(embed_links=True)
+    @cooldown(1, 1.5, BucketType.user)
     async def avatar(self, ctx, member: Optional[discord.Member] = None):
 
         #Checks if a member is mentioned or not
