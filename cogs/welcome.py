@@ -3,7 +3,8 @@
 
 import discord
 
-from discord.ext.commands import command, guild_only, bot_has_permissions, has_permissions, Cog, group
+from discord.ext.commands import command, guild_only, bot_has_permissions, has_permissions, Cog, group, \
+cooldown, BucketType
 
 from datetime import datetime
 
@@ -32,6 +33,7 @@ class Welcome(Cog):
         brief="{The Welcome Menu what else?}", 
         usage="welcome")
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(use_external_emojis=True)
     async def welcome(self, ctx):
       
@@ -50,6 +52,7 @@ class Welcome(Cog):
         
         #Make embed
         e = discord.Embed(
+            color=0x0F4707, 
             title=f"__*{cog.qualified_name}*__\n*() - Optional\n<> - Required*", 
             description="".join(desc))
                   
@@ -73,10 +76,12 @@ class Welcome(Cog):
         await ctx.send(embed=e)
 
     @welcome.command(
-      brief="{Change the Channel to Send Welcome Messages To}", 
-      usage="welcome channel <#channel>"
+        brief="{Change the Channel to Send Welcome Messages To}", 
+        usage="welcome channel <#channel>", 
+        aliases=['chann']
     )
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(manage_channels=True)
     @has_permissions(manage_channels=True)
     async def channel(self, ctx, channel: discord.TextChannel):
@@ -89,6 +94,7 @@ class Welcome(Cog):
           
           #Make and send embed
           e = discord.Embed(
+              color=0x0F4707, 
               description=f"**Welcome Channel has been set to {channel.mention}**")
           
           e.timestamp = datetime.utcnow()
@@ -104,7 +110,7 @@ class Welcome(Cog):
         aliases=['currentchannel', 'cc', 
                 'ccurrent', 'currentc'])
     @guild_only()
-    @bot_has_permissions(manage_channels=True)
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_channels=True)
     async def currentchann(self, ctx):
       
@@ -113,15 +119,16 @@ class Welcome(Cog):
         check_channel = await self.db.get_welcome_channel(ctx.guild.id)
 
         #If there's no channel set
-        if check_channel[0] is None:
-          
+        if check_channel is None:
+
             await ctx.send("There is no channel set")
             return
         
         #If there is a channel set
-        if check_channel:
+        if check_channel is not None:
             
             e = discord.Embed(
+                color=0x0F4707, 
                 description=f"**Current channel is <#{check_channel[0]}>**")
                 
             e.timestamp = datetime.utcnow()
@@ -130,11 +137,11 @@ class Welcome(Cog):
         await ctx.send(embed=e)
 
     @welcome.command(
-      brief="{Change the welcome message (There is also a default)}", 
-      usage="welcome text <new_text_here>", 
-      aliases=['message', 'msg'])
+        brief="{Change the welcome message (There is also a default)}", 
+        usage="welcome text <new_text_here>", 
+        aliases=['message', 'msg'])
+    @cooldown(1, 1.5, BucketType.user)
     @guild_only()
-    @bot_has_permissions(manage_channels=True)
     @has_permissions(manage_channels=True)
     async def text(self, ctx, *, text):
       
@@ -148,8 +155,8 @@ class Welcome(Cog):
         check_channel = await self.db.get_welcome_channel(ctx.guild.id)
         
         #If there isn't a channel
-        if check_channel[0] is None:
-            
+        if check_channel is None:
+
             await ctx.send("Welcome messages are turned off")
             return
           
@@ -162,6 +169,7 @@ class Welcome(Cog):
         
             #Make and send embed
             e = discord.Embed(
+                color=0x0F4707, 
                 title="**Welcome Message Set**",
                 description=f"**New Message:** {text}")
                 
@@ -175,14 +183,14 @@ class Welcome(Cog):
         aliases=['currenttext', 
                  'currentext', 'currentmessage', 'cmsg', 'ctext', 'cmessage'])
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_channels=True)
-    @bot_has_permissions(manage_channels=True)
     async def currentmsg(self, ctx):
       
         check_chann = await self.db.get_welcome_channel(ctx.guild.id)
         
         #If there isn't a channel set
-        if check_chann[0] is None:
+        if check_chann is None:
             
             await ctx.send("Welcome messages are turned off")
             return
@@ -200,9 +208,9 @@ class Welcome(Cog):
             
                 #Make embed
                 e = discord.Embed(
+                    color=0x0F4707, 
                     title="**Default Welcome Message**", 
-                    description="**{mention} just left {guild}. Sorry to see you go!**\n__*Member Count: {members} Members*__")
-                
+                    description="**Welcome {mention} to {guild}! We hope you enjoy your stay!**\n__*Member Count: {members}*__")
                 e.timestamp = datetime.utcnow()
         
             #If there IS a message set in db
@@ -210,6 +218,7 @@ class Welcome(Cog):
             if the_text is not None:
                 #Make embed
                 e = discord.Embed(
+                    color=0x0F4707, 
                     title="**Current Welcome Message**", 
                     description=f"**Message:** {str(the_text)}")
             
@@ -223,7 +232,8 @@ class Welcome(Cog):
         usage="welcome rtext", 
         aliases=['removechannel', 'removechann', 'rch', 'rc'])
     @guild_only()
-    @bot_has_permissions(manage_channels=True, use_external_emojis=True)
+    @cooldown(1, 1.5, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
     @has_permissions(manage_channels=True)
     async def rchannel(self, ctx):
       
@@ -245,7 +255,7 @@ class Welcome(Cog):
         get_channel = await self.db.get_welcome_channel(ctx.guild.id)
 
         #If there isn't a set message
-        if get_channel[0] is None:
+        if get_channel is None:
             await ctx.send("There is no channel to remove")
             return
         
@@ -330,6 +340,7 @@ class Welcome(Cog):
                     #Make a new embed
                     #To edit the original
                     et = discord.Embed(
+                        color=0x420000, 
                         description=f"**{red_mark} Channel Won't be Deleted and Welcome Messages are Still Enabled**")
                     et.set_footer(
                         text=ctx.author)
@@ -348,7 +359,8 @@ class Welcome(Cog):
         usage="welcome rtext", 
         aliases=['removemsg', 'removemessage', 'removetext', 'rmsg', 'rmessage'])
     @guild_only()
-    @bot_has_permissions(manage_channels=True, use_external_emojis=True)
+    @cooldown(1, 1.5, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
     @has_permissions(manage_channels=True)
     async def rtext(self, ctx):
       
@@ -461,6 +473,7 @@ class Welcome(Cog):
                         await m.remove_reaction(red_mark, ctx.author)
                     
                         et = discord.Embed(
+                            color=0x420000, 
                             description=f"**{red_mark} Custom Message won't be Deleted**")
                         et.set_footer(
                             text=ctx.author)
@@ -479,8 +492,8 @@ class Welcome(Cog):
         usage="welcome preview", 
         aliases=['prv', 'pview', 'pv'])
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_channels=True)
-    @bot_has_permissions(manage_channels=True)
     async def preview(self, ctx):
 
       guild = ctx.guild
@@ -492,7 +505,7 @@ class Welcome(Cog):
       check_channel = await self.db.get_welcome_channel(ctx.guild.id)
 
       #If there isn't a channel set
-      if check_channel[0] is None:
+      if check_channel is None:
           await ctx.send("There's Nothing to Preview if Welcome Messages are Turned Off")
           return
 
@@ -561,7 +574,6 @@ class Welcome(Cog):
               
           await ctx.send(embed=e)
         
-
 #•----------Event----------•#
 
     #Saying goodbye to Members
@@ -655,6 +667,8 @@ class Welcome(Cog):
         #Insert this guild's id
         #Into our guilds table
         await self.db.add_guild(guild.id)
+        
+        await self.db.drop_prefix(guild.id)
         
         #List of channel keywords to look for
         names = ['comman', 'bot']
