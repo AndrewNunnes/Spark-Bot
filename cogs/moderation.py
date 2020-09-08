@@ -98,8 +98,7 @@ class Moderation(Cog, name="Moderation Category"):
         brief="{Menu for Server Configuration/Management}", 
         usage="configmenu")
     @guild_only()
-    @cooldown(1, 3, BucketType.user)
-    @has_permissions(manage_messages=True)
+    @cooldown(1, 1.5, BucketType.user)
     async def configmenu(self, ctx):
         
         cog = self.gc.get_cog_by_class('Config')
@@ -131,13 +130,12 @@ class Moderation(Cog, name="Moderation Category"):
 #•----------Warn System-----------•#
 
     @command(
-      brief="{Warn a User}", 
-      usage="warn <user> (reason)", 
-      aliases=['addwarn', 'warnuser'])
+        brief="{Warn a User}", 
+        usage="warn <user> (reason)", 
+        aliases=['addwarn', 'warnuser'])
     @guild_only()
-    @cooldown(1, 3, BucketType.user)
+    @cooldown(1, 2.5, BucketType.user)
     @has_permissions(kick_members=True)
-    @bot_has_permissions(kick_members=True)
     async def warn(self, ctx, member: discord.Member, *, reason: Optional[str]="No Reason Provided"):
         
         #If a member isn't provided
@@ -232,13 +230,13 @@ class Moderation(Cog, name="Moderation Category"):
         await ctx.send(embed=e)
         
     @command(
-      brief="{List of Warns a User has", 
-      usage="warns (member)", 
-      aliases=['warnlist', 'listwarns'])
+        brief="{List of Warns a User has", 
+        usage="warns (member)", 
+        aliases=['warnlist', 'listwarns'])
     @guild_only()
     @has_permissions(kick_members=True)
-    @bot_has_permissions(kick_members=True, use_external_emojis=True)
-    @cooldown(1, 3, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
+    @cooldown(1, 1.5, BucketType.user)
     async def warns(self, ctx, member: Optional[discord.Member]):
         
         redmark = "<:redmark:738415723172462723>"
@@ -387,8 +385,8 @@ class Moderation(Cog, name="Moderation Category"):
         aliases=['deletewarn', 'dwarn'])
     @guild_only()
     @has_permissions(kick_members=True)
-    @bot_has_permissions(kick_members=True, use_external_emojis=True)
-    @cooldown(1, 3, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
+    @cooldown(1, 2.5, BucketType.user)
     async def delwarn(self, ctx, member: discord.Member, *, number: int):
         
         #Get warns from database
@@ -440,8 +438,8 @@ class Moderation(Cog, name="Moderation Category"):
         aliases=['clearwrn', 'clearwrns'])
     @guild_only()
     @has_permissions(kick_members=True)
-    @bot_has_permissions(kick_members=True, use_external_emojis=True)
-    @cooldown(1, 3, BucketType.user)
+    @bot_has_permissions(use_external_emojis=True)
+    @cooldown(1, 2.5, BucketType.user)
     async def clearwarns(self, ctx, member: discord.Member):
         
         #If a member isn't given
@@ -485,8 +483,8 @@ class Moderation(Cog, name="Moderation Category"):
         usage='mute <member(s) (time)', 
         aliases=['addmute', 'muteuser'])
     @guild_only()
-    @cooldown(1, 5, BucketType.user)
-    @has_permissions(manage_roles=True)
+    @cooldown(1, 2.5, BucketType.user)
+    @has_permissions(manage_roles=True, kick_members=True)
     @bot_has_permissions(manage_roles=True)
     async def mute(self, ctx, member: Greedy[discord.Member], *, time: TimeConverter=None):
         
@@ -662,7 +660,7 @@ class Moderation(Cog, name="Moderation Category"):
     @guild_only()
     @has_permissions(manage_roles=True, kick_members=True)
     @bot_has_permissions(manage_roles=True)
-    @cooldown(1, 5, BucketType.user)
+    @cooldown(1, 2.5, BucketType.user)
     async def unmute(self, ctx, member: Greedy[discord.Member], *, reason: Optional[str]="No reason provided"):
         
         redmark = "<:redmark:738415723172462723>"
@@ -679,13 +677,13 @@ class Moderation(Cog, name="Moderation Category"):
         await self.unmute_mem(ctx, member, reason=reason)
         
     @command(
-      brief="{Kicks a User from the Guild}", 
-      usage="kick <user> (reason_message)")
+        brief="{Kicks a User from the Guild}", 
+        usage="kick <user> (reason_message)")
     @guild_only()
     @has_permissions(kick_members=True)
     @bot_has_permissions(kick_members=True)
-    @cooldown(1, 3, BucketType.user)
-    async def kick(self, ctx, member : discord.Member, *, reason):
+    @cooldown(1, 2.5, BucketType.user)
+    async def kick(self, ctx, member : discord.Member, *, reason=None):
       
         #Checking if the user tries to 
         #Kick themselves
@@ -698,10 +696,7 @@ class Moderation(Cog, name="Moderation Category"):
         if reason is None:
             await ctx.send("You gotta give a reason to kick this member")
             return
-        #await can_execute_action(user, target):
-            #await ctx.send("You can't kick this user due to role hierarchy")
-            #return
-          
+
         try:
             #Sending the member this message
             await member.send(f'You\'ve been kicked from `{ctx.guild.name}` for `{reason}`')
@@ -744,7 +739,7 @@ class Moderation(Cog, name="Moderation Category"):
     @has_permissions(ban_members=True)
     @bot_has_permissions(ban_members=True)
     @guild_only()
-    @cooldown(1, 3, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def ban(self, ctx, user : discord.Member, *, reason=None):
 
         if ctx.author == user:
@@ -786,6 +781,7 @@ class Moderation(Cog, name="Moderation Category"):
       brief="{Unbans a User}", 
       usage="unban <user#1234>")
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(ban_members=True)
     @bot_has_permissions(ban_members=True)
     async def unban(self, ctx, *, member):
@@ -821,6 +817,7 @@ class Moderation(Cog, name="Moderation Category"):
         usage="clean <number>", 
         aliases=['purge', 'prune', 'sweep'])
     @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
     @has_permissions(manage_messages=True)
     @bot_has_permissions(manage_messages=True)
     async def clean(self, ctx, count: int):
