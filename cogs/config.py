@@ -26,7 +26,6 @@ class Config(Cog):
         invoke_without_command=True, 
         brief="{Configuration Menu/Commands}", 
         usage="config")
-    @has_permissions(manage_messages=True)
     @guild_only()
     @cooldown(1, 1.5, BucketType.user)
     async def config(self, ctx):
@@ -70,10 +69,10 @@ class Config(Cog):
         e.set_thumbnail(
             url=ctx.author.avatar_url)
       
-        fields = [("• **prefix change :** `{ctx.prefix}prefix change <new_prefix>`", 
+        fields = [(f"• **prefix change :** `{ctx.prefix}prefix change <new_prefix>`", 
                   "{Change the Bot's Prefix}", False), 
                   
-                  ("• **prefix reset :** `{ctx.prefix}prefix reset`", 
+                  (f"• **prefix reset :** `{ctx.prefix}prefix reset`", 
                   "{Reset the Custom Prefix}", False)]
         
         for n, v, i in fields:
@@ -89,7 +88,7 @@ class Config(Cog):
         usage="prefix change <new_prefix>", 
         aliases=['new', 'switch'])
     @guild_only()
-    @cooldown(1, 5, BucketType.user)
+    @cooldown(1, 5, BucketType.guild)
     @has_permissions(manage_guild=True)
     async def change(self, ctx, pre: str=None):
         
@@ -122,7 +121,7 @@ class Config(Cog):
         usage="prefix reset", 
         aliases=['delete', 'del'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 2.5, BucketType.guild)
     @has_permissions(manage_guild=True)
     async def reset(self, ctx):
         
@@ -206,38 +205,6 @@ class Config(Cog):
     
         await ctx.send(embed=e)
     
-    @config.command(
-        brief="{Menu for Logging}", 
-        usage="config logsmenu", 
-        aliases=['logmenu'])
-    @has_permissions(manage_messages=True)
-    @guild_only()
-    @cooldown(1, 1.5, BucketType.user)
-    async def logsmenu(self, ctx):
-
-        cog = self.gc.get_cog_by_class('Logging')
-
-        e = discord.Embed(
-            title=f"__*{cog.qualified_name}*__\n_*() - Optional\n<> - Required*_\n\n__*Your Available Commands*__",
-            color=0x420000)
-        
-        #Iterate through all commands including subcommands 
-        #Inside of that cog
-        for c in cog.walk_commands():
-            
-            fields = [(f"• **{c.name} :** `{ctx.prefix}{c.usage}`", f"{c.brief}", True)]
-            for n, v, i in fields:
-                e.add_field(
-                    name=n, 
-                    value=v, 
-                    inline=i)
-            
-        e.timestamp = datetime.utcnow()
-        e.set_footer(
-            name=f"Requested by {ctx.author}")
-        
-        await ctx.send(embed=e)
-
     @config.command(
       brief="{Menu for Role Management}", 
       usage="config role")
