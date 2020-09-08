@@ -94,7 +94,7 @@ class Minecraft(Cog, name="Minecraft Category"):
         brief="{Check Status of a MC Server}", 
         usage="mcping <server_ip>",
         aliases=['serverping', 'mcstatus'])
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @guild_only()
     async def mcping(self, ctx, host, port: int = None):
         
@@ -108,7 +108,7 @@ class Minecraft(Cog, name="Minecraft Category"):
             res = await self.ses.get(f'https://theapi.info/mc/mcping?host={combined}') 
             jj = await res.json()
 
-        if jj['online'] is not True:
+        if not jj['success'] or not jj['online']:
             e = discord.Embed(
                 color=0x420000, 
                 title=f'<:offline:728377784207933550> {combined} is offline')
@@ -307,7 +307,7 @@ class Minecraft(Cog, name="Minecraft Category"):
         data['name_history'][0]['changedToAt'] = "Original Name"
         
         #Change case where month is 0
-        data['name_history'][3]['changedToAt'] = "1/29/2017"
+        data['name_history'][0]['changedToAt'] = "1/29/2017"
         
         #Store the user name history
         #As a variable
@@ -454,7 +454,7 @@ class Minecraft(Cog, name="Minecraft Category"):
     @command(
         brief="{See a Player's Cape}", 
         usage="cape <player/uuid>")
-    @is_owner()
+    @cooldown(1, 1.5, BucketType.user)
     @guild_only()
     async def cape(self, ctx, *, gamertag: str):
         
@@ -520,9 +520,9 @@ class Minecraft(Cog, name="Minecraft Category"):
         brief="{Get a UUID with a Username}",
         usage="uuid <player>", 
         aliases=[''])
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @guild_only()
-    @bot_has_permissions(embed_links=True, use_external_emojis=True)
+    @bot_has_permissions(use_external_emojis=True)
     async def get_uuid(self, ctx, *, gamertag: str):
         
         redmark = "<:redmark:738415723172462723>"
@@ -579,9 +579,9 @@ class Minecraft(Cog, name="Minecraft Category"):
         brief="{Get a Gamertag using a UUID}", 
         usage="mcplayer <uuid>", 
         aliases=['gamertag', 'mcuser', 'mcname'])
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @guild_only()
-    @bot_has_permissions(embed_links=True, use_external_emojis=True)
+    @bot_has_permissions(use_external_emojis=True)
     async def get_gamertag(self, ctx, *, uuid):
         
         #Define our custom emoji
@@ -614,7 +614,7 @@ class Minecraft(Cog, name="Minecraft Category"):
             #Get the name 
             j = json.loads(await response.text())
             name = j[len(j) - 1]["name"]
-        
+            
             #Make the embed
             e = discord.Embed(
                 title="Convert UUID's to Players Here", 
@@ -645,7 +645,7 @@ class Minecraft(Cog, name="Minecraft Category"):
         usage="villagerspeak <text>", 
         aliases=['vspeak'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def villagerspeak(self, ctx, *, msg):
         
         #Use the function/method from above 
@@ -656,7 +656,7 @@ class Minecraft(Cog, name="Minecraft Category"):
         brief="{Converts text into Enchantment Table Language}", 
         usage="enchant <text>")
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def enchant(self, ctx, *, msg):
         msg = str(msg).replace("```", "").replace("\\", "\\\\")
         await self.lang_convert(ctx, "```" + msg + "```", self.g.enchantLang)
@@ -666,7 +666,7 @@ class Minecraft(Cog, name="Minecraft Category"):
         usage="unenchant <enchantment_text>", 
         aliases=['unchant'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def unenchant(self, ctx, *, msg):
         lang = {}
         
@@ -679,7 +679,7 @@ class Minecraft(Cog, name="Minecraft Category"):
         usage="cursed", 
         aliases=['mccursed', 'cursedmc'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def cursed(self, ctx):
         #Get the images from 'global.py'
         images = self.g.cursedImages
@@ -692,9 +692,13 @@ class Minecraft(Cog, name="Minecraft Category"):
         
         await ctx.send(embed=e)
         
-    @command()
-    @is_owner()
-    async def testmc(self, ctx):
+    @command(
+        brief="{Get Sales for Minecraft Games}", 
+        usage="mcsales", 
+        aliases=['minecraftsales'])
+    @guild_only()
+    @cooldown(1, 1.5, BucketType.user)
+    async def mcsales(self, ctx):
         
         dung = await DataService.Data.getStatistics(item_sold_dungeons=True)
 
@@ -728,26 +732,12 @@ class Minecraft(Cog, name="Minecraft Category"):
         await ctx.send(embed=e)
 
     @command(
-        name="mcsales", 
-        brief="{Get the Total Sales on Minecraft}", 
-        usage="mcsales")
-    @guild_only()
-    @cooldown(1, 1, BucketType.user)
-    async def mc_sales(self, ctx):
-
-        r = await self.ses.post("https://api.mojang.com/orders/statistics",
-                                json={"metricKeys": ["item_sold_minecraft", "prepaid_card_redeemed_minecraft"]})
-        j = json.loads(await r.text())
-        await ctx.send(embed=discord.Embed(color=discord.Color.dark_green(),
-                                           description=f"**{j['total']}** total Minecraft copies sold, **{round(j['saleVelocityPerSeconds'], 3)}** copies sold per second."))
-
-    @command(
         name="randomserver", 
         brief="{Get a Random Minecraft Server}", 
         usage="randomserver", 
         aliases=['mcserver'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     @bot_has_permissions(use_external_emojis=True)
     async def random_mc_server(self, ctx):
       
@@ -812,7 +802,7 @@ class Minecraft(Cog, name="Minecraft Category"):
         usage='mcidea', 
         aliases=['buildidea'])
     @guild_only()
-    @cooldown(1, 2.5, BucketType.user)
+    @cooldown(1, 1.5, BucketType.user)
     async def build_idea(self, ctx):
       
         if choice([True, False]):
